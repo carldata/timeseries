@@ -51,4 +51,9 @@ class SeriesTest extends FlatSpec with Matchers {
     series.map(x => x._2 + 2).max() shouldBe 7.6
   }
 
+  it should "fold values" in {
+    val series = Series.fromTimestamps(Seq((1, 1), (2, -3), (3, 6)))
+    series.fold(0)((x, y) => x+y) shouldBe 4
+  }
+
 }

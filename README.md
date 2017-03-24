@@ -11,7 +11,7 @@ Library for processing Time Series which are functions from Time to real value.
   * [ ] Reading and writing from CSV file
   * [ ] Slice series
   * [x] Mapping over Series
-  * [ ] Folding Series
+  * [x] Folding Series
   * [ ] Rolling window
   * [ ] Resampling and groupBy
   * Calculate statistics

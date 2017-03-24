@@ -36,5 +36,9 @@ class Series(idx: Seq[LocalDateTime], vs: Seq[Double]) {
     val xs: Seq[Double] = index.zip(values).map(f)
     new Series(idx, xs)
   }
+
+  def fold(z: Double)(f: (Double, Double) => Double): Double = {
+    values.fold(z)(f)
+  }
 }
 
