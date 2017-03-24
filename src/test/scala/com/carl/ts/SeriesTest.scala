@@ -26,10 +26,16 @@ class SeriesTest extends FlatSpec with Matchers {
     series.length shouldBe 3
   }
 
-  //  it "element by index" $ do
-//  let xs = TS.tsSeries [1..] [10.0, 1.2, 32.4, 0.65, 11.0]
-//  fmap TS.dpValue (TS.elemAt 2 xs) `shouldBe` Just 32.4
-//
+  it should "access element at given index" in {
+    val series = Series.fromTimestamps(Seq((1, 1), (2, 3.4), (3, 5.6)))
+    series.get(2) shouldBe 5.6
+  }
+
+  it should "return 0 for element outside of the index" in {
+    val series = Series.fromTimestamps(Seq((1, 1), (2, 3.4), (3, 5.6)))
+    series.get(20) shouldBe 0
+  }
+
 //  it "map over series" $ do
 //  let xs = TS.tsSeries [1..] [10.0, 1.2, 32.4, 0.65, 11.0]
 //  let ys = fmap (+ 2) xs

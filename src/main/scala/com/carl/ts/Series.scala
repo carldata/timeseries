@@ -22,8 +22,10 @@ object Series {
 class Series(idx: Seq[LocalDateTime], vs: Seq[Double]) {
 
   private val index: Seq[LocalDateTime] = idx
-  private val values: Seq[Double] = vs
+  private val values: Vector[Double] = vs.toVector
 
   def length: Int = index.length
+
+  def get(i: Int): Double = if(i >= 0 && i < values.length) { values(i) } else { 0 }
 }
 
