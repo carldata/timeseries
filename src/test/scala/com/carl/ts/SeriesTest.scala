@@ -21,7 +21,12 @@ class SeriesTest extends FlatSpec with Matchers {
     series.length shouldBe 3
   }
 
-//  it "element by index" $ do
+  it should "be build from timestamps" in {
+    val series = Series.fromTimestamps(Seq((1, 1), (2, 3.4), (3, 5.6)))
+    series.length shouldBe 3
+  }
+
+  //  it "element by index" $ do
 //  let xs = TS.tsSeries [1..] [10.0, 1.2, 32.4, 0.65, 11.0]
 //  fmap TS.dpValue (TS.elemAt 2 xs) `shouldBe` Just 32.4
 //

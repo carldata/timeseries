@@ -1,6 +1,6 @@
 package com.carl.ts
 
-import java.time.LocalDateTime
+import java.time.{LocalDateTime, ZoneOffset}
 
 
 object Series {
@@ -9,6 +9,13 @@ object Series {
   def fromRows(rows: Seq[(LocalDateTime, Double)]): Series = {
     val (idx, vs) = rows.unzip
     new Series(idx, vs)
+  }
+
+  /** Create TimeSeries from timestamps */
+  def fromTimestamps(rows: Seq[(Long, Double)]): Series = {
+    val (idx, vs) = rows.unzip
+    val idx2 = idx.map( i => LocalDateTime.ofEpochSecond(i, 0, ZoneOffset.UTC))
+    new Series(idx2, vs)
   }
 }
 
