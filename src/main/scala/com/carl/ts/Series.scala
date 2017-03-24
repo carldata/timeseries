@@ -5,36 +5,36 @@ import java.time.{LocalDateTime, ZoneOffset}
 
 object Series {
 
-  /** Create TimeSeries from data in rows format */
-  def fromRows(rows: Seq[(LocalDateTime, Double)]): Series = {
-    val (idx, vs) = rows.unzip
-    new Series(idx, vs)
+  /** Create TimeSeries from data in columns format */
+  def fromColumns(index: Seq[LocalDateTime], values: Seq[Double]): Series = {
+    new Series(index.zip(values))
   }
 
   /** Create TimeSeries from timestamps */
   def fromTimestamps(rows: Seq[(Long, Double)]): Series = {
-    val (idx, vs) = rows.unzip
-    val idx2 = idx.map( i => LocalDateTime.ofEpochSecond(i, 0, ZoneOffset.UTC))
-    new Series(idx2, vs)
+    new Series(rows.map( r => (LocalDateTime.ofEpochSecond(r._1, 0, ZoneOffset.UTC), r._2)))
   }
 }
 
-class Series(idx: Seq[LocalDateTime], vs: Seq[Double]) {
+class Series(d: Seq[(LocalDateTime, Double)]) {
 
-  private val index: Seq[LocalDateTime] = idx
-  private val values: Vector[Double] = vs.toVector
+  val data: Vector[(LocalDateTime, Double)] = d.toVector
 
-  def length: Int = index.length
+  val index: Seq[LocalDateTime] = data.map(_._1)
 
-  def get(i: Int): Double = if(i >= 0 && i < values.length) { values(i) } else { 0 }
+  val values: Seq[Double] = data.map(_._2)
+
+  def length: Int = data.length
+
+  def get(i: Int): Double = data.lift(i).map(_._2).getOrElse(0)
 
   def max(): Double = values.max
 
   def min(): Double = values.min
 
   def map(f: ((LocalDateTime, Double)) => Double): Series = {
-    val xs: Seq[Double] = index.zip(values).map(f)
-    new Series(idx, xs)
+    val xs: Seq[Double] = data.map(f)
+    new Series(index.zip(xs))
   }
 
   def fold(z: Double)(f: (Double, Double) => Double): Double = {

@@ -9,15 +9,13 @@ class SeriesTest extends FlatSpec with Matchers {
 
   "Series" should "have length equal to its index" in {
     val now = LocalDateTime.now()
-    val series = new Series(
-      Seq(now, now.plusMinutes(1), now.plusMinutes(2)),
-      Seq(1.2))
+    val series = new Series(Seq((now,1), (now.plusMinutes(1), 2), (now.plusMinutes(2), 3)))
     series.length shouldBe 3
   }
 
   it should "be build from the rows" in {
     val now = LocalDateTime.now()
-    val series = Series.fromRows(Seq((now, 1), (now.plusMinutes(1), 3.4), (now.plusMinutes(2), 5.6)))
+    val series = Series.fromColumns(Seq(now, now.plusMinutes(1), now.plusMinutes(2)), Seq(1, 2, 3, 4, 5.6))
     series.length shouldBe 3
   }
 
