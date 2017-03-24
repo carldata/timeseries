@@ -46,9 +46,9 @@ class SeriesTest extends FlatSpec with Matchers {
     series.max() shouldBe 5.6
   }
 
-  //  it "map over series" $ do
-//  let xs = TS.tsSeries [1..] [10.0, 1.2, 32.4, 0.65, 11.0]
-//  let ys = fmap (+ 2) xs
-//    TS.values ys `shouldBe` [12.0, 3.2, 34.4, 2.65, 13.0]
+  it should "map over its values" in {
+    val series = Series.fromTimestamps(Seq((1, 1), (2, -3.4), (3, 5.6)))
+    series.map(x => x._2 + 2).max() shouldBe 7.6
+  }
 
 }

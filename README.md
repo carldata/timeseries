@@ -10,7 +10,7 @@ Library for processing Time Series which are functions from Time to real value.
 
   * [ ] Reading and writing from CSV file
   * [ ] Slice series
-  * [ ] Mapping over Series
+  * [x] Mapping over Series
   * [ ] Folding Series
   * [ ] Rolling window
   * [ ] Resampling and groupBy
@@ -20,9 +20,10 @@ Library for processing Time Series which are functions from Time to real value.
   * [ ] Finding sessions (periods of activity)
 
 
-## Installation
+## Build
 
-```sh
+```bash
+sbt test
 ```
 
 

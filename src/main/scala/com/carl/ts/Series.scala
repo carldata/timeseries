@@ -31,5 +31,10 @@ class Series(idx: Seq[LocalDateTime], vs: Seq[Double]) {
   def max(): Double = values.max
 
   def min(): Double = values.min
+
+  def map(f: ((LocalDateTime, Double)) => Double): Series = {
+    val xs: Seq[Double] = index.zip(values).map(f)
+    new Series(idx, xs)
+  }
 }
 
