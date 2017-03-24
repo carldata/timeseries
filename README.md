@@ -15,7 +15,7 @@ Library for processing Time Series which are functions from Time to real value.
   * [ ] Rolling window
   * [ ] Resampling and groupBy
   * Calculate statistics
-    * [ ] min, max
+    * [x] min, max
     * [ ] median, variance, standard deviation
   * [ ] Finding sessions (periods of activity)
 

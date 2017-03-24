@@ -27,5 +27,9 @@ class Series(idx: Seq[LocalDateTime], vs: Seq[Double]) {
   def length: Int = index.length
 
   def get(i: Int): Double = if(i >= 0 && i < values.length) { values(i) } else { 0 }
+
+  def max(): Double = values.max
+
+  def min(): Double = values.min
 }
 
