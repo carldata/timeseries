@@ -1,6 +1,6 @@
 package com.carl.ts
 
-import java.time.LocalDateTime
+import java.time.{LocalDateTime, ZoneOffset}
 
 import org.scalatest._
 
@@ -52,6 +52,13 @@ class SeriesTest extends FlatSpec with Matchers {
   it should "fold values" in {
     val series = Series.fromTimestamps(Seq((1, 1), (2, -3), (3, 6)))
     series.fold(0)((x, y) => x+y) shouldBe 4
+  }
+
+  it should "return subseries" in {
+    val series = Series.fromTimestamps(Seq((1, 1), (2, -3), (3, 6), (4, 6), (5, 6), (6, 6)))
+    val start = LocalDateTime.ofEpochSecond(2, 0, ZoneOffset.UTC)
+    val end = LocalDateTime.ofEpochSecond(6, 0, ZoneOffset.UTC)
+    series.slice(start, end).length shouldBe 4
   }
 
 }

@@ -40,5 +40,11 @@ class Series(d: Seq[(LocalDateTime, Double)]) {
   def fold(z: Double)(f: (Double, Double) => Double): Double = {
     values.fold(z)(f)
   }
+
+  /** Get slice of series with left side inclusive and right side exclusive */
+  def slice(start: LocalDateTime, end: LocalDateTime): Series = {
+    val d = data.filter(x => (x._1.isAfter(start) || x._1.isEqual(start)) && x._1.isBefore(end))
+    new Series(d)
+  }
 }
 
