@@ -5,9 +5,20 @@ package com.carl.ts
   */
 object Stats {
 
-  trait StatsLike {
-    def mean(xs: Seq[Double]): Double
-    def variance(xs: Seq[Double]): Double
-    def stddev(xs: Seq[Double]): Double
+  implicit class SeriesStats[T](val series: Series[T])(implicit num: Numeric[T]) {
+
+    def mean: Double = num.toDouble(series.sum) / series.length
+
+    def variance: Double = {
+      val m = mean
+      val s = series.values
+        .map(num.toDouble)
+        .map(x => Math.pow(x-m, 2))
+        .sum
+      s / series.length
+    }
+
+    def stddev: Double = Math.sqrt(variance)
   }
+
 }

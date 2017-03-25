@@ -36,17 +36,22 @@ class SeriesTest extends FlatSpec with Matchers {
 
   it should "return minimum value" in {
     val series: Series[Double] = Series.fromTimestamps(Seq((1, 1), (2, -3.4), (3, 5.6)))
-    series.min() shouldBe -3.4
+    series.min shouldBe -3.4
   }
 
   it should "return maximum value" in {
     val series: Series[Int] = Series.fromTimestamps(Seq((1, 1), (2, -3), (3, 5)))
-    series.max() shouldBe 5
+    series.max shouldBe 5
+  }
+
+  it should "sum its elements" in {
+    val series: Series[Int] = Series.fromTimestamps(Seq((1, 1), (2, -3), (3, 5)))
+    series.sum shouldBe 3
   }
 
   it should "map over its values" in {
     val series: Series[Double] = Series.fromTimestamps(Seq((1, 1), (2, -3.4), (3, 5.6)))
-    series.map(x => x._2 + 2).max() shouldBe 7.6
+    series.map(x => x._2 + 2).max shouldBe 7.6
   }
 
   it should "fold values" in {

@@ -28,9 +28,11 @@ class Series[V: Numeric](d: Seq[(LocalDateTime, V)]) {
 
   def get(i: Int)(implicit num: Numeric[V]): V = data.lift(i).map(_._2).getOrElse(num.zero)
 
-  def max(): V = values.max
+  def max: V = values.max
 
-  def min(): V = values.min
+  def min: V = values.min
+
+  def sum(implicit num: Numeric[V]): V = values.fold(num.zero)(num.plus)
 
   def map(f: ((LocalDateTime, V)) => V): Series[V] = {
     val xs: Seq[V] = data.map(f)
