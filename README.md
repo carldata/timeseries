@@ -8,16 +8,21 @@ Library for processing Time Series which are functions from Time to real value.
 
 # Features
 
-  * [ ] Reading and writing from CSV file
-  * [x] Slicing series
-  * [x] Mapping over Series
-  * [x] Folding Series
-  * [ ] Rolling window
-  * [ ] Resampling and groupBy
+  * Basic functionality
+    * [x] Slicing series
+    * [x] Mapping over Series
+    * [x] Folding Series
+    * [ ] Integration
+    * [ ] Differentiation
+    * [ ] Rolling window
+    * [ ] Resampling and groupBy
+  * Input/Output
+    * [ ] Reading and writing from CSV file
   * Calculate statistics
     * [x] min, max
     * [x] mean, variance and standard deviation
-  * [ ] Finding sessions (periods of activity)
+  * Advanced functionality
+    * [ ] Finding sessions (periods of activity)
   * Anomaly detection
     * [ ] Outliers
 
