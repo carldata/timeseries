@@ -71,4 +71,17 @@ class SeriesTest extends FlatSpec with Matchers {
     val expected: Series[Int] = Series.fromTimestamps(Seq((2, -6), (3, -2), (4, 14)))
     series.differentiate.values shouldBe expected.values
   }
+
+  it should "integrate values" in {
+    val series: Series[Int] = Series.fromTimestamps(Seq((1, 2), (2, -4), (3, -6), (4, 8)))
+    val expected: Series[Int] = Series.fromTimestamps(Seq((2, -2), (3, -10), (4, 2)))
+    series.integrate.values shouldBe expected.values
+  }
+
+  it should "integrate index" in {
+    val series: Series[Int] = Series.fromTimestamps(Seq((1, 2), (2, -4), (3, -6), (4, 8)))
+    val expected: Series[Int] = Series.fromTimestamps(Seq((2, -2), (3, -10), (4, 2)))
+    series.integrate.index shouldBe expected.index
+  }
+
 }

@@ -53,5 +53,10 @@ class Series[V: Numeric](d: Seq[(LocalDateTime, V)]) {
     val vs: Seq[V] = values.zip(values.tail).map(x => num.minus(x._2, x._1))
     new Series(index.tail.zip(vs))(num)
   }
+
+  def integrate(implicit num: Numeric[V]): Series[V] = {
+    val vs: Seq[V] = values.zip(values.tail).map(x => num.plus(x._1, x._2))
+    new Series(index.tail.zip(vs))(num)
+  }
 }
 

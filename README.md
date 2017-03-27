@@ -12,7 +12,7 @@ Library for processing Time Series which are functions from Time to real value.
     * [x] Slicing series
     * [x] Mapping over Series
     * [x] Folding Series
-    * [ ] Integration
+    * [x] Integration
     * [x] Differentiation
     * [ ] Rolling window
     * [ ] Resampling and groupBy
