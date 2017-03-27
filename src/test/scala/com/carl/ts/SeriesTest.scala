@@ -34,6 +34,18 @@ class SeriesTest extends FlatSpec with Matchers {
     series.get(20) shouldBe 0
   }
 
+  it should "return first element of a Series" in {
+    val now = LocalDateTime.now()
+    val series = Series.fromColumns(Seq(now, now.plusMinutes(1), now.plusMinutes(2)), Seq(1, 2, 3, 4, 5.6))
+    series.head shouldBe Some((now, 1))
+  }
+
+  it should "return None as first element for empty Series" in {
+    val now = LocalDateTime.now()
+    val series = Series.fromColumns(Seq(now, now.plusMinutes(1), now.plusMinutes(2)), Seq(1, 2, 3, 4, 5.6))
+    series.length shouldBe 3
+  }
+
   it should "return minimum value" in {
     val series: Series[Double] = Series.fromTimestamps(Seq((1, 1), (2, -3.4), (3, 5.6)))
     series.min shouldBe -3.4

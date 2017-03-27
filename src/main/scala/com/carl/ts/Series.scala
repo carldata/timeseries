@@ -33,6 +33,8 @@ class Series[V: Numeric](d: Seq[(LocalDateTime, V)]) {
 
   def get(i: Int)(implicit num: Numeric[V]): V = data.lift(i).map(_._2).getOrElse(num.zero)
 
+  def head: Option[(LocalDateTime, V)] = d.headOption
+
   def max: V = values.max
 
   def min: V = values.min
