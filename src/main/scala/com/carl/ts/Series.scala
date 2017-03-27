@@ -41,13 +41,11 @@ class Series[V: Numeric](d: Seq[(LocalDateTime, V)]) {
 
   def sum(implicit num: Numeric[V]): V = values.fold(num.zero)(num.plus)
 
+  def fold(z: V)(f: (V, V) => V): V = values.fold(z)(f)
+
   def map(f: ((LocalDateTime, V)) => V): Series[V] = {
     val xs: Seq[V] = data.map(f)
     new Series(index.zip(xs))
-  }
-
-  def fold(z: V)(f: (V, V) => V): V = {
-    values.fold(z)(f)
   }
 
   /** Get slice of series with left side inclusive and right side exclusive */
