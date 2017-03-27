@@ -1,6 +1,3 @@
-[![Build Status](https://travis-ci.org/klangner/timeseries.svg?branch=master)](https://travis-ci.org/klangner/timeseries)
-[![Hackage](https://img.shields.io/hackage/v/timeseries.svg)](https://hackage.haskell.org/package/timeseries)
-
 # Welcome to Time Series library
 
 Library for processing Time Series which are functions from Time to real value.
