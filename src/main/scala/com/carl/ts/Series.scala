@@ -14,6 +14,11 @@ object Series {
   def fromTimestamps[V: Numeric](rows: Seq[(Long, V)]): Series[V] = {
     new Series(rows.map( r => (LocalDateTime.ofEpochSecond(r._1, 0, ZoneOffset.UTC), r._2)))
   }
+
+  /** Create empty series */
+  def empty[V: Numeric] = {
+    new Series(Seq())
+  }
 }
 
 class Series[V: Numeric](d: Seq[(LocalDateTime, V)]) {

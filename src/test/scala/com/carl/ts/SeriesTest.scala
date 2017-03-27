@@ -84,4 +84,7 @@ class SeriesTest extends FlatSpec with Matchers {
     series.integrate.index shouldBe expected.index
   }
 
+  it should "work with empty series" in {
+
+  }
 }

@@ -21,6 +21,7 @@ Library for processing Time Series which are functions from Time to real value.
     * [x] mean, variance and standard deviation
   * Advanced functionality
     * [ ] Finding sessions (periods of activity)
+    * [ ] Finding patterns
   * Anomaly detection
     * [ ] Outliers
 
