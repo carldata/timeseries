@@ -16,8 +16,8 @@ object Series {
   }
 
   /** Create empty series */
-  def empty[V: Numeric] = {
-    new Series(Seq())
+  def empty: Series[Int] = {
+    new Series[Int](Seq())
   }
 }
 
@@ -55,11 +55,13 @@ class Series[V: Numeric](d: Seq[(LocalDateTime, V)]) {
   }
 
   def differentiate(implicit num: Numeric[V]): Series[V] = {
+    if(values.isEmpty) {return new Series(d)(num)}
     val vs: Seq[V] = values.zip(values.tail).map(x => num.minus(x._2, x._1))
     new Series(index.tail.zip(vs))(num)
   }
 
   def integrate(implicit num: Numeric[V]): Series[V] = {
+    if(values.isEmpty) {return new Series(d)(num)}
     val vs: Seq[V] = values.zip(values.tail).map(x => num.plus(x._1, x._2))
     new Series(index.tail.zip(vs))(num)
   }

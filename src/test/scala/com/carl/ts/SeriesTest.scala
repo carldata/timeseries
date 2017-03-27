@@ -85,6 +85,8 @@ class SeriesTest extends FlatSpec with Matchers {
   }
 
   it should "work with empty series" in {
-
+    val series = Series.empty
+    series.sum shouldBe 0
+    series.differentiate.values shouldBe series.values
   }
 }
