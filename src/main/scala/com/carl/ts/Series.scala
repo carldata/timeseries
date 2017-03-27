@@ -48,5 +48,10 @@ class Series[V: Numeric](d: Seq[(LocalDateTime, V)]) {
     val d = data.filter(x => (x._1.isAfter(start) || x._1.isEqual(start)) && x._1.isBefore(end))
     new Series(d)
   }
+
+  def differentiate(implicit num: Numeric[V]): Series[V] = {
+    val vs: Seq[V] = values.zip(values.tail).map(x => num.minus(x._2, x._1))
+    new Series(index.tail.zip(vs))(num)
+  }
 }
 

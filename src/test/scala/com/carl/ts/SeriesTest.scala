@@ -66,4 +66,9 @@ class SeriesTest extends FlatSpec with Matchers {
     series.slice(start, end).length shouldBe 4
   }
 
+  it should "differentiate" in {
+    val series: Series[Int] = Series.fromTimestamps(Seq((1, 2), (2, -4), (3, -6), (4, 8)))
+    val expected: Series[Int] = Series.fromTimestamps(Seq((2, -6), (3, -2), (4, 14)))
+    series.differentiate.values shouldBe expected.values
+  }
 }
