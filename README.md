@@ -1,5 +1,5 @@
 [![Build status](https://travis-ci.org/carldata/timeseries.svg?branch=master)](https://travis-ci.org/carldata/timeseries)
-# Welcome to Time Series library
+# Welcome to the Time Series library
 
 Library for processing Time Series which are functions from Time to real value.
 
@@ -31,6 +31,16 @@ Library for processing Time Series which are functions from Time to real value.
 ```bash
 sbt test
 ```
+
+This library can also be compiled into JavaScript
+
+```bash
+sbt fastOptJS
+```
+
+## Examples
+
+Folder examples contains some examples how to use this library 
 
 
 # Join in!
