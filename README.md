@@ -8,14 +8,11 @@ Library for processing Time Series which are functions from Time to real value.
 
   * Basic functionality
     * [x] Slicing series
-    * [x] Mapping over Series
-    * [x] Folding Series
+    * [x] Map, fold and filter
     * [x] Integration
     * [x] Differentiation
     * [ ] Rolling window
     * [ ] Resampling and groupBy
-  * Input/Output
-    * [ ] Reading and writing from CSV file
   * Calculate statistics
     * [x] min, max
     * [x] mean, variance and standard deviation

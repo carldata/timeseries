@@ -15,10 +15,8 @@ object AnomalyApp {
 
   def main(args: Array[String]): Unit = {
     val series = loadCSV("testdata/anomalies.csv")
-    println("Basic statistics:")
-    println("  * Length: " + series.length)
-    println("  * Mean: " + series.mean)
-    println("  * Std dev: " + series.stddev)
+    printStats("Raw data", series)
+    printStats("Differences", series.differentiate)
   }
 
   def loadCSV(fileName: String): Series[Double] = {
@@ -32,5 +30,13 @@ object AnomalyApp {
       (index, value)
     })
     new Series(readings)
+  }
+
+  def printStats(title: String, series: Series[Double]) = {
+    println(title)
+    println("  * Length: " + series.length)
+    println("  * Mean: " + series.mean)
+    println("  * Std dev: " + series.stddev)
+
   }
 }

@@ -41,6 +41,8 @@ class Series[V: Numeric](d: Seq[(LocalDateTime, V)]) {
 
   def sum(implicit num: Numeric[V]): V = values.fold(num.zero)(num.plus)
 
+  def filter(f: ((LocalDateTime, V)) => Boolean): Series[V] = new Series(d.filter(f))
+
   def fold(z: V)(f: (V, V) => V): V = values.fold(z)(f)
 
   def map(f: ((LocalDateTime, V)) => V): Series[V] = {

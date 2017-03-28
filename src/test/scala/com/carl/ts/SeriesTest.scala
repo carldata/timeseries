@@ -70,6 +70,11 @@ class SeriesTest extends FlatSpec with Matchers {
     series.fold(0)((x, y) => x+y) shouldBe 4
   }
 
+  it should "filter its values" in {
+    val series: Series[Double] = Series.fromTimestamps(Seq((1, 1), (2, -3.4), (3, 5.6)))
+    series.filter(x => x._2 > 0).length shouldBe 2
+  }
+
   it should "return subseries" in {
     val series: Series[Int] = Series.fromTimestamps(Seq((1, 1), (2, -3), (3, 6), (4, 6), (5, 6), (6, 6)))
     val start = LocalDateTime.ofEpochSecond(2, 0, ZoneOffset.UTC)
