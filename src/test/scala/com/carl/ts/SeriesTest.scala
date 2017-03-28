@@ -41,7 +41,7 @@ class SeriesTest extends FlatSpec with Matchers {
   }
 
   it should "return None as first element for empty Series" in {
-    val series = Series.empty
+    val series = Series.empty[Int]
     series.head shouldBe None
   }
 
@@ -101,7 +101,7 @@ class SeriesTest extends FlatSpec with Matchers {
   }
 
   it should "work with empty series" in {
-    val series = Series.empty
+    val series = Series.empty[Int]
     series.sum shouldBe 0
     series.differentiate.values shouldBe series.values
   }

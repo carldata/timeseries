@@ -16,8 +16,8 @@ object Series {
   }
 
   /** Create empty series */
-  def empty: Series[Int] = {
-    new Series[Int](Seq())
+  def empty[V: Numeric]: Series[V] = {
+    new Series[V](Seq[(LocalDateTime, V)]())
   }
 }
 
