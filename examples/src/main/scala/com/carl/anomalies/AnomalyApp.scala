@@ -1,6 +1,11 @@
 package com.carl.anomalies
 
+import java.io.File
+import java.time.LocalDateTime
+
+import com.github.tototoshi.csv.CSVReader
 import com.carl.ts.Series
+import com.carl.ts.Stats.SeriesStats
 
 
 /**
@@ -9,7 +14,23 @@ import com.carl.ts.Series
 object AnomalyApp {
 
   def main(args: Array[String]): Unit = {
-    val series = Series.empty
-    println("Hello from anomaly detection: " + series)
+    val series = loadCSV("testdata/anomalies.csv")
+    println("Basic statistics:")
+    println("  * Length: " + series.length)
+    println("  * Mean: " + series.mean)
+    println("  * Std dev: " + series.stddev)
+  }
+
+  def loadCSV(fileName: String): Series[Double] = {
+    import java.time.format.DateTimeFormatter
+    val format = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
+    val reader = CSVReader.open(new File(fileName))
+    val data = reader.allWithHeaders()
+    val readings: List[(LocalDateTime, Double)] = data.map(row => {
+      val index = row.get("time").map(x => LocalDateTime.parse(x,format)).getOrElse(LocalDateTime.now())
+      val value = row.get("velocity").map(_.toDouble).getOrElse(0.0)
+      (index, value)
+    })
+    new Series(readings)
   }
 }
