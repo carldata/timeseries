@@ -31,7 +31,7 @@ Library for processing Time Series which are functions from Time to real value.
 sbt test
 ```
 
-This library can also be compiled into JavaScript
+This library can also be compiled into the JavaScript
 
 ```bash
 sbt fastOptJS
