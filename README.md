@@ -16,6 +16,8 @@ Library for processing Time Series which are functions from Time to real value.
   * Calculate statistics
     * [x] min, max
     * [x] mean, variance and standard deviation
+  * IO
+    * [x] Read data from CSV string
   * Advanced functionality
     * [ ] Finding sessions (periods of activity)
     * [ ] Finding patterns
