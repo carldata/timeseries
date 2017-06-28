@@ -1,4 +1,4 @@
-[![Build status](https://travis-ci.org/carldata/timeseries.svg?branch=master)](https://travis-ci.org/carldata/timeseries)
+[![Build status](https://travis-ci.org/klangner/timeseries-scala.svg?branch=master)](https://travis-ci.org/klangner/timeseries-scala)
 # Welcome to the Time Series library
 
 Library for processing Time Series which are functions from Time to real value.
