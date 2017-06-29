@@ -42,7 +42,7 @@ We are happy to receive bug reports, fixes, documentation enhancements,
 and other improvements.
 
 Please report bugs via the
-[github issue tracker](http://github.com/carldata/timeseries/issues).
+[github issue tracker](http://github.com/klangner/timeseries-scala/issues).
 
 
 
