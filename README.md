@@ -1,4 +1,4 @@
-[![Build status](https://travis-ci.org/klangner/timeseries-scala.svg?branch=master)](https://travis-ci.org/klangner/timeseries-scala)
+[![Build status](https://travis-ci.org/carl/timeseries.svg?branch=master)](https://travis-ci.org/carl/timeseries)
 # Welcome to the Time Series library
 
 Library for processing Time Series which are functions from Time to real value.
@@ -42,7 +42,7 @@ We are happy to receive bug reports, fixes, documentation enhancements,
 and other improvements.
 
 Please report bugs via the
-[github issue tracker](http://github.com/klangner/timeseries-scala/issues).
+[github issue tracker](http://github.com/carl/timeseries/issues).
 
 
 
