@@ -1,7 +1,7 @@
 [![Build status](https://travis-ci.org/carl/timeseries.svg?branch=master)](https://travis-ci.org/carl/timeseries)
 # Welcome to the Time Series library
 
-Library for processing Time Series which are functions from Time to real value.
+Library for processing Time Series.
 
 
 # Features
@@ -30,10 +30,6 @@ Library for processing Time Series which are functions from Time to real value.
 ```bash
 sbt test
 ```
-
-## Examples
-
-Folder examples contains some examples how to use this library 
 
 
 # Join in!
