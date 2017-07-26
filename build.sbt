@@ -1,6 +1,6 @@
 name := "timeseries"
 
-organization := "com.carl"
+organization := "io.github.carldata"
 
 version := "0.1.0"
 
