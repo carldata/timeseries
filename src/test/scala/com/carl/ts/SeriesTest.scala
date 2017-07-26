@@ -67,7 +67,7 @@ class SeriesTest extends FlatSpec with Matchers {
 
   it should "fold values" in {
     val series: Series[Int] = Series.fromTimestamps(Seq((1, 1), (2, -3), (3, 6)))
-    series.fold(0)((x, y) => x+y) shouldBe 4
+    series.values.sum shouldBe 4
   }
 
   it should "filter its values" in {
