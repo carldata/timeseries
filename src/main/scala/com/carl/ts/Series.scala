@@ -25,13 +25,16 @@ object Series {
   * TimeSeries contains data indexed by DateTime. The type of stored data
   * is parametric.
   */
-case class Series[V: Numeric](index: Vector[LocalDateTime], values: Vector[V]) {
+class Series[V: Numeric](idx: Vector[LocalDateTime], ds: Vector[V]) {
 
   def this(d: Seq[(LocalDateTime, V)]) = {
     this(d.map(_._1).toVector, d.map(_._2).toVector)
   }
 
-  def length: Int = index.length
+  val length: Int = math.min(idx.length, ds.length)
+  val index: Vector[LocalDateTime] = idx.take(length)
+  val values: Vector[V] = ds.take(length)
+
 
   /** Safe get. If element is out of the bounds then 0 is returned */
   def get(i: Int)(implicit num: Numeric[V]): V = values.lift(i).getOrElse(num.zero)
@@ -69,16 +72,16 @@ case class Series[V: Numeric](index: Vector[LocalDateTime], values: Vector[V]) {
   }
 
   def differentiate(implicit num: Numeric[V]): Series[V] = {
-    if(values.isEmpty) {
+    if(index.isEmpty || values.isEmpty) {
       this
     } else {
       val vs: Vector[V] = values.zip(values.tail).map(x => num.minus(x._2, x._1))
-      new Series(index, vs)(num)
+      new Series(index.tail, vs)(num)
     }
   }
 
   def integrate(implicit num: Numeric[V]): Series[V] = {
-    if(values.isEmpty) {
+    if(index.isEmpty || values.isEmpty) {
       this
     } else {
       val vs: Vector[V] = values.zip(values.tail).map(x => num.plus(x._1, x._2))
