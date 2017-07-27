@@ -1,4 +1,4 @@
-[![Build status](https://travis-ci.org/carl/timeseries.svg?branch=master)](https://travis-ci.org/carl/timeseries)
+[![Build status](https://travis-ci.org/carldata/timeseries.svg?branch=master)](https://travis-ci.org/carldata/timeseries)
 # Welcome to the Time Series library
 
 Library for processing Time Series.
