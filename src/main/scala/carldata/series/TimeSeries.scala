@@ -1,23 +1,23 @@
-package com.carl.ts
+package carldata.series
 
 import java.time.{LocalDateTime, ZoneOffset}
 
 
-object Series {
+object TimeSeries {
 
   /** Create TimeSeries from data in columns format */
-  def fromColumns[V: Numeric](index: Seq[LocalDateTime], values: Seq[V]): Series[V] = {
-    new Series(index.zip(values))
+  def fromColumns[V: Numeric](index: Seq[LocalDateTime], values: Seq[V]): TimeSeries[V] = {
+    new TimeSeries(index.zip(values))
   }
 
   /** Create TimeSeries from timestamps */
-  def fromTimestamps[V: Numeric](rows: Seq[(Long, V)]): Series[V] = {
-    new Series(rows.map( r => (LocalDateTime.ofEpochSecond(r._1, 0, ZoneOffset.UTC), r._2)))
+  def fromTimestamps[V: Numeric](rows: Seq[(Long, V)]): TimeSeries[V] = {
+    new TimeSeries(rows.map(r => (LocalDateTime.ofEpochSecond(r._1, 0, ZoneOffset.UTC), r._2)))
   }
 
   /** Create empty series */
-  def empty[V: Numeric]: Series[V] = {
-    new Series[V](Seq[(LocalDateTime, V)]())
+  def empty[V: Numeric]: TimeSeries[V] = {
+    new TimeSeries[V](Seq[(LocalDateTime, V)]())
   }
 }
 
@@ -25,7 +25,7 @@ object Series {
   * TimeSeries contains data indexed by DateTime. The type of stored data
   * is parametric.
   */
-class Series[V: Numeric](idx: Vector[LocalDateTime], ds: Vector[V]) {
+class TimeSeries[V: Numeric](idx: Vector[LocalDateTime], ds: Vector[V]) {
 
   def this(d: Seq[(LocalDateTime, V)]) = {
     this(d.map(_._1).toVector, d.map(_._2).toVector)
@@ -53,39 +53,39 @@ class Series[V: Numeric](idx: Vector[LocalDateTime], ds: Vector[V]) {
   def sum(implicit num: Numeric[V]): V = values.fold(num.zero)(num.plus)
 
   /** Filter by index and value */
-  def filter(f: ((LocalDateTime, V)) => Boolean): Series[V] = {
-    new Series(index.zip(values).filter(f))
+  def filter(f: ((LocalDateTime, V)) => Boolean): TimeSeries[V] = {
+    new TimeSeries(index.zip(values).filter(f))
   }
 
   /** Map by index and value. Create new values */
-  def map(f: ((LocalDateTime, V)) => V): Series[V] = {
+  def map(f: ((LocalDateTime, V)) => V): TimeSeries[V] = {
     val vs: Vector[V] = index.zip(values).map(f)
-    new Series(index, vs)
+    new TimeSeries(index, vs)
   }
 
   /** Get slice of series with left side inclusive and right side exclusive
     * this operation is based on index.
     */
-  def slice(start: LocalDateTime, end: LocalDateTime): Series[V] = {
+  def slice(start: LocalDateTime, end: LocalDateTime): TimeSeries[V] = {
     val d = index.zip(values).filter(x => (x._1.isAfter(start) || x._1.isEqual(start)) && x._1.isBefore(end))
-    new Series(d)
+    new TimeSeries(d)
   }
 
-  def differentiate(implicit num: Numeric[V]): Series[V] = {
+  def differentiate(implicit num: Numeric[V]): TimeSeries[V] = {
     if(index.isEmpty || values.isEmpty) {
       this
     } else {
       val vs: Vector[V] = values.zip(values.tail).map(x => num.minus(x._2, x._1))
-      new Series(index.tail, vs)(num)
+      new TimeSeries(index.tail, vs)(num)
     }
   }
 
-  def integrate(implicit num: Numeric[V]): Series[V] = {
+  def integrate(implicit num: Numeric[V]): TimeSeries[V] = {
     if(index.isEmpty || values.isEmpty) {
       this
     } else {
       val vs: Vector[V] = values.zip(values.tail).map(x => num.plus(x._1, x._2))
-      new Series(index.tail, vs)(num)
+      new TimeSeries(index.tail, vs)(num)
     }
   }
 }

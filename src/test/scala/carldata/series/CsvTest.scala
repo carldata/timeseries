@@ -1,4 +1,4 @@
-package com.carl.ts
+package carldata.series
 
 import org.scalatest._
 

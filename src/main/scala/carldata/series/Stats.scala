@@ -1,11 +1,11 @@
-package com.carl.ts
+package carldata.series
 
 /**
   * Created by Krzysztof Langner on 2017-03-25.
   */
 object Stats {
 
-  implicit class SeriesStats[T](val series: Series[T])(implicit num: Numeric[T]) {
+  implicit class SeriesStats[T](val series: TimeSeries[T])(implicit num: Numeric[T]) {
 
     def mean: Double = num.toDouble(series.sum) / series.length
 
