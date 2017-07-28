@@ -1,7 +1,17 @@
-[![Build status](https://travis-ci.org/carldata/timeseries.svg?branch=master)](https://travis-ci.org/carldata/timeseries)
 # Welcome to the Time Series library
 
+[![Build status](https://travis-ci.org/carldata/timeseries.svg?branch=master)](https://travis-ci.org/carldata/timeseries)
+[![Maven Central](https://maven-badges.herokuapp.com/maven-central/io.github.carldata/timeseries_2.12/badge.svg)](https://maven-badges.herokuapp.com/maven-central/io.github.carldata/timeseries_2.12)
+
 Library for processing Time Series.
+
+
+## Quick start
+ 
+ Add the following dependency to the build.sbt
+ ```
+ libraryDependencies += "io.github.carldata" %% "timeseries" % "0.2.1"
+ ```
 
 
 # Features
@@ -24,12 +34,6 @@ Library for processing Time Series.
   * Anomaly detection
     * [ ] Outliers
 
-
-## Build
-
-```bash
-sbt test
-```
 
 
 # Join in!
