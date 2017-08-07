@@ -46,6 +46,13 @@ class TimeSeries[V: Numeric](idx: Vector[LocalDateTime], ds: Vector[V]) {
     } yield (i, v)
   }
 
+  def last: Option[(LocalDateTime, V)] = {
+    for {
+      i <- index.lastOption
+      v <- values.lastOption
+    } yield (i, v)
+  }
+
   def max: V = values.max
 
   def min: V = values.min

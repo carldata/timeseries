@@ -45,6 +45,17 @@ class TimeSeriesTest extends FlatSpec with Matchers {
     series.head shouldBe None
   }
 
+  it should "return last element of a Series" in {
+    val now = LocalDateTime.now()
+    val series = TimeSeries.fromColumns(Seq(now, now.plusMinutes(1), now.plusMinutes(2)), Seq(1, 2, 3, 4, 5.6))
+    series.last shouldBe Some((now.plusMinutes(2), 3))
+  }
+
+  it should "return None as last element for empty Series" in {
+    val series = TimeSeries.empty[Int]
+    series.last shouldBe None
+  }
+
   it should "return minimum value" in {
     val series: TimeSeries[Double] = TimeSeries.fromTimestamps(Seq((1, 1), (2, -3.4), (3, 5.6)))
     series.min shouldBe -3.4
