@@ -25,7 +25,7 @@ object TimeSeries {
   * TimeSeries contains data indexed by DateTime. The type of stored data
   * is parametric.
   */
-class TimeSeries[V: Numeric](idx: Vector[LocalDateTime], ds: Vector[V]) {
+case class TimeSeries[V: Numeric](idx: Vector[LocalDateTime], ds: Vector[V]) {
 
   def this(d: Seq[(LocalDateTime, V)]) = {
     this(d.map(_._1).toVector, d.map(_._2).toVector)
@@ -60,6 +60,12 @@ class TimeSeries[V: Numeric](idx: Vector[LocalDateTime], ds: Vector[V]) {
   /** Map by index and value. Create new values */
   def map(f: ((LocalDateTime, V)) => V): TimeSeries[V] = {
     val vs: Vector[V] = index.zip(values).map(f)
+    new TimeSeries(index, vs)
+  }
+
+  /** Map over values. */
+  def mapValues(f: V => V): TimeSeries[V] = {
+    val vs: Vector[V] = values.map(f)
     new TimeSeries(index, vs)
   }
 

@@ -65,6 +65,11 @@ class TimeSeriesTest extends FlatSpec with Matchers {
     series.map(x => x._2 + 2).max shouldBe 7.6
   }
 
+  it should "mapValues over its values" in {
+    val series: TimeSeries[Double] = TimeSeries.fromTimestamps(Seq((1, 1), (2, -3.4), (3, 5.6)))
+    series.mapValues(_ + 2).max shouldBe 7.6
+  }
+
   it should "fold values" in {
     val series: TimeSeries[Int] = TimeSeries.fromTimestamps(Seq((1, 1), (2, -3), (3, 6)))
     series.values.sum shouldBe 4
