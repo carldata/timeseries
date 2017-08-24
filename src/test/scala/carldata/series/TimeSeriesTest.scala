@@ -128,7 +128,9 @@ class TimeSeriesTest extends FlatSpec with Matchers {
     val series = TimeSeries(idx, Vector(1, 2, 3, 4, 5))
     val expected = TimeSeries(Vector(now, now.plusMinutes(1)), Vector(6, 9))
 
-    series.groupByMinute(xs => xs.sum) shouldBe expected
+    def g(t: LocalDateTime): LocalDateTime = t.withSecond(0)
+    def f(vs: Seq[Int]): Int = vs.sum
+    series.groupByTime(g, f) shouldBe expected
   }
 
 }

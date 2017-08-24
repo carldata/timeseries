@@ -102,9 +102,9 @@ case class TimeSeries[V: Numeric](idx: Vector[LocalDateTime], ds: Vector[V]) {
   }
 
   /** Aggregate date for each minute */
-  def groupByMinute(f: Seq[V] => V): TimeSeries[V] = {
-     val gs = index.zip(values)
-      .groupBy(x => x._1.withSecond(0))
+  def groupByTime(g: LocalDateTime => LocalDateTime, f: Seq[V] => V): TimeSeries[V] = {
+    val gs = index.zip(values)
+      .groupBy(x => g(x._1))
       .mapValues(xs => f(xs.map(_._2)))
       .toSeq
       .sortWith((x, y) => x._1.isBefore(y._1))
