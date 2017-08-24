@@ -21,8 +21,9 @@ Library for processing Time Series.
     * [x] Map, fold and filter
     * [x] Integration
     * [x] Differentiation
+    * [x] groupBy
     * [ ] Rolling window
-    * [ ] Resampling and groupBy
+    * [ ] Resampling 
   * Calculate statistics
     * [x] min, max
     * [x] mean, variance and standard deviation

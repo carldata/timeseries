@@ -20,7 +20,7 @@ object TimeSeries {
   * TimeSeries contains data indexed by DateTime. The type of stored data
   * is parametric.
   */
-case class TimeSeries[V: Numeric](idx: Vector[LocalDateTime], ds: Vector[V]) {
+case class TimeSeries[V: math.Numeric](idx: Vector[LocalDateTime], ds: Vector[V]) {
 
   def this(d: Seq[(LocalDateTime, V)]) = {
     this(d.map(_._1).toVector, d.map(_._2).toVector)
@@ -43,6 +43,7 @@ case class TimeSeries[V: Numeric](idx: Vector[LocalDateTime], ds: Vector[V]) {
     } yield (i, v)
   }
 
+  /** Get last element of the series */
   def last: Option[(LocalDateTime, V)] = {
     for {
       i <- index.lastOption
@@ -81,7 +82,7 @@ case class TimeSeries[V: Numeric](idx: Vector[LocalDateTime], ds: Vector[V]) {
     new TimeSeries(d)
   }
 
-  /** Retunr new series with difference between 2 points */
+  /** Return new series with difference between 2 points */
   def differentiate(implicit num: Numeric[V]): TimeSeries[V] = {
     if(isEmpty) {
       this
@@ -101,7 +102,7 @@ case class TimeSeries[V: Numeric](idx: Vector[LocalDateTime], ds: Vector[V]) {
     }
   }
 
-  /** Aggregate date for each minute */
+  /** Aggregate date by time */
   def groupByTime(g: LocalDateTime => LocalDateTime, f: Seq[V] => V): TimeSeries[V] = {
     val gs = index.zip(values)
       .groupBy(x => g(x._1))
