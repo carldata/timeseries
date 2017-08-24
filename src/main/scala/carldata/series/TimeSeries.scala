@@ -5,11 +5,6 @@ import java.time.{LocalDateTime, ZoneOffset}
 
 object TimeSeries {
 
-  /** Create TimeSeries from data in columns format */
-  def fromColumns[V: Numeric](index: Seq[LocalDateTime], values: Seq[V]): TimeSeries[V] = {
-    new TimeSeries(index.zip(values))
-  }
-
   /** Create TimeSeries from timestamps */
   def fromTimestamps[V: Numeric](rows: Seq[(Long, V)]): TimeSeries[V] = {
     new TimeSeries(rows.map(r => (LocalDateTime.ofEpochSecond(r._1, 0, ZoneOffset.UTC), r._2)))
@@ -35,6 +30,8 @@ case class TimeSeries[V: Numeric](idx: Vector[LocalDateTime], ds: Vector[V]) {
   val index: Vector[LocalDateTime] = idx.take(length)
   val values: Vector[V] = ds.take(length)
 
+  /** Check is series is empty */
+  def isEmpty: Boolean = index.isEmpty || values.isEmpty
 
   /** Safe get. If element is out of the bounds then 0 is returned */
   def get(i: Int)(implicit num: Numeric[V]): V = values.lift(i).getOrElse(num.zero)
@@ -84,8 +81,9 @@ case class TimeSeries[V: Numeric](idx: Vector[LocalDateTime], ds: Vector[V]) {
     new TimeSeries(d)
   }
 
+  /** Retunr new series with difference between 2 points */
   def differentiate(implicit num: Numeric[V]): TimeSeries[V] = {
-    if(index.isEmpty || values.isEmpty) {
+    if(isEmpty) {
       this
     } else {
       val vs: Vector[V] = values.zip(values.tail).map(x => num.minus(x._2, x._1))
@@ -93,13 +91,25 @@ case class TimeSeries[V: Numeric](idx: Vector[LocalDateTime], ds: Vector[V]) {
     }
   }
 
+  /** Accumulate sum for each point */
   def integrate(implicit num: Numeric[V]): TimeSeries[V] = {
-    if(index.isEmpty || values.isEmpty) {
+    if(isEmpty) {
       this
     } else {
       val vs: Vector[V] = values.zip(values.tail).map(x => num.plus(x._1, x._2))
       new TimeSeries(index.tail, vs)(num)
     }
+  }
+
+  /** Aggregate date for each minute */
+  def groupByMinute(f: Seq[V] => V): TimeSeries[V] = {
+     val gs = index.zip(values)
+      .groupBy(x => x._1.withSecond(0))
+      .mapValues(xs => f(xs.map(_._2)))
+      .toSeq
+      .sortWith((x, y) => x._1.isBefore(y._1))
+
+    new TimeSeries(gs)
   }
 }
 

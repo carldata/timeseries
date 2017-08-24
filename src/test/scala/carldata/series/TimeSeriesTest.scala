@@ -15,7 +15,7 @@ class TimeSeriesTest extends FlatSpec with Matchers {
 
   it should "be build from the rows" in {
     val now = LocalDateTime.now()
-    val series = TimeSeries.fromColumns(Seq(now, now.plusMinutes(1), now.plusMinutes(2)), Seq(1, 2, 3, 4, 5.6))
+    val series = TimeSeries(Vector(now, now.plusMinutes(1), now.plusMinutes(2)), Vector(1, 2, 3, 4, 5.6))
     series.length shouldBe 3
   }
 
@@ -36,7 +36,7 @@ class TimeSeriesTest extends FlatSpec with Matchers {
 
   it should "return first element of a Series" in {
     val now = LocalDateTime.now()
-    val series = TimeSeries.fromColumns(Seq(now, now.plusMinutes(1), now.plusMinutes(2)), Seq(1, 2, 3, 4, 5.6))
+    val series = TimeSeries(Vector(now, now.plusMinutes(1), now.plusMinutes(2)), Vector(1, 2, 3, 4, 5.6))
     series.head shouldBe Some((now, 1))
   }
 
@@ -47,7 +47,7 @@ class TimeSeriesTest extends FlatSpec with Matchers {
 
   it should "return last element of a Series" in {
     val now = LocalDateTime.now()
-    val series = TimeSeries.fromColumns(Seq(now, now.plusMinutes(1), now.plusMinutes(2)), Seq(1, 2, 3, 4, 5.6))
+    val series = TimeSeries(Vector(now, now.plusMinutes(1), now.plusMinutes(2)), Vector(1, 2, 3, 4, 5.6))
     series.last shouldBe Some((now.plusMinutes(2), 3))
   }
 
@@ -121,4 +121,14 @@ class TimeSeriesTest extends FlatSpec with Matchers {
     series.sum shouldBe 0
     series.differentiate.values shouldBe series.values
   }
+
+  it should "group by minute" in {
+    val now = LocalDateTime.parse("2015-01-01T00:00:00")
+    val idx = Vector(now, now.plusSeconds(34), now.plusSeconds(44), now.plusSeconds(65), now.plusSeconds(74))
+    val series = TimeSeries(idx, Vector(1, 2, 3, 4, 5))
+    val expected = TimeSeries(Vector(now, now.plusMinutes(1)), Vector(6, 9))
+
+    series.groupByMinute(xs => xs.sum) shouldBe expected
+  }
+
 }
