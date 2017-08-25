@@ -112,16 +112,12 @@ case class TimeSeries[V: math.Numeric](idx: Vector[LocalDateTime], ds: Vector[V]
 
     new TimeSeries(gs)
   }
-
-  def rollingWindow(windowSize: Duration, stepSize: Duration, f: Seq[V] => V): TimeSeries[V] = {
-    val rs = Iterator.iterate(index.head)(_.plus(stepSize))
-      .takeWhile(x => x.isBefore(index.last)).toSeq
-      .map { s => {
-        val first = index.zip(values).minBy(x => x._1.isBefore(s) || x._1.isEqual(s))
-        val window = slice(first._1, first._1.plus(windowSize))
-        (window.index.last, f(window.values))
-      }
-      }
+  /** Rolling window operation */
+  def rollingWindow(windowSize: Duration, f: Seq[V] => V): TimeSeries[V] = {
+    val rs = index.map { t =>
+      val window = slice(t.minus(windowSize), t.plusNanos(1))
+      (t, f(window.values))
+    }
 
     new TimeSeries(rs)
   }

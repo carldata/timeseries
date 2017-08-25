@@ -133,16 +133,14 @@ class TimeSeriesTest extends FlatSpec with Matchers {
     series.groupByTime(g, f) shouldBe expected
   }
 
-  it should "find sum in rolling windows oparation" in {
+  it should "find sum in rolling windows operation" in {
     val now = LocalDateTime.parse("2015-01-01T00:00:00")
-    val idx = Vector(now, now.plusMinutes(5), now.plusMinutes(35), now.plusMinutes(55), now.plusMinutes(80))
+    val idx = Vector(now, now.plusMinutes(10), now.plusMinutes(30), now.plusMinutes(50), now.plusMinutes(80))
     val series = TimeSeries(idx, Vector(1, 2, 3, 4, 5))
-    val expected = TimeSeries(Vector(now.plusMinutes(55), now.plusMinutes(80), now.plusMinutes(80)), Vector(9,12,5))
-    val step = Duration.ofMinutes(30)
+    val expected = TimeSeries(idx, Vector(1,3,6,10,12))
     val window = Duration.ofHours(1)
 
-    def f(vs: Seq[Int]): Int = vs.sum
-    series.rollingWindow(window, step, f) shouldBe expected
+    series.rollingWindow(window, _.sum) shouldBe expected
   }
 
 }
