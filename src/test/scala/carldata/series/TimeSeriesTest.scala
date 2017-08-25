@@ -1,6 +1,6 @@
 package carldata.series
 
-import java.time.{LocalDateTime, ZoneOffset}
+import java.time.{Duration, LocalDateTime, ZoneOffset}
 
 import org.scalatest._
 
@@ -129,6 +129,16 @@ class TimeSeriesTest extends FlatSpec with Matchers {
     val expected = TimeSeries(Vector(now, now.plusMinutes(1)), Vector(6, 9))
 
     series.groupByTime(_.withSecond(0), _.sum) shouldBe expected
+  }
+
+  it should "find sum in rolling windows operation" in {
+    val now = LocalDateTime.parse("2015-01-01T00:00:00")
+    val idx = Vector(now, now.plusMinutes(10), now.plusMinutes(30), now.plusMinutes(50), now.plusMinutes(80))
+    val series = TimeSeries(idx, Vector(1, 2, 3, 4, 5))
+    val expected = TimeSeries(idx, Vector(1,3,6,10,12))
+    val window = Duration.ofHours(1)
+
+    series.rollingWindow(window, _.sum) shouldBe expected
   }
 
 }
