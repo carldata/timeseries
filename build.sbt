@@ -6,7 +6,10 @@ version := "0.2.1"
 
 scalaVersion := "2.12.3"
 
-libraryDependencies += "org.scalatest" %% "scalatest" % "3.0.1" % "test"
+libraryDependencies ++= Seq(
+  "com.storm-enroute" %% "scalameter-core" % "0.8.2" % "test",
+  "org.scalatest" %% "scalatest" % "3.0.1" % "test"
+)
 
 publishTo := {
   val nexus = "https://oss.sonatype.org/"
