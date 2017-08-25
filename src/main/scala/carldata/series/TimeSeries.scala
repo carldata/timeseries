@@ -116,10 +116,10 @@ case class TimeSeries[V: math.Numeric](idx: Vector[LocalDateTime], ds: Vector[V]
   def rollingWindow(windowSize: Duration, f: Seq[V] => V): TimeSeries[V] = {
     val rs = index.map { t =>
       val window = slice(t.minus(windowSize), t.plusNanos(1))
-      (t, f(window.values))
+      f(window.values)
     }
 
-    new TimeSeries(rs)
+    new TimeSeries(index, rs)
   }
 }
 
