@@ -1,6 +1,6 @@
 package carldata.series
 
-import java.time.{LocalDateTime, ZoneOffset}
+import java.time.{Duration, LocalDateTime, ZoneOffset}
 
 
 object TimeSeries {
@@ -84,7 +84,7 @@ case class TimeSeries[V: math.Numeric](idx: Vector[LocalDateTime], ds: Vector[V]
 
   /** Return new series with difference between 2 points */
   def differentiate(implicit num: Numeric[V]): TimeSeries[V] = {
-    if(isEmpty) {
+    if (isEmpty) {
       this
     } else {
       val vs: Vector[V] = values.zip(values.tail).map(x => num.minus(x._2, x._1))
@@ -94,7 +94,7 @@ case class TimeSeries[V: math.Numeric](idx: Vector[LocalDateTime], ds: Vector[V]
 
   /** Accumulate sum for each point */
   def integrate(implicit num: Numeric[V]): TimeSeries[V] = {
-    if(isEmpty) {
+    if (isEmpty) {
       this
     } else {
       val vs: Vector[V] = values.zip(values.tail).map(x => num.plus(x._1, x._2))
@@ -111,6 +111,19 @@ case class TimeSeries[V: math.Numeric](idx: Vector[LocalDateTime], ds: Vector[V]
       .sortWith((x, y) => x._1.isBefore(y._1))
 
     new TimeSeries(gs)
+  }
+
+  def rollingWindow(windowSize: Duration, stepSize: Duration, f: Seq[V] => V): TimeSeries[V] = {
+    val rs = Iterator.iterate(index.head)(_.plus(stepSize))
+      .takeWhile(x => x.isBefore(index.last)).toSeq
+      .map { s => {
+        val first = index.zip(values).minBy(x => x._1.isBefore(s) || x._1.isEqual(s))
+        val window = slice(first._1, first._1.plus(windowSize))
+        (window.index.last, f(window.values))
+      }
+      }
+
+    new TimeSeries(rs)
   }
 }
 
