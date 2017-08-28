@@ -13,6 +13,10 @@ Library for processing Time Series.
  libraryDependencies += "io.github.carldata" %% "timeseries" % "0.2.1"
  ```
 
+Running benchmarks
+```bash
+sbt -mem 4000 run
+```
 
 # Features
 
@@ -22,7 +26,7 @@ Library for processing Time Series.
     * [x] Integration
     * [x] Differentiation
     * [x] groupBy
-    * [ ] Rolling window
+    * [x] Rolling window
     * [ ] Resampling 
   * Calculate statistics
     * [x] min, max

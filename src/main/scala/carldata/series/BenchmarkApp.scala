@@ -42,6 +42,8 @@ object BenchmarkApp{
 
   }
 
+  private val intFormatter = java.text.NumberFormat.getIntegerInstance
+
   /** Run several tests anr report result */
   def measure(size: Int, f: TimeSeries[Float] => Unit): Unit = {
     val xs = 1.to(size).toVector
@@ -50,7 +52,8 @@ object BenchmarkApp{
       f(ts)
     }
 
-    println(s"$size points: $time.")
+    val sizeFormatted = intFormatter.format(size)
+    println(s"$sizeFormatted points: $time.")
   }
 
 

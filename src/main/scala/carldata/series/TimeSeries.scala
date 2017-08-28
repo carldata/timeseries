@@ -3,6 +3,8 @@ package carldata.series
 import java.time.{Duration, LocalDateTime, ZoneOffset}
 
 import scala.annotation.tailrec
+import scala.collection.{immutable, mutable}
+import scala.collection.mutable.{ArrayBuffer, Builder, ListBuffer}
 
 
 object TimeSeries {
@@ -105,30 +107,20 @@ case class TimeSeries[V: math.Numeric](idx: Vector[LocalDateTime], ds: Vector[V]
   }
 
   /** Aggregate date by time */
-//  def groupByTime(g: LocalDateTime => LocalDateTime, f: Seq[V] => V): TimeSeries[V] = {
-//
-//    @tailrec def groupR(xs: List[(LocalDateTime, V)]): List[(LocalDateTime, V)] = {
-//      if(xs.isEmpty) xs
-//      else{
-//        val h = g(xs.head._1)
-//        val (ys1, ys2) = xs.partition( p => g(p._1).isEqual(h))
-//        (h, f(ys1.map(_._2))) :: groupR(ys2)
-//      }
-//    }
-//
-//    val gs = groupR(index.zip(values))
-//    new TimeSeries(gs)
-//  }
-
   def groupByTime(g: LocalDateTime => LocalDateTime, f: Seq[V] => V): TimeSeries[V] = {
-    val gs = index.zip(values)
-      .groupBy(x => g(x._1))
-      .mapValues(xs => f(xs.map(_._2)))
-      .toSeq
-      .sortWith((x, y) => x._1.isBefore(y._1))
-
-    new TimeSeries(gs)
+    if(isEmpty) this
+    else {
+      val xs = mutable.ListBuffer[(LocalDateTime, ArrayBuffer[V])]((g(index.head), mutable.ArrayBuffer()))
+      for ((k,v) <- index.zip(values)) {
+        val last = xs.last
+        val t = g(k)
+        if(last._1.isEqual(t)) last._2 += v
+        else xs += ((t, ArrayBuffer(v)))
+      }
+      TimeSeries(xs.map(_._1).toVector, xs.map(x => f(x._2)).toVector)
+    }
   }
+
   /** Rolling window operation */
   def rollingWindow(windowSize: Duration, f: Seq[V] => V): TimeSeries[V] = {
     val rs = index.map { t =>
