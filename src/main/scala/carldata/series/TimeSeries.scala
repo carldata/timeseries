@@ -2,9 +2,8 @@ package carldata.series
 
 import java.time.{Duration, LocalDateTime, ZoneOffset}
 
-import scala.annotation.tailrec
-import scala.collection.{immutable, mutable}
-import scala.collection.mutable.{ArrayBuffer, Builder, ListBuffer}
+import scala.collection.mutable
+import scala.collection.mutable.ArrayBuffer
 
 
 object TimeSeries {
