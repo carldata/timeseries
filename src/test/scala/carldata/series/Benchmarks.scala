@@ -31,7 +31,7 @@ class Benchmarks extends FlatSpec with Matchers {
     println(s"map over $size points: $time.")
   }
 
-  /** group by */
+  /** Group by time. 100x slower then map. */
   def measureGroupByTime(size: Int): Unit = {
     val xs = 1.to(size).toVector
     val ts = TimeSeries.fromTimestamps(xs.map(x => (x.toLong * 1000, x.toFloat)))

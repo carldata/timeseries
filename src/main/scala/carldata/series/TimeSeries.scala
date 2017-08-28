@@ -2,6 +2,8 @@ package carldata.series
 
 import java.time.{LocalDateTime, ZoneOffset}
 
+import scala.annotation.tailrec
+
 
 object TimeSeries {
 
@@ -103,6 +105,21 @@ case class TimeSeries[V: math.Numeric](idx: Vector[LocalDateTime], ds: Vector[V]
   }
 
   /** Aggregate date by time */
+//  def groupByTime(g: LocalDateTime => LocalDateTime, f: Seq[V] => V): TimeSeries[V] = {
+//
+//    @tailrec def groupR(xs: List[(LocalDateTime, V)]): List[(LocalDateTime, V)] = {
+//      if(xs.isEmpty) xs
+//      else{
+//        val h = g(xs.head._1)
+//        val (ys1, ys2) = xs.partition( p => g(p._1).isEqual(h))
+//        (h, f(ys1.map(_._2))) :: groupR(ys2)
+//      }
+//    }
+//
+//    val gs = groupR(index.zip(values))
+//    new TimeSeries(gs)
+//  }
+
   def groupByTime(g: LocalDateTime => LocalDateTime, f: Seq[V] => V): TimeSeries[V] = {
     val gs = index.zip(values)
       .groupBy(x => g(x._1))
@@ -112,5 +129,6 @@ case class TimeSeries[V: math.Numeric](idx: Vector[LocalDateTime], ds: Vector[V]
 
     new TimeSeries(gs)
   }
+
 }
 
