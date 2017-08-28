@@ -1,6 +1,6 @@
 package carldata.series
 
-import java.time.{LocalDateTime, ZoneOffset}
+import java.time.{Duration, LocalDateTime, ZoneOffset}
 
 import scala.annotation.tailrec
 
@@ -129,6 +129,14 @@ case class TimeSeries[V: math.Numeric](idx: Vector[LocalDateTime], ds: Vector[V]
 
     new TimeSeries(gs)
   }
+  /** Rolling window operation */
+  def rollingWindow(windowSize: Duration, f: Seq[V] => V): TimeSeries[V] = {
+    val rs = index.map { t =>
+      val window = slice(t.minus(windowSize), t.plusNanos(1))
+      f(window.values)
+    }
 
+    new TimeSeries(index, rs)
+  }
 }
 
