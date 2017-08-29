@@ -14,6 +14,34 @@ object TimeSeries {
   def empty[V: Numeric]: TimeSeries[V] = {
     new TimeSeries[V](Seq[(LocalDateTime, V)]())
   }
+
+  def resample[V: Fractional](ts: TimeSeries[V], delta: Duration)(implicit num: Fractional[V]): TimeSeries[V] = {
+    def internal_resample(inputTs: TimeSeries[V], partial: TimeSeries[V]): TimeSeries[V] = {
+      inputTs.head match {
+        case Some(x) =>
+          val ts = new TimeSeries(inputTs.index.tail, inputTs.values.tail)(num)
+          val y = partial.last.get
+          val nidx = y._1.plus(delta)
+          val tx = num.fromInt(Duration.between(nidx, x._1).toMillis.toInt)
+          val ty = num.fromInt(Duration.between(y._1, nidx).toMillis.toInt)
+
+          val mu = num.plus(num.times(num.div(ty, num.plus(tx, ty)), x._2), num.times(num.div(tx, num.plus(tx, ty)), y._2))
+          val out = if (nidx.isBefore(x._1)) internal_resample(inputTs, new TimeSeries(partial.index :+ nidx, partial.values :+ mu)(num))
+          else if (nidx.isEqual(x._1)) internal_resample(ts, new TimeSeries(partial.index :+ x._1, partial.values :+ x._2)(num))
+          else internal_resample(ts, partial)
+          out
+        case _ => {
+          partial
+        }
+      }
+
+    }
+
+    val res = internal_resample(new TimeSeries(ts.index, ts.values)(num), new TimeSeries(Vector(ts.index.head), Vector(ts.values.head))(num))
+    new TimeSeries(res.index, res.values)(num)
+  }
+
+
 }
 
 /**
