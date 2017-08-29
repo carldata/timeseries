@@ -17,6 +17,8 @@ object BenchmarkApp{
   def measureGroupBy(ts: TimeSeries[Float]): Unit = ts.groupByTime(_.withSecond(0), _.sum)
   /** Rolling window */
   def measureRollingWindow(ts: TimeSeries[Float]): Unit = ts.rollingWindow(Duration.ofMinutes(1), _.sum)
+  /** Resample */
+  def measureResample(ts: TimeSeries[Float]): Unit =  TimeSeries.resample(ts, Duration.ofMinutes(1))
 
 
   /** Run benchmarks */
@@ -39,6 +41,12 @@ object BenchmarkApp{
     measure(size100K/100, measureRollingWindow)
     measure(size500K/100, measureRollingWindow)
     measure(size1M/100, measureRollingWindow)
+
+    println("\n4. Measure: resample")
+    measure(20, measureResample)
+    measure(size100K/100, measureResample)
+    measure(size500K/100, measureResample)
+    measure(size1M/100, measureResample)
 
   }
 
