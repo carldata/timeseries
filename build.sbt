@@ -2,12 +2,12 @@ name := "timeseries"
 
 organization := "io.github.carldata"
 
-version := "0.2.1"
+version := "0.2.2"
 
 scalaVersion := "2.12.3"
 
 libraryDependencies ++= Seq(
-  "com.storm-enroute" %% "scalameter-core" % "0.8.2" % "test",
+  "com.storm-enroute" %% "scalameter-core" % "0.8.2",
   "org.scalatest" %% "scalatest" % "3.0.1" % "test"
 )
 

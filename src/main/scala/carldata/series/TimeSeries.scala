@@ -2,6 +2,9 @@ package carldata.series
 
 import java.time.{Duration, LocalDateTime, ZoneOffset}
 
+import scala.collection.mutable
+import scala.collection.mutable.ArrayBuffer
+
 
 object TimeSeries {
 
@@ -112,7 +115,7 @@ case class TimeSeries[V: math.Numeric](idx: Vector[LocalDateTime], ds: Vector[V]
 
   /** Return new series with difference between 2 points */
   def differentiate(implicit num: Numeric[V]): TimeSeries[V] = {
-    if (isEmpty) {
+    if(isEmpty) {
       this
     } else {
       val vs: Vector[V] = values.zip(values.tail).map(x => num.minus(x._2, x._1))
@@ -122,7 +125,7 @@ case class TimeSeries[V: math.Numeric](idx: Vector[LocalDateTime], ds: Vector[V]
 
   /** Accumulate sum for each point */
   def integrate(implicit num: Numeric[V]): TimeSeries[V] = {
-    if (isEmpty) {
+    if(isEmpty) {
       this
     } else {
       val vs: Vector[V] = values.zip(values.tail).map(x => num.plus(x._1, x._2))
@@ -132,14 +135,19 @@ case class TimeSeries[V: math.Numeric](idx: Vector[LocalDateTime], ds: Vector[V]
 
   /** Aggregate date by time */
   def groupByTime(g: LocalDateTime => LocalDateTime, f: Seq[V] => V): TimeSeries[V] = {
-    val gs = index.zip(values)
-      .groupBy(x => g(x._1))
-      .mapValues(xs => f(xs.map(_._2)))
-      .toSeq
-      .sortWith((x, y) => x._1.isBefore(y._1))
-
-    new TimeSeries(gs)
+    if(isEmpty) this
+    else {
+      val xs = mutable.ListBuffer[(LocalDateTime, ArrayBuffer[V])]((g(index.head), mutable.ArrayBuffer()))
+      for ((k,v) <- index.zip(values)) {
+        val last = xs.last
+        val t = g(k)
+        if(last._1.isEqual(t)) last._2 += v
+        else xs += ((t, ArrayBuffer(v)))
+      }
+      TimeSeries(xs.map(_._1).toVector, xs.map(x => f(x._2)).toVector)
+    }
   }
+
   /** Rolling window operation */
   def rollingWindow(windowSize: Duration, f: Seq[V] => V): TimeSeries[V] = {
     val rs = index.map { t =>
