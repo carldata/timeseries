@@ -2,8 +2,7 @@ package carldata.series
 
 import java.time.{Duration, LocalDateTime, ZoneOffset}
 
-import scala.collection.mutable
-import scala.collection.mutable.ArrayBuffer
+import scala.collection.mutable.{ArrayBuffer, ListBuffer}
 
 
 object TimeSeries {
@@ -87,7 +86,7 @@ case class TimeSeries[V: math.Numeric](idx: Vector[LocalDateTime], ds: Vector[V]
 
   /** Return new series with difference between 2 points */
   def differentiate(implicit num: Numeric[V]): TimeSeries[V] = {
-    if(isEmpty) {
+    if (isEmpty) {
       this
     } else {
       val vs: Vector[V] = values.zip(values.tail).map(x => num.minus(x._2, x._1))
@@ -97,7 +96,7 @@ case class TimeSeries[V: math.Numeric](idx: Vector[LocalDateTime], ds: Vector[V]
 
   /** Accumulate sum for each point */
   def integrate(implicit num: Numeric[V]): TimeSeries[V] = {
-    if(isEmpty) {
+    if (isEmpty) {
       this
     } else {
       val vs: Vector[V] = values.zip(values.tail).map(x => num.plus(x._1, x._2))
@@ -105,15 +104,40 @@ case class TimeSeries[V: math.Numeric](idx: Vector[LocalDateTime], ds: Vector[V]
     }
   }
 
+  /**
+    * Integrate series for selected window.
+    * Windows are not overlapping and sum starts at 0 at the beginning of each window
+    */
+  def integrateByTime(windowSize: Duration)(implicit num: Numeric[V]): TimeSeries[V] = {
+    if (isEmpty) this
+    else {
+      val end = index.head.plus(windowSize)
+      // This buffer could be used inside foldLeft, but idea will show wrong errors in += operation then
+      val xs = ArrayBuffer.empty[V]
+      index.zip(values).foldLeft[(V, LocalDateTime)]((num.zero, end)) { (acc, x) =>
+        if (x._1.isBefore(acc._2)) {
+          val v = num.plus(acc._1, x._2)
+          xs += v
+          (v, acc._2)
+        } else {
+          xs += x._2
+          (x._2, acc._2.plus(windowSize))
+        }
+      }
+
+      TimeSeries(index, xs.toVector)(num)
+    }
+  }
+
   /** Aggregate date by time */
   def groupByTime(g: LocalDateTime => LocalDateTime, f: Seq[V] => V): TimeSeries[V] = {
-    if(isEmpty) this
+    if (isEmpty) this
     else {
-      val xs = mutable.ListBuffer[(LocalDateTime, ArrayBuffer[V])]((g(index.head), mutable.ArrayBuffer()))
-      for ((k,v) <- index.zip(values)) {
+      val xs = ListBuffer[(LocalDateTime, ArrayBuffer[V])]((g(index.head), ArrayBuffer()))
+      for ((k, v) <- index.zip(values)) {
         val last = xs.last
         val t = g(k)
-        if(last._1.isEqual(t)) last._2 += v
+        if (last._1.isEqual(t)) last._2 += v
         else xs += ((t, ArrayBuffer(v)))
       }
       TimeSeries(xs.map(_._1).toVector, xs.map(x => f(x._2)).toVector)

@@ -7,6 +7,7 @@ version := "0.2.2"
 scalaVersion := "2.12.3"
 
 libraryDependencies ++= Seq(
+  "ch.qos.logback" % "logback-classic" % "1.2.3" % Runtime,
   "com.storm-enroute" %% "scalameter-core" % "0.8.2",
   "org.scalatest" %% "scalatest" % "3.0.1" % "test"
 )

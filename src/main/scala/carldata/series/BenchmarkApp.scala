@@ -17,6 +17,8 @@ object BenchmarkApp{
   def measureGroupBy(ts: TimeSeries[Float]): Unit = ts.groupByTime(_.withSecond(0), _.sum)
   /** Rolling window */
   def measureRollingWindow(ts: TimeSeries[Float]): Unit = ts.rollingWindow(Duration.ofMinutes(1), _.sum)
+  /** Rolling window */
+  def measureIntegrateByTime(ts: TimeSeries[Float]): Unit = ts.integrateByTime(Duration.ofMinutes(1))
 
 
   /** Run benchmarks */
@@ -40,6 +42,10 @@ object BenchmarkApp{
     measure(size500K/100, measureRollingWindow)
     measure(size1M/100, measureRollingWindow)
 
+    println("\n4. Measure: integrateByTime")
+    measure(size1M, measureIntegrateByTime)
+
+    println()
   }
 
   private val intFormatter = java.text.NumberFormat.getIntegerInstance
