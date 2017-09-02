@@ -3,7 +3,7 @@ package carldata.series
 import java.time.{Duration, LocalDateTime, ZoneOffset}
 
 import scala.collection.mutable
-import scala.collection.mutable.ArrayBuffer
+import scala.collection.mutable.{ArrayBuffer, ListBuffer}
 
 
 object TimeSeries {
@@ -18,32 +18,37 @@ object TimeSeries {
     new TimeSeries[V](Seq[(LocalDateTime, V)]())
   }
 
-  def resample[V: Fractional](ts: TimeSeries[V], delta: Duration)(implicit num: Fractional[V]): TimeSeries[V] = {
-    def internal_resample(inputTs: TimeSeries[V], partial: TimeSeries[V]): TimeSeries[V] = {
-      inputTs.head match {
-        case Some(x) =>
-          val ts = new TimeSeries(inputTs.index.tail, inputTs.values.tail)(num)
-          val y = partial.last.get
-          val nidx = y._1.plus(delta)
-          val tx = num.fromInt(Duration.between(nidx, x._1).toMillis.toInt)
-          val ty = num.fromInt(Duration.between(y._1, nidx).toMillis.toInt)
+  /**
+    * Resample given TimeSeries with indexes separated by delta
+    */
+  def resample[V: Fractional](xs: TimeSeries[V], delta: Duration)(implicit num: Fractional[V]): TimeSeries[V] = {
+    val ys: mutable.ListBuffer[V] = ListBuffer()
+    val ts = Iterator.iterate(xs.index.head)(_.plusNanos(delta.toNanos))
+      .takeWhile(_.isBefore(xs.index.last.plusNanos(1))).toVector
 
-          val mu = num.plus(num.times(num.div(ty, num.plus(tx, ty)), x._2), num.times(num.div(tx, num.plus(tx, ty)), y._2))
-          val out = if (nidx.isBefore(x._1)) internal_resample(inputTs, new TimeSeries(partial.index :+ nidx, partial.values :+ mu)(num))
-          else if (nidx.isEqual(x._1)) internal_resample(ts, new TimeSeries(partial.index :+ x._1, partial.values :+ x._2)(num))
-          else internal_resample(ts, partial)
-          out
-        case _ => {
-          partial
-        }
+    def g(ts: Vector[LocalDateTime], xs: Vector[LocalDateTime], vs: Vector[V], prev: V): TimeSeries[V] = {
+      val tsh = ts.head
+      val xsh = xs.head
+      if (xsh.isEqual(tsh)) {
+        ys.append(vs.head)
+        if (ts.size == 1) TimeSeries(ts, ys.toVector)(num) else g(ts.tail, xs.tail, vs.tail, vs.head)
       }
-
+      else if (tsh.isBefore(xsh)) {
+        val ysh = if (ts.size != 1) ts.tail.head else xsh
+        val tx = num.fromInt(Duration.between(tsh, xsh).toMillis.toInt)
+        val ty = num.fromInt(Duration.between(tsh, ysh).toMillis.toInt)
+        val mu = num.plus(num.times(num.div(ty, num.plus(tx, ty)), vs.head), num.times(num.div(tx, num.plus(tx, ty)), prev))
+        ys.append(mu)
+        if (ts.size == 1) TimeSeries(ts, ys.toVector)(num) else g(ts.tail, xs, vs, mu)
+      }
+      else {
+        g(ts, xs.tail, vs.tail, vs.head)
+      }
     }
 
-    val res = internal_resample(new TimeSeries(ts.index, ts.values)(num), new TimeSeries(Vector(ts.index.head), Vector(ts.values.head))(num))
-    new TimeSeries(res.index, res.values)(num)
+    g(ts, xs.index, xs.values, num.fromInt(0))
+    TimeSeries(ts, ys.toVector)(num)
   }
-
 
 }
 
@@ -115,7 +120,7 @@ case class TimeSeries[V: math.Numeric](idx: Vector[LocalDateTime], ds: Vector[V]
 
   /** Return new series with difference between 2 points */
   def differentiate(implicit num: Numeric[V]): TimeSeries[V] = {
-    if(isEmpty) {
+    if (isEmpty) {
       this
     } else {
       val vs: Vector[V] = values.zip(values.tail).map(x => num.minus(x._2, x._1))
@@ -125,7 +130,7 @@ case class TimeSeries[V: math.Numeric](idx: Vector[LocalDateTime], ds: Vector[V]
 
   /** Accumulate sum for each point */
   def integrate(implicit num: Numeric[V]): TimeSeries[V] = {
-    if(isEmpty) {
+    if (isEmpty) {
       this
     } else {
       val vs: Vector[V] = values.zip(values.tail).map(x => num.plus(x._1, x._2))
@@ -135,13 +140,13 @@ case class TimeSeries[V: math.Numeric](idx: Vector[LocalDateTime], ds: Vector[V]
 
   /** Aggregate date by time */
   def groupByTime(g: LocalDateTime => LocalDateTime, f: Seq[V] => V): TimeSeries[V] = {
-    if(isEmpty) this
+    if (isEmpty) this
     else {
       val xs = mutable.ListBuffer[(LocalDateTime, ArrayBuffer[V])]((g(index.head), mutable.ArrayBuffer()))
-      for ((k,v) <- index.zip(values)) {
+      for ((k, v) <- index.zip(values)) {
         val last = xs.last
         val t = g(k)
-        if(last._1.isEqual(t)) last._2 += v
+        if (last._1.isEqual(t)) last._2 += v
         else xs += ((t, ArrayBuffer(v)))
       }
       TimeSeries(xs.map(_._1).toVector, xs.map(x => f(x._2)).toVector)
