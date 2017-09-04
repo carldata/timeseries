@@ -42,7 +42,7 @@ object BenchmarkApp{
     println("\n3. Measure: rollingWindow")
     measure(size100K/100, measureRollingWindow)
     measure(size500K/100, measureRollingWindow)
-//    measure(size1M/100, measureRollingWindow)
+    measure(size1M/100, measureRollingWindow)
 
     println("\n4. Measure: resample")
     measure(size100K, measureResample)
