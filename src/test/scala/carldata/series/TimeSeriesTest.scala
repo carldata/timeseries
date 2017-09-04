@@ -9,7 +9,7 @@ class TimeSeriesTest extends FlatSpec with Matchers {
 
   "TimeSeries" should "have length equal to its index" in {
     val now = LocalDateTime.now()
-    val series = new TimeSeries(Seq((now,1), (now.plusMinutes(1), 2), (now.plusMinutes(2), 3)))
+    val series = new TimeSeries(Seq((now, 1), (now.plusMinutes(1), 2), (now.plusMinutes(2), 3)))
     series.length shouldBe 3
   }
 
@@ -145,10 +145,52 @@ class TimeSeriesTest extends FlatSpec with Matchers {
     val now = LocalDateTime.parse("2015-01-01T00:00:00")
     val idx = Vector(now, now.plusMinutes(10), now.plusMinutes(30), now.plusMinutes(50), now.plusMinutes(80))
     val series = TimeSeries(idx, Vector(1, 2, 3, 4, 5))
-    val expected = TimeSeries(idx, Vector(1,3,6,10,12))
+    val expected = TimeSeries(idx, Vector(1, 3, 6, 10, 12))
     val window = Duration.ofHours(1)
 
     series.rollingWindow(window, _.sum) shouldBe expected
   }
+
+  it should "resample: don't change series without missing values" in {
+    val now = LocalDateTime.parse("2015-01-01T00:00:00")
+    val idx = Vector(now, now.plusMinutes(10), now.plusMinutes(20), now.plusMinutes(30), now.plusMinutes(40))
+    val series = TimeSeries(idx, Vector(1f, 2f, 3f, 4f, 5f))
+    val expected = TimeSeries(idx, Vector(1f, 2f, 3f, 4f, 5f))
+
+    TimeSeries.resample(series,Duration.ofMinutes(10)) shouldBe expected
+  }
+
+  it should "resample: missing values" in {
+    val now = LocalDateTime.parse("2015-01-01T00:00:00")
+    val idx = Vector(now.plusMinutes(1), now.plusMinutes(2), now.plusMinutes(3), now.plusMinutes(5))
+    val series = TimeSeries(idx, Vector(1f, 2f, 3f, 5f))
+    val expected = TimeSeries(Vector(now.plusMinutes(1), now.plusMinutes(2), now.plusMinutes(3), now.plusMinutes(4), now.plusMinutes(5)), Vector(1f, 2f, 3f, 4f, 5f))
+
+    TimeSeries.resample(series,Duration.ofMinutes(1)) shouldBe expected
+  }
+
+  it should "resample: missing lots of values" in {
+    val now = LocalDateTime.parse("2015-01-01T00:00:00")
+    val idx = Vector(now.plusMinutes(1), now.plusMinutes(5))
+    val series = TimeSeries(idx, Vector(1f, 5f))
+    val expected = TimeSeries(Vector(now.plusMinutes(1), now.plusMinutes(2), now.plusMinutes(3), now.plusMinutes(4), now.plusMinutes(5)), Vector(1f, 2f, 3f, 4f, 5f))
+
+    TimeSeries.resample(series,Duration.ofMinutes(1)) shouldBe expected
+  }
+
+  it should "resample: middle values" in {
+    val now = LocalDateTime.parse("2015-01-01T00:00:00")
+    val idx = Vector(now.plusMinutes(1), now.plusMinutes(4), now.plusMinutes(6))
+    val series = TimeSeries(idx, Vector(1f, 4f, 6f))
+    val expected = TimeSeries(Vector(now.plusMinutes(1), now.plusMinutes(3), now.plusMinutes(5)), Vector(1f, 3f, 5f))
+
+    TimeSeries.resample(series,Duration.ofMinutes(2)) shouldBe expected
+  }
+
+  it should "resample: empty series" in {
+    val emptySeries = TimeSeries.empty[Float]
+    TimeSeries.resample(emptySeries, Duration.ofMinutes(2)) shouldBe emptySeries
+  }
+
 
 }
