@@ -2,6 +2,7 @@ package carldata.series
 
 import java.time.{Duration, LocalDateTime, ZoneOffset}
 
+import scala.annotation.tailrec
 import scala.collection.mutable
 import scala.collection.mutable.{ArrayBuffer, ListBuffer}
 
@@ -22,32 +23,36 @@ object TimeSeries {
     * Resample given TimeSeries with indexes separated by delta
     */
   def resample[V: Fractional](xs: TimeSeries[V], delta: Duration)(implicit num: Fractional[V]): TimeSeries[V] = {
-    val ys: mutable.ListBuffer[V] = ListBuffer()
-    val ts = Iterator.iterate(xs.index.head)(_.plusNanos(delta.toNanos))
-      .takeWhile(_.isBefore(xs.index.last.plusNanos(1))).toVector
+    if (xs.index.isEmpty) TimeSeries.empty[V](num)
+    else {
+      val ys: mutable.ListBuffer[V] = ListBuffer()
+      val ts = Iterator.iterate(xs.index.head)(_.plusNanos(delta.toNanos))
+        .takeWhile(_.isBefore(xs.index.last.plusNanos(1))).toVector
 
-    def g(ts: Vector[LocalDateTime], xs: Vector[LocalDateTime], vs: Vector[V], prev: V): TimeSeries[V] = {
-      val tsh = ts.head
-      val xsh = xs.head
-      if (xsh.isEqual(tsh)) {
-        ys.append(vs.head)
-        if (ts.size == 1) TimeSeries(ts, ys.toVector)(num) else g(ts.tail, xs.tail, vs.tail, vs.head)
+      @tailrec
+      def g(ts: Vector[LocalDateTime], xs: Vector[LocalDateTime], vs: Vector[V], prev: V): Unit = {
+        val tsh = ts.head
+        val xsh = xs.head
+        if (xsh.isEqual(tsh)) {
+          ys.append(vs.head)
+          if (ts.size != 1) g(ts.tail, xs.tail, vs.tail, vs.head)
+        }
+        else if (tsh.isBefore(xsh)) {
+          val ysh = if (ts.size != 1) ts.tail.head else xsh
+          val tx = num.fromInt(Duration.between(tsh, xsh).toMillis.toInt)
+          val ty = num.fromInt(Duration.between(tsh, ysh).toMillis.toInt)
+          val mu = num.plus(num.times(num.div(ty, num.plus(tx, ty)), vs.head), num.times(num.div(tx, num.plus(tx, ty)), prev))
+          ys.append(mu)
+          if (ts.size != 1) g(ts.tail, xs, vs, mu)
+        }
+        else {
+          g(ts, xs.tail, vs.tail, vs.head)
+        }
       }
-      else if (tsh.isBefore(xsh)) {
-        val ysh = if (ts.size != 1) ts.tail.head else xsh
-        val tx = num.fromInt(Duration.between(tsh, xsh).toMillis.toInt)
-        val ty = num.fromInt(Duration.between(tsh, ysh).toMillis.toInt)
-        val mu = num.plus(num.times(num.div(ty, num.plus(tx, ty)), vs.head), num.times(num.div(tx, num.plus(tx, ty)), prev))
-        ys.append(mu)
-        if (ts.size == 1) TimeSeries(ts, ys.toVector)(num) else g(ts.tail, xs, vs, mu)
-      }
-      else {
-        g(ts, xs.tail, vs.tail, vs.head)
-      }
+
+      g(ts, xs.index, xs.values, num.fromInt(0))
+      TimeSeries(ts, ys.toVector)(num)
     }
-
-    g(ts, xs.index, xs.values, num.fromInt(0))
-    TimeSeries(ts, ys.toVector)(num)
   }
 
 }

@@ -187,4 +187,10 @@ class TimeSeriesTest extends FlatSpec with Matchers {
     TimeSeries.resample(series,Duration.ofMinutes(2)) shouldBe expected
   }
 
+  it should "resample: empty series" in {
+    val emptySeries = TimeSeries.empty[Float]
+    TimeSeries.resample(emptySeries, Duration.ofMinutes(2)) shouldBe emptySeries
+  }
+
+
 }
