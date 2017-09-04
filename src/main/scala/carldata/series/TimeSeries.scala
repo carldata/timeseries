@@ -185,20 +185,17 @@ case class TimeSeries[V: math.Numeric](idx: Vector[LocalDateTime], ds: Vector[V]
 
   /** Rolling window operation */
   def rollingWindow(windowSize: Duration, f: Seq[V] => V): TimeSeries[V] = {
-    val rs: mutable.ListBuffer[V] = ListBuffer()
-
     @tailrec
-    def g(v: Vector[(LocalDateTime, V)]): Unit = {
+    def g(v: Vector[(LocalDateTime, V)], out: Vector[V]): Vector[V] = {
       if (!v.isEmpty) {
         val splitIndex: Int = v.indexWhere(x => x._1.isBefore(v.head._1.minus(windowSize).minusNanos(1)))
         val window = if (splitIndex > 0) v.take(splitIndex) else v
-        rs.append(f(window.map(x => x._2)))
-        g(v.tail)
+        g(v.tail, out :+ f(window.map(x => x._2)))
       }
+      else out
     }
 
-    g(index.zip(values).reverse)
-    new TimeSeries(index, rs.toVector.reverse)
+    new TimeSeries(index, g(index.zip(values).reverse, Vector.empty).reverse)
 
   }
 }
