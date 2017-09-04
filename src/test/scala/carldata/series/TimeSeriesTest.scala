@@ -58,27 +58,27 @@ class TimeSeriesTest extends FlatSpec with Matchers {
 
   it should "return minimum value" in {
     val series: TimeSeries[Double] = TimeSeries.fromTimestamps(Seq((1, 1), (2, -3.4), (3, 5.6)))
-    series.min shouldBe -3.4
+    series.values.min shouldBe -3.4
   }
 
   it should "return maximum value" in {
     val series: TimeSeries[Int] = TimeSeries.fromTimestamps(Seq((1, 1), (2, -3), (3, 5)))
-    series.max shouldBe 5
+    series.values.max shouldBe 5
   }
 
   it should "sum its elements" in {
     val series: TimeSeries[Int] = TimeSeries.fromTimestamps(Seq((1, 1), (2, -3), (3, 5)))
-    series.sum shouldBe 3
+    series.values.sum shouldBe 3
   }
 
   it should "map over its values" in {
     val series: TimeSeries[Double] = TimeSeries.fromTimestamps(Seq((1, 1), (2, -3.4), (3, 5.6)))
-    series.map(x => x._2 + 2).max shouldBe 7.6
+    series.map(x => x._2 + 2).values.max shouldBe 7.6
   }
 
   it should "mapValues over its values" in {
     val series: TimeSeries[Double] = TimeSeries.fromTimestamps(Seq((1, 1), (2, -3.4), (3, 5.6)))
-    series.mapValues(_ + 2).max shouldBe 7.6
+    series.mapValues(_ + 2).values.max shouldBe 7.6
   }
 
   it should "fold values" in {
@@ -101,19 +101,19 @@ class TimeSeriesTest extends FlatSpec with Matchers {
   it should "differentiate" in {
     val series: TimeSeries[Int] = TimeSeries.fromTimestamps(Seq((1, 2), (2, -4), (3, -6), (4, 8)))
     val expected: TimeSeries[Int] = TimeSeries.fromTimestamps(Seq((2, -6), (3, -2), (4, 14)))
-    series.differentiate.values shouldBe expected.values
+    TimeSeries.differentiate(series).values shouldBe expected.values
   }
 
   it should "integrate values" in {
     val series: TimeSeries[Int] = TimeSeries.fromTimestamps(Seq((1, 2), (2, -4), (3, -6), (4, 8)))
     val expected: TimeSeries[Int] = TimeSeries.fromTimestamps(Seq((2, -2), (3, -10), (4, 2)))
-    series.integrate.values shouldBe expected.values
+    TimeSeries.integrate(series).values shouldBe expected.values
   }
 
   it should "integrate index" in {
     val series: TimeSeries[Int] = TimeSeries.fromTimestamps(Seq((1, 2), (2, -4), (3, -6), (4, 8)))
     val expected: TimeSeries[Int] = TimeSeries.fromTimestamps(Seq((2, -2), (3, -10), (4, 2)))
-    series.integrate.index shouldBe expected.index
+    TimeSeries.integrate(series).index shouldBe expected.index
   }
 
   it should "integrate by time" in {
@@ -123,13 +123,13 @@ class TimeSeriesTest extends FlatSpec with Matchers {
     val series = TimeSeries(idx, Vector(1, 2, 3, 4, 5, 6))
     val expected = TimeSeries(idx, Vector(1, 3, 6, 10, 5, 11))
 
-    series.integrateByTime(Duration.ofHours(1)) shouldBe expected
+    TimeSeries.integrateByTime(series, Duration.ofHours(1)) shouldBe expected
   }
 
   it should "work with empty series" in {
     val series = TimeSeries.empty[Int]
-    series.sum shouldBe 0
-    series.differentiate.values shouldBe series.values
+    series.values.sum shouldBe 0
+    TimeSeries.differentiate(series).values shouldBe series.values
   }
 
   it should "group by minute" in {
