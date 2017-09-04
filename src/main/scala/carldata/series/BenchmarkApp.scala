@@ -1,6 +1,6 @@
 package carldata.series
 
-import java.time.Duration
+import java.time.{Duration, LocalDateTime, ZoneOffset}
 
 import org.scalameter._
 
@@ -45,10 +45,9 @@ object BenchmarkApp{
     measure(size1M/100, measureRollingWindow)
 
     println("\n4. Measure: resample")
-    measure(20, measureResample)
-    measure(size100K/100, measureResample)
-    measure(size500K/100, measureResample)
-    measure(size1M/100, measureResample)
+    measure(size100K, measureResample)
+    measure(size500K, measureResample)
+    measure(size1M, measureResample)
 
     println("\n5. Measure: integrateByTime")
     measure(size1M, measureIntegrateByTime)
@@ -61,7 +60,7 @@ object BenchmarkApp{
   /** Run several tests anr report result */
   def measure(size: Int, f: TimeSeries[Float] => Unit): Unit = {
     val xs = 1.to(size).toVector
-    val ts = TimeSeries.fromTimestamps(xs.map(x => (x.toLong*5000, x.toFloat)))
+    val ts = TimeSeries.fromTimestamps(xs.map(x => (x.toLong*5, x.toFloat)))
     val time: Quantity[Double] = withWarmer(new Warmer.Default).measure {
       f(ts)
     }
@@ -69,7 +68,5 @@ object BenchmarkApp{
     val sizeFormatted = intFormatter.format(size)
     println(s"$sizeFormatted points: $time.")
   }
-
-
 
 }
