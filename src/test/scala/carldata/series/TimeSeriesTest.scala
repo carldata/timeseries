@@ -116,6 +116,16 @@ class TimeSeriesTest extends FlatSpec with Matchers {
     series.integrate.index shouldBe expected.index
   }
 
+  it should "integrate by time" in {
+    val now = LocalDateTime.parse("2015-01-01T00:00:00")
+    val idx = Vector(now, now.plusMinutes(15), now.plusMinutes(30), now.plusMinutes(45),
+      now.plusMinutes(60), now.plusMinutes(70))
+    val series = TimeSeries(idx, Vector(1, 2, 3, 4, 5, 6))
+    val expected = TimeSeries(idx, Vector(1, 3, 6, 10, 5, 11))
+
+    series.integrateByTime(Duration.ofHours(1)) shouldBe expected
+  }
+
   it should "work with empty series" in {
     val series = TimeSeries.empty[Int]
     series.sum shouldBe 0
