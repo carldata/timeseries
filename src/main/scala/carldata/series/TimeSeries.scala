@@ -93,7 +93,6 @@ object TimeSeries {
           (x._2, acc._2.plus(windowSize))
         }
       }
-
       TimeSeries(ts.index, xs.toVector)
     }
   }
@@ -179,7 +178,7 @@ case class TimeSeries[V](idx: Vector[LocalDateTime], ds: Vector[V]) {
   def rollingWindow(windowSize: Duration, f: Seq[V] => V): TimeSeries[V] = {
     @tailrec
     def g(v: Vector[(LocalDateTime, V)], out: Vector[V]): Vector[V] = {
-      if (!v.isEmpty) {
+      if (v.nonEmpty) {
         val splitIndex: Int = v.indexWhere(x => x._1.isBefore(v.head._1.minus(windowSize).minusNanos(1)))
         val window = if (splitIndex > 0) v.take(splitIndex) else v
         g(v.tail, out :+ f(window.map(x => x._2)))
@@ -188,7 +187,6 @@ case class TimeSeries[V](idx: Vector[LocalDateTime], ds: Vector[V]) {
     }
 
     new TimeSeries(index, g(index.zip(values).reverse, Vector.empty).reverse)
-
   }
 }
 
