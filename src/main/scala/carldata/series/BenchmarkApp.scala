@@ -1,6 +1,6 @@
 package carldata.series
 
-import java.time.{Duration, LocalDateTime, ZoneOffset}
+import java.time.Duration
 
 import org.scalameter._
 
@@ -20,33 +20,26 @@ object BenchmarkApp{
   /** Resample */
   def measureResample(ts: TimeSeries[Float]): Unit =  TimeSeries.resample(ts, Duration.ofMinutes(1))
   /** Rolling window */
-  def measureIntegrateByTime(ts: TimeSeries[Float]): Unit = ts.integrateByTime(Duration.ofMinutes(1))
+  def measureIntegrateByTime(ts: TimeSeries[Float]): Unit = TimeSeries.integrateByTime(ts, Duration.ofMinutes(1))
 
 
   /** Run benchmarks */
   def main(args: Array[String]): Unit = {
     val size100K = 100000
-    val size500K = 500000
     val size1M = 1000000
 
     println("\n1. Measure: map")
-    measure(size100K, measureMap)
-    measure(size500K, measureMap)
     measure(size1M, measureMap)
 
     println("\n2. Measure: groupBy")
-    measure(size100K, measureGroupBy)
-    measure(size500K, measureGroupBy)
     measure(size1M, measureGroupBy)
 
     println("\n3. Measure: rollingWindow")
-    measure(size100K/100, measureRollingWindow)
-    measure(size500K/100, measureRollingWindow)
-    measure(size1M/100, measureRollingWindow)
+    measure(size100K, measureRollingWindow)
+    measure(size1M, measureRollingWindow)
 
     println("\n4. Measure: resample")
     measure(size100K, measureResample)
-    measure(size500K, measureResample)
     measure(size1M, measureResample)
 
     println("\n5. Measure: integrateByTime")

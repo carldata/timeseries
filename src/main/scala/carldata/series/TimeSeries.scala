@@ -51,7 +51,49 @@ object TimeSeries {
       }
 
       g(ts, xs.index, xs.values, num.fromInt(0))
-      TimeSeries(ts, ys.toVector)(num)
+      TimeSeries(ts, ys.toVector)
+    }
+  }
+
+  /** Return new series with difference between 2 points */
+  def differentiate[V: Numeric](ts: TimeSeries[V])(implicit num: Numeric[V]): TimeSeries[V] = {
+    if (ts.isEmpty) ts
+    else {
+      val vs: Vector[V] = ts.values.zip(ts.values.tail).map(x => num.minus(x._2, x._1))
+      new TimeSeries(ts.index.tail, vs)
+    }
+  }
+
+  /** Accumulate sum for each point */
+  def integrate[V: Numeric](ts: TimeSeries[V])(implicit num: Numeric[V]): TimeSeries[V] = {
+    if (ts.isEmpty) ts
+    else {
+      val vs: Vector[V] = ts.values.zip(ts.values.tail).map(x => num.plus(x._1, x._2))
+      new TimeSeries(ts.index.tail, vs)
+    }
+  }
+
+  /**
+    * Integrate series for selected window.
+    * Windows are not overlapping and sum starts at 0 at the beginning of each window
+    */
+  def integrateByTime[V: Numeric](ts: TimeSeries[V], windowSize: Duration)(implicit num: Numeric[V]): TimeSeries[V] = {
+    if (ts.isEmpty) ts
+    else {
+      val end = ts.index.head.plus(windowSize)
+      // This buffer could be used inside foldLeft, but then Intellij Idea will show wrong errors in += operation.
+      val xs = ArrayBuffer.empty[V]
+      ts.index.zip(ts.values).foldLeft[(V, LocalDateTime)]((num.zero, end)) { (acc, x) =>
+        if (x._1.isBefore(acc._2)) {
+          val v = num.plus(acc._1, x._2)
+          xs += v
+          (v, acc._2)
+        } else {
+          xs += x._2
+          (x._2, acc._2.plus(windowSize))
+        }
+      }
+      TimeSeries(ts.index, xs.toVector)
     }
   }
 
@@ -61,7 +103,7 @@ object TimeSeries {
   * TimeSeries contains data indexed by DateTime. The type of stored data
   * is parametric.
   */
-case class TimeSeries[V: math.Numeric](idx: Vector[LocalDateTime], ds: Vector[V]) {
+case class TimeSeries[V](idx: Vector[LocalDateTime], ds: Vector[V]) {
 
   def this(d: Seq[(LocalDateTime, V)]) = {
     this(d.map(_._1).toVector, d.map(_._2).toVector)
@@ -92,12 +134,6 @@ case class TimeSeries[V: math.Numeric](idx: Vector[LocalDateTime], ds: Vector[V]
     } yield (i, v)
   }
 
-  def max: V = values.max
-
-  def min: V = values.min
-
-  def sum(implicit num: Numeric[V]): V = values.fold(num.zero)(num.plus)
-
   /** Filter by index and value */
   def filter(f: ((LocalDateTime, V)) => Boolean): TimeSeries[V] = {
     new TimeSeries(index.zip(values).filter(f))
@@ -123,51 +159,6 @@ case class TimeSeries[V: math.Numeric](idx: Vector[LocalDateTime], ds: Vector[V]
     new TimeSeries(d)
   }
 
-  /** Return new series with difference between 2 points */
-  def differentiate(implicit num: Numeric[V]): TimeSeries[V] = {
-    if (isEmpty) {
-      this
-    } else {
-      val vs: Vector[V] = values.zip(values.tail).map(x => num.minus(x._2, x._1))
-      new TimeSeries(index.tail, vs)(num)
-    }
-  }
-
-  /** Accumulate sum for each point */
-  def integrate(implicit num: Numeric[V]): TimeSeries[V] = {
-    if (isEmpty) {
-      this
-    } else {
-      val vs: Vector[V] = values.zip(values.tail).map(x => num.plus(x._1, x._2))
-      new TimeSeries(index.tail, vs)(num)
-    }
-  }
-
-  /**
-    * Integrate series for selected window.
-    * Windows are not overlapping and sum starts at 0 at the beginning of each window
-    */
-  def integrateByTime(windowSize: Duration)(implicit num: Numeric[V]): TimeSeries[V] = {
-    if (isEmpty) this
-    else {
-      val end = index.head.plus(windowSize)
-      // This buffer could be used inside foldLeft, but idea will show wrong errors in += operation then
-      val xs = ArrayBuffer.empty[V]
-      index.zip(values).foldLeft[(V, LocalDateTime)]((num.zero, end)) { (acc, x) =>
-        if (x._1.isBefore(acc._2)) {
-          val v = num.plus(acc._1, x._2)
-          xs += v
-          (v, acc._2)
-        } else {
-          xs += x._2
-          (x._2, acc._2.plus(windowSize))
-        }
-      }
-
-      TimeSeries(index, xs.toVector)(num)
-    }
-  }
-
   /** Aggregate date by time */
   def groupByTime(g: LocalDateTime => LocalDateTime, f: Seq[V] => V): TimeSeries[V] = {
     if (isEmpty) this
@@ -187,7 +178,7 @@ case class TimeSeries[V: math.Numeric](idx: Vector[LocalDateTime], ds: Vector[V]
   def rollingWindow(windowSize: Duration, f: Seq[V] => V): TimeSeries[V] = {
     @tailrec
     def g(v: Vector[(LocalDateTime, V)], out: Vector[V]): Vector[V] = {
-      if (!v.isEmpty) {
+      if (v.nonEmpty) {
         val splitIndex: Int = v.indexWhere(x => x._1.isBefore(v.head._1.minus(windowSize).minusNanos(1)))
         val window = if (splitIndex > 0) v.take(splitIndex) else v
         g(v.tail, out :+ f(window.map(x => x._2)))
@@ -196,7 +187,6 @@ case class TimeSeries[V: math.Numeric](idx: Vector[LocalDateTime], ds: Vector[V]
     }
 
     new TimeSeries(index, g(index.zip(values).reverse, Vector.empty).reverse)
-
   }
 }
 

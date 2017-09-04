@@ -7,7 +7,7 @@ object Stats {
 
   implicit class SeriesStats[T](val series: TimeSeries[T])(implicit num: Numeric[T]) {
 
-    def mean: Double = num.toDouble(series.sum) / series.length
+    def mean: Double = num.toDouble(series.values.sum) / series.length
 
     def variance: Double = {
       val m = mean
