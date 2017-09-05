@@ -60,7 +60,24 @@ object TimeSeries {
     if (ts.isEmpty) ts
     else {
       val vs: Vector[V] = ts.values.zip(ts.values.tail).map(x => num.minus(x._2, x._1))
-      new TimeSeries(ts.index.tail, vs)
+      TimeSeries(ts.index.tail, vs)
+    }
+  }
+
+  /**
+    * Return new series with difference between 2 points with the possibility of overflow value
+    * Use case:
+    * Older sensor equipment often used simple counters to record events.
+    * These counters would continue to some max value (i.e. 100) and then rollover to 0
+    */
+  def diffOverflow[V: Numeric](ts: TimeSeries[V], overflowValue: V)(implicit num: Numeric[V]): TimeSeries[V] = {
+    if (ts.isEmpty) ts
+    else {
+      val vs: Vector[V] = ts.values.zip(ts.values.tail).map{ x =>
+        if(num.lt(x._2, x._1)) num.minus(num.plus(x._2, overflowValue), x._1)
+        else num.minus(x._2, x._1)
+      }
+      TimeSeries(ts.index, vs)
     }
   }
 

@@ -104,6 +104,15 @@ class TimeSeriesTest extends FlatSpec with Matchers {
     TimeSeries.differentiate(series).values shouldBe expected.values
   }
 
+  it should "differentiate with the overflow" in {
+    val now = LocalDateTime.parse("2015-01-01T00:00:00")
+    val idx = Vector(now, now.plusMinutes(5), now.plusMinutes(10), now.plusMinutes(15),
+      now.plusMinutes(20), now.plusMinutes(25), now.plusMinutes(30))
+    val series = TimeSeries(idx, Vector(1, 2, 3, 5, 8, 3, 2))
+    val expected = TimeSeries(idx.tail, Vector(1, 1, 2, 3, 5, 9))
+    TimeSeries.diffOverflow(series, 10).values shouldBe expected.values
+  }
+
   it should "integrate values" in {
     val series: TimeSeries[Int] = TimeSeries.fromTimestamps(Seq((1, 2), (2, -4), (3, -6), (4, 8)))
     val expected: TimeSeries[Int] = TimeSeries.fromTimestamps(Seq((2, -2), (3, -10), (4, 2)))
