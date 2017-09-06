@@ -220,5 +220,10 @@ case class TimeSeries[V](idx: Vector[LocalDateTime], ds: Vector[V]) {
       TimeSeries(idx, vs)
     }
   }
+
+  def shiftTime(d: Duration, forward: Boolean): TimeSeries[V] = {
+    val idx = index.map(i => if(forward) i.plus(d) else i.minus(d) )
+    TimeSeries(idx, values)
+  }
 }
 

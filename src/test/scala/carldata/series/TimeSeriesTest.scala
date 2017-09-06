@@ -211,4 +211,26 @@ class TimeSeriesTest extends FlatSpec with Matchers {
     series.repeat(now, now.plusHours(2), Duration.ofHours(1)) shouldBe expected
   }
 
+  it should "shift time forward" in {
+    val now = LocalDateTime.parse("2015-01-01T00:00:00")
+    val idx = Vector(now, now.plusMinutes(15), now.plusMinutes(30), now.plusMinutes(45))
+    val vs = Vector(1, 4, 6, 8)
+    val series = TimeSeries(idx, vs)
+    val idx2 = Vector(now.plusMinutes(60), now.plusMinutes(75), now.plusMinutes(90), now.plusMinutes(105))
+    val expected = TimeSeries(idx2, vs)
+
+    series.shiftTime(Duration.ofHours(1), forward=true) shouldBe expected
+  }
+
+  it should "shift time backward" in {
+    val now = LocalDateTime.parse("2015-01-01T00:00:00")
+    val idx = Vector(now.plusMinutes(60), now.plusMinutes(75), now.plusMinutes(90), now.plusMinutes(105))
+    val vs = Vector(1, 4, 6, 8)
+    val series = TimeSeries(idx, vs)
+    val idx2 = Vector(now, now.plusMinutes(15), now.plusMinutes(30), now.plusMinutes(45))
+    val expected = TimeSeries(idx2, vs)
+
+    series.shiftTime(Duration.ofHours(1), forward=false) shouldBe expected
+  }
+
 }
