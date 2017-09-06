@@ -29,8 +29,7 @@ object TimeSeries {
       val ts = Iterator.iterate(xs.index.head)(_.plusNanos(delta.toNanos))
         .takeWhile(_.isBefore(xs.index.last.plusNanos(1))).toVector
 
-      @tailrec
-      def g(ts: Vector[LocalDateTime], xs: Vector[LocalDateTime], vs: Vector[V], prev: V): Unit = {
+      @tailrec def g(ts: Vector[LocalDateTime], xs: Vector[LocalDateTime], vs: Vector[V], prev: V): Unit = {
         val tsh = ts.head
         val xsh = xs.head
         if (xsh.isEqual(tsh)) {
@@ -193,8 +192,8 @@ case class TimeSeries[V](idx: Vector[LocalDateTime], ds: Vector[V]) {
 
   /** Rolling window operation */
   def rollingWindow(windowSize: Duration, f: Seq[V] => V): TimeSeries[V] = {
-    @tailrec
-    def g(v: Vector[(LocalDateTime, V)], out: Vector[V]): Vector[V] = {
+
+    @tailrec def g(v: Vector[(LocalDateTime, V)], out: Vector[V]): Vector[V] = {
       if (v.nonEmpty) {
         val splitIndex: Int = v.indexWhere(x => x._1.isBefore(v.head._1.minus(windowSize).minusNanos(1)))
         val window = if (splitIndex > 0) v.take(splitIndex) else v
@@ -204,6 +203,22 @@ case class TimeSeries[V](idx: Vector[LocalDateTime], ds: Vector[V]) {
     }
 
     new TimeSeries(index, g(index.zip(values).reverse, Vector.empty).reverse)
+  }
+
+  /** Repeat series */
+  def repeat(start: LocalDateTime, end: LocalDateTime, d: Duration): TimeSeries[V] = {
+    val ts = slice(start, start.plus(d))
+    if(ts.isEmpty) ts
+    else {
+      @tailrec def repeatR(offset: Duration, dp: (Vector[LocalDateTime], Vector[V])): (Vector[LocalDateTime], Vector[V]) = {
+        val idx = ts.index.map(_.plus(offset))
+        if(idx.head.isBefore(end)) repeatR(offset.plus(d), (dp._1 ++ idx, dp._2 ++ ts.values))
+        else dp
+      }
+
+      val (idx, vs) = repeatR(Duration.ZERO, (Vector(), Vector()))
+      TimeSeries(idx, vs)
+    }
   }
 }
 

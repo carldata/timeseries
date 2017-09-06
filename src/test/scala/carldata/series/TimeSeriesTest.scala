@@ -201,5 +201,14 @@ class TimeSeriesTest extends FlatSpec with Matchers {
     TimeSeries.resample(emptySeries, Duration.ofMinutes(2)) shouldBe emptySeries
   }
 
+  it should "repeat values" in {
+    val now = LocalDateTime.parse("2015-01-01T00:00:00")
+    val idx = Vector(now, now.plusMinutes(15), now.plusMinutes(30), now.plusMinutes(45))
+    val series = TimeSeries(idx, Vector(1, 4, 6, 8))
+    val idx2 = Vector(now.plusMinutes(60), now.plusMinutes(75), now.plusMinutes(90), now.plusMinutes(105))
+    val expected = TimeSeries(idx ++ idx2, Vector(1, 4, 6, 8, 1, 4, 6, 8))
+
+    series.repeat(now, now.plusHours(2), Duration.ofHours(1)) shouldBe expected
+  }
 
 }
