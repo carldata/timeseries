@@ -29,8 +29,7 @@ object TimeSeries {
       val ts = Iterator.iterate(xs.index.head)(_.plusNanos(delta.toNanos))
         .takeWhile(_.isBefore(xs.index.last.plusNanos(1))).toVector
 
-      @tailrec
-      def g(ts: Vector[LocalDateTime], xs: Vector[LocalDateTime], vs: Vector[V], prev: V): Unit = {
+      @tailrec def g(ts: Vector[LocalDateTime], xs: Vector[LocalDateTime], vs: Vector[V], prev: V): Unit = {
         val tsh = ts.head
         val xsh = xs.head
         if (xsh.isEqual(tsh)) {
