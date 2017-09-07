@@ -233,4 +233,17 @@ class TimeSeriesTest extends FlatSpec with Matchers {
     series.shiftTime(Duration.ofHours(1), forward=false) shouldBe expected
   }
 
+  it should "step index" in {
+    val now = LocalDateTime.parse("2015-01-01T00:00:00")
+    val idx = Vector(now, now.plusHours(1), now.plusHours(2))
+    val vs = Vector(10f, 8f, 12f)
+    val series = TimeSeries(idx, vs)
+    val idx2 = Vector(
+      now, now.plusMinutes(15), now.plusMinutes(30), now.plusMinutes(45),
+      now.plusMinutes(60), now.plusMinutes(75), now.plusMinutes(90), now.plusMinutes(105))
+    val expected = TimeSeries(idx2, Vector(2, 2, 2, 2, 3, 3, 3, 3))
+
+    TimeSeries.step(series, Duration.ofMinutes(15)) shouldBe expected
+  }
+
 }

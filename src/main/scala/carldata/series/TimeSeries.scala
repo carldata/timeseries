@@ -19,6 +19,11 @@ object TimeSeries {
     new TimeSeries[V](Seq[(LocalDateTime, V)]())
   }
 
+  /** Create new index with the step equal to duration, for a given time range */
+  private def reindex(start: LocalDateTime, end: LocalDateTime, delta: Duration): Vector[LocalDateTime] = {
+    Iterator.iterate(start)(_.plusNanos(delta.toNanos)).takeWhile(_.isBefore(end)).toVector
+  }
+
   /**
     * Resample given TimeSeries with indexes separated by delta
     */
@@ -26,8 +31,7 @@ object TimeSeries {
     if (xs.index.isEmpty) TimeSeries.empty[V](num)
     else {
       val ys: mutable.ListBuffer[V] = ListBuffer()
-      val ts = Iterator.iterate(xs.index.head)(_.plusNanos(delta.toNanos))
-        .takeWhile(_.isBefore(xs.index.last.plusNanos(1))).toVector
+      val ts = reindex(xs.index.head, xs.index.last.plusNanos(1), delta)
 
       @tailrec def g(ts: Vector[LocalDateTime], xs: Vector[LocalDateTime], vs: Vector[V], prev: V): Unit = {
         val tsh = ts.head
@@ -72,8 +76,8 @@ object TimeSeries {
   def diffOverflow[V: Numeric](ts: TimeSeries[V], overflowValue: V)(implicit num: Numeric[V]): TimeSeries[V] = {
     if (ts.isEmpty) ts
     else {
-      val vs: Vector[V] = ts.values.zip(ts.values.tail).map{ x =>
-        if(num.lt(x._2, x._1)) num.minus(num.plus(x._2, overflowValue), x._1)
+      val vs: Vector[V] = ts.values.zip(ts.values.tail).map { x =>
+        if (num.lt(x._2, x._1)) num.minus(num.plus(x._2, overflowValue), x._1)
         else num.minus(x._2, x._1)
       }
       TimeSeries(ts.index, vs)
@@ -113,6 +117,34 @@ object TimeSeries {
     }
   }
 
+  /**
+    * This function resamples index. But the values are not interpolated but just fractions
+    * of current values.
+    * For example if we have value 10 every hour and we run step with 15 minutes range
+    * we will get values 2.5 every 15 minutes (10/4)
+    */
+  def step[V: Fractional](ts: TimeSeries[V], d: Duration)(implicit num: Fractional[V]): TimeSeries[V] = {
+    val index = reindex(ts.index.head, ts.index.last, d)
+    val builder: mutable.ListBuffer[V] = ListBuffer()
+
+    @tailrec def stepR(dp: Vector[(LocalDateTime, V)], newIdx: Vector[LocalDateTime]): Vector[V] = {
+      if (dp.isEmpty) builder.toVector
+      else {
+        val p = dp.head
+        val xs = newIdx.takeWhile(_.isBefore(p._1))
+        val len = xs.length
+        if(len > 0) {
+          val v = num.div(p._2, num.fromInt(len))
+          0.until(len).foreach(_ => builder.append(v))
+        }
+        stepR(dp.tail, newIdx.drop(len))
+      }
+    }
+
+    val vs = stepR(ts.dataPoints, index)
+    TimeSeries(index.take(vs.length), vs)
+  }
+
 }
 
 /**
@@ -128,6 +160,7 @@ case class TimeSeries[V](idx: Vector[LocalDateTime], ds: Vector[V]) {
   val length: Int = math.min(idx.length, ds.length)
   val index: Vector[LocalDateTime] = idx.take(length)
   val values: Vector[V] = ds.take(length)
+  val dataPoints: Vector[(LocalDateTime, V)] = index.zip(values)
 
   /** Check is series is empty */
   def isEmpty: Boolean = index.isEmpty || values.isEmpty
@@ -208,11 +241,11 @@ case class TimeSeries[V](idx: Vector[LocalDateTime], ds: Vector[V]) {
   /** Repeat series */
   def repeat(start: LocalDateTime, end: LocalDateTime, d: Duration): TimeSeries[V] = {
     val ts = slice(start, start.plus(d))
-    if(ts.isEmpty) ts
+    if (ts.isEmpty) ts
     else {
       @tailrec def repeatR(offset: Duration, dp: (Vector[LocalDateTime], Vector[V])): (Vector[LocalDateTime], Vector[V]) = {
         val idx = ts.index.map(_.plus(offset))
-        if(idx.head.isBefore(end)) repeatR(offset.plus(d), (dp._1 ++ idx, dp._2 ++ ts.values))
+        if (idx.head.isBefore(end)) repeatR(offset.plus(d), (dp._1 ++ idx, dp._2 ++ ts.values))
         else dp
       }
 
@@ -221,9 +254,11 @@ case class TimeSeries[V](idx: Vector[LocalDateTime], ds: Vector[V]) {
     }
   }
 
+  /** Shift index by specific time duration */
   def shiftTime(d: Duration, forward: Boolean): TimeSeries[V] = {
-    val idx = index.map(i => if(forward) i.plus(d) else i.minus(d) )
+    val idx = index.map(i => if (forward) i.plus(d) else i.minus(d))
     TimeSeries(idx, values)
   }
+
 }
 
