@@ -178,13 +178,13 @@ class TimeSeriesTest extends FlatSpec with Matchers {
     TimeSeries.interpolate(series, Duration.ofMinutes(1)) shouldBe expected
   }
 
-  it should "find missing: missing values" in {
+  it should "fill missing: missing values" in {
     val now = LocalDateTime.parse("2015-01-01T00:00:00")
     val idx = Vector(now.plusMinutes(1), now.plusMinutes(2), now.plusMinutes(3), now.plusMinutes(5))
     val series = TimeSeries(idx, Vector(1f, 2f, 3f, 5f))
     val expected = TimeSeries(Vector(now.plusMinutes(1), now.plusMinutes(2), now.plusMinutes(3), now.plusMinutes(4), now.plusMinutes(5)), Vector(1f, 2f, 3f, 1f, 5f))
 
-    TimeSeries.find_missing(series, Duration.ofMinutes(1), 1f) shouldBe expected
+    TimeSeries.fillMissing(series, Duration.ofMinutes(1), 1f) shouldBe expected
   }
 
   it should "interpolate: missing lots of values" in {

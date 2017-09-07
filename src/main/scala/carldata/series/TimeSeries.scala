@@ -20,7 +20,7 @@ object TimeSeries {
   }
 
   /** Return new series, add default value to missing points */
-  def find_missing[V: Numeric](xs: TimeSeries[V], delta: Duration, default: V)(implicit num: Fractional[V]): TimeSeries[V] = {
+  def fillMissing[V: Numeric](xs: TimeSeries[V], delta: Duration, default: V)(implicit num: Fractional[V]): TimeSeries[V] = {
     def f(x1: (LocalDateTime, V), x2: (LocalDateTime, V), tsh: LocalDateTime) = default
 
     xs.resample(delta, f)
