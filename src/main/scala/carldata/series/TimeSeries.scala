@@ -19,39 +19,22 @@ object TimeSeries {
     new TimeSeries[V](Seq[(LocalDateTime, V)]())
   }
 
-  /**
-    * Resample given TimeSeries with indexes separated by delta
-    */
-  def resample[V: Fractional](xs: TimeSeries[V], delta: Duration)(implicit num: Fractional[V]): TimeSeries[V] = {
-    if (xs.index.isEmpty) TimeSeries.empty[V](num)
-    else {
-      val ys: mutable.ListBuffer[V] = ListBuffer()
-      val ts = Iterator.iterate(xs.index.head)(_.plusNanos(delta.toNanos))
-        .takeWhile(_.isBefore(xs.index.last.plusNanos(1))).toVector
+  /** Return new series, add default value to missing points */
+  def find_missing[V: Numeric](xs: TimeSeries[V], delta: Duration, default: V)(implicit num: Fractional[V]): TimeSeries[V] = {
+    def f(x1: (LocalDateTime, V), x2: (LocalDateTime, V), tsh: LocalDateTime) = default
 
-      @tailrec def g(ts: Vector[LocalDateTime], xs: Vector[LocalDateTime], vs: Vector[V], prev: V): Unit = {
-        val tsh = ts.head
-        val xsh = xs.head
-        if (xsh.isEqual(tsh)) {
-          ys.append(vs.head)
-          if (ts.size != 1) g(ts.tail, xs.tail, vs.tail, vs.head)
-        }
-        else if (tsh.isBefore(xsh)) {
-          val ysh = if (ts.size != 1) ts.tail.head else xsh
-          val tx = num.fromInt(Duration.between(tsh, xsh).toMillis.toInt)
-          val ty = num.fromInt(Duration.between(tsh, ysh).toMillis.toInt)
-          val mu = num.plus(num.times(num.div(ty, num.plus(tx, ty)), vs.head), num.times(num.div(tx, num.plus(tx, ty)), prev))
-          ys.append(mu)
-          if (ts.size != 1) g(ts.tail, xs, vs, mu)
-        }
-        else {
-          g(ts, xs.tail, vs.tail, vs.head)
-        }
-      }
+    xs.resample(delta, f)
+  }
 
-      g(ts, xs.index, xs.values, num.fromInt(0))
-      TimeSeries(ts, ys.toVector)
+  /** Return new series by interpolate missing points */
+  def interpolate[V: Numeric](xs: TimeSeries[V], delta: Duration)(implicit num: Fractional[V]): TimeSeries[V] = {
+    def f(x1: (LocalDateTime, V), x2: (LocalDateTime, V), tsh: LocalDateTime) = {
+      val tx = num.fromInt(Duration.between(tsh, x1._1).toMillis.toInt)
+      val ty = num.fromInt(Duration.between(tsh, x2._1).toMillis.toInt)
+      num.plus(num.times(num.div(ty, num.plus(tx, ty)), x1._2), num.times(num.div(tx, num.plus(tx, ty)), x2._2))
     }
+
+    xs.resample(delta, f)
   }
 
   /** Return new series with difference between 2 points */
@@ -72,8 +55,8 @@ object TimeSeries {
   def diffOverflow[V: Numeric](ts: TimeSeries[V], overflowValue: V)(implicit num: Numeric[V]): TimeSeries[V] = {
     if (ts.isEmpty) ts
     else {
-      val vs: Vector[V] = ts.values.zip(ts.values.tail).map{ x =>
-        if(num.lt(x._2, x._1)) num.minus(num.plus(x._2, overflowValue), x._1)
+      val vs: Vector[V] = ts.values.zip(ts.values.tail).map { x =>
+        if (num.lt(x._2, x._1)) num.minus(num.plus(x._2, overflowValue), x._1)
         else num.minus(x._2, x._1)
       }
       TimeSeries(ts.index, vs)
@@ -190,6 +173,39 @@ case class TimeSeries[V](idx: Vector[LocalDateTime], ds: Vector[V]) {
     }
   }
 
+  /**
+    * Resample given TimeSeries with indexes separated by delta
+    */
+  def resample(delta: Duration, f: ((LocalDateTime, V), (LocalDateTime, V), LocalDateTime) => V)(implicit num: Numeric[V]): TimeSeries[V] = {
+    if (index.isEmpty) TimeSeries.empty[V](num)
+    else {
+      val ys: mutable.ListBuffer[V] = ListBuffer()
+      val ts = Iterator.iterate(index.head)(_.plusNanos(delta.toNanos))
+        .takeWhile(_.isBefore(index.last.plusNanos(1))).toVector
+
+      @tailrec def g(ts: Vector[LocalDateTime], xs: Vector[LocalDateTime], vs: Vector[V], prev: V): Unit = {
+        val tsh = ts.head
+        val xsh = xs.head
+        if (xsh.isEqual(tsh)) {
+          ys.append(vs.head)
+          if (ts.size != 1) g(ts.tail, xs.tail, vs.tail, vs.head)
+        }
+        else if (tsh.isBefore(xsh)) {
+          val ysh = if (ts.size != 1) ts.tail.head else xsh
+          val mu = f((xsh, vs.head), (ysh, prev), tsh)
+          ys.append(mu)
+          if (ts.size != 1) g(ts.tail, xs, vs, mu)
+        }
+        else {
+          g(ts, xs.tail, vs.tail, vs.head)
+        }
+      }
+
+      g(ts, index, values, num.fromInt(0))
+      TimeSeries(ts, ys.toVector)
+    }
+  }
+
   /** Rolling window operation */
   def rollingWindow(windowSize: Duration, f: Seq[V] => V): TimeSeries[V] = {
 
@@ -208,11 +224,11 @@ case class TimeSeries[V](idx: Vector[LocalDateTime], ds: Vector[V]) {
   /** Repeat series */
   def repeat(start: LocalDateTime, end: LocalDateTime, d: Duration): TimeSeries[V] = {
     val ts = slice(start, start.plus(d))
-    if(ts.isEmpty) ts
+    if (ts.isEmpty) ts
     else {
       @tailrec def repeatR(offset: Duration, dp: (Vector[LocalDateTime], Vector[V])): (Vector[LocalDateTime], Vector[V]) = {
         val idx = ts.index.map(_.plus(offset))
-        if(idx.head.isBefore(end)) repeatR(offset.plus(d), (dp._1 ++ idx, dp._2 ++ ts.values))
+        if (idx.head.isBefore(end)) repeatR(offset.plus(d), (dp._1 ++ idx, dp._2 ++ ts.values))
         else dp
       }
 
@@ -222,7 +238,7 @@ case class TimeSeries[V](idx: Vector[LocalDateTime], ds: Vector[V]) {
   }
 
   def shiftTime(d: Duration, forward: Boolean): TimeSeries[V] = {
-    val idx = index.map(i => if(forward) i.plus(d) else i.minus(d) )
+    val idx = index.map(i => if (forward) i.plus(d) else i.minus(d))
     TimeSeries(idx, values)
   }
 }

@@ -18,7 +18,7 @@ object BenchmarkApp{
   /** Rolling window */
   def measureRollingWindow(ts: TimeSeries[Float]): Unit = ts.rollingWindow(Duration.ofMinutes(1), _.sum)
   /** Resample */
-  def measureResample(ts: TimeSeries[Float]): Unit =  TimeSeries.resample(ts, Duration.ofMinutes(1))
+  def measureResample(ts: TimeSeries[Float]): Unit =  TimeSeries.interpolate(ts, Duration.ofMinutes(1))
   /** Rolling window */
   def measureIntegrateByTime(ts: TimeSeries[Float]): Unit = TimeSeries.integrateByTime(ts, Duration.ofMinutes(1))
 

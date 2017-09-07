@@ -160,45 +160,54 @@ class TimeSeriesTest extends FlatSpec with Matchers {
     series.rollingWindow(window, _.sum) shouldBe expected
   }
 
-  it should "resample: don't change series without missing values" in {
+  it should "interpolate: don't change series without missing values" in {
     val now = LocalDateTime.parse("2015-01-01T00:00:00")
     val idx = Vector(now, now.plusMinutes(10), now.plusMinutes(20), now.plusMinutes(30), now.plusMinutes(40))
     val series = TimeSeries(idx, Vector(1f, 2f, 3f, 4f, 5f))
     val expected = TimeSeries(idx, Vector(1f, 2f, 3f, 4f, 5f))
 
-    TimeSeries.resample(series,Duration.ofMinutes(10)) shouldBe expected
+    TimeSeries.interpolate(series, Duration.ofMinutes(10)) shouldBe expected
   }
 
-  it should "resample: missing values" in {
+  it should "interpolate: missing values" in {
     val now = LocalDateTime.parse("2015-01-01T00:00:00")
     val idx = Vector(now.plusMinutes(1), now.plusMinutes(2), now.plusMinutes(3), now.plusMinutes(5))
     val series = TimeSeries(idx, Vector(1f, 2f, 3f, 5f))
     val expected = TimeSeries(Vector(now.plusMinutes(1), now.plusMinutes(2), now.plusMinutes(3), now.plusMinutes(4), now.plusMinutes(5)), Vector(1f, 2f, 3f, 4f, 5f))
 
-    TimeSeries.resample(series,Duration.ofMinutes(1)) shouldBe expected
+    TimeSeries.interpolate(series, Duration.ofMinutes(1)) shouldBe expected
   }
 
-  it should "resample: missing lots of values" in {
+  it should "find missing: missing values" in {
+    val now = LocalDateTime.parse("2015-01-01T00:00:00")
+    val idx = Vector(now.plusMinutes(1), now.plusMinutes(2), now.plusMinutes(3), now.plusMinutes(5))
+    val series = TimeSeries(idx, Vector(1f, 2f, 3f, 5f))
+    val expected = TimeSeries(Vector(now.plusMinutes(1), now.plusMinutes(2), now.plusMinutes(3), now.plusMinutes(4), now.plusMinutes(5)), Vector(1f, 2f, 3f, 1f, 5f))
+
+    TimeSeries.find_missing(series, Duration.ofMinutes(1), 1f) shouldBe expected
+  }
+
+  it should "interpolate: missing lots of values" in {
     val now = LocalDateTime.parse("2015-01-01T00:00:00")
     val idx = Vector(now.plusMinutes(1), now.plusMinutes(5))
     val series = TimeSeries(idx, Vector(1f, 5f))
     val expected = TimeSeries(Vector(now.plusMinutes(1), now.plusMinutes(2), now.plusMinutes(3), now.plusMinutes(4), now.plusMinutes(5)), Vector(1f, 2f, 3f, 4f, 5f))
 
-    TimeSeries.resample(series,Duration.ofMinutes(1)) shouldBe expected
+    TimeSeries.interpolate(series, Duration.ofMinutes(1)) shouldBe expected
   }
 
-  it should "resample: middle values" in {
+  it should "interpolate: middle values" in {
     val now = LocalDateTime.parse("2015-01-01T00:00:00")
     val idx = Vector(now.plusMinutes(1), now.plusMinutes(4), now.plusMinutes(6))
     val series = TimeSeries(idx, Vector(1f, 4f, 6f))
     val expected = TimeSeries(Vector(now.plusMinutes(1), now.plusMinutes(3), now.plusMinutes(5)), Vector(1f, 3f, 5f))
 
-    TimeSeries.resample(series,Duration.ofMinutes(2)) shouldBe expected
+    TimeSeries.interpolate(series, Duration.ofMinutes(2)) shouldBe expected
   }
 
-  it should "resample: empty series" in {
+  it should "interpolate: empty series" in {
     val emptySeries = TimeSeries.empty[Float]
-    TimeSeries.resample(emptySeries, Duration.ofMinutes(2)) shouldBe emptySeries
+    TimeSeries.interpolate(emptySeries, Duration.ofMinutes(2)) shouldBe emptySeries
   }
 
   it should "repeat values" in {
@@ -219,7 +228,7 @@ class TimeSeriesTest extends FlatSpec with Matchers {
     val idx2 = Vector(now.plusMinutes(60), now.plusMinutes(75), now.plusMinutes(90), now.plusMinutes(105))
     val expected = TimeSeries(idx2, vs)
 
-    series.shiftTime(Duration.ofHours(1), forward=true) shouldBe expected
+    series.shiftTime(Duration.ofHours(1), forward = true) shouldBe expected
   }
 
   it should "shift time backward" in {
@@ -230,7 +239,7 @@ class TimeSeriesTest extends FlatSpec with Matchers {
     val idx2 = Vector(now, now.plusMinutes(15), now.plusMinutes(30), now.plusMinutes(45))
     val expected = TimeSeries(idx2, vs)
 
-    series.shiftTime(Duration.ofHours(1), forward=false) shouldBe expected
+    series.shiftTime(Duration.ofHours(1), forward = false) shouldBe expected
   }
 
 }
