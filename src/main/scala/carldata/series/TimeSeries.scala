@@ -96,6 +96,39 @@ object TimeSeries {
     }
   }
 
+  /** Create new index with the step equal to duration, for a given time range */
+  private def reindex(start: LocalDateTime, end: LocalDateTime, delta: Duration): Vector[LocalDateTime] = {
+    Iterator.iterate(start)(_.plusNanos(delta.toNanos)).takeWhile(_.isBefore(end)).toVector
+  }
+
+  /**
+    * This function resamples index. But the values are not interpolated but just fractions
+    * of current values.
+    * For example if we have value 10 every hour and we run step with 15 minutes range
+    * we will get values 2.5 every 15 minutes (10/4)
+    */
+  def step[V: Fractional](ts: TimeSeries[V], d: Duration)(implicit num: Fractional[V]): TimeSeries[V] = {
+    val index = reindex(ts.index.head, ts.index.last, d)
+    val builder: mutable.ListBuffer[V] = ListBuffer()
+
+    @tailrec def stepR(dp: Vector[(LocalDateTime, V)], newIdx: Vector[LocalDateTime]): Vector[V] = {
+      if (dp.isEmpty) builder.toVector
+      else {
+        val p = dp.head
+        val xs = newIdx.takeWhile(_.isBefore(p._1))
+        val len = xs.length
+        if (len > 0) {
+          val v = num.div(p._2, num.fromInt(len))
+          0.until(len).foreach(_ => builder.append(v))
+        }
+        stepR(dp.tail, newIdx.drop(len))
+      }
+    }
+
+    val vs = stepR(ts.dataPoints, index)
+    TimeSeries(index.take(vs.length), vs)
+  }
+
 }
 
 /**
@@ -111,6 +144,7 @@ case class TimeSeries[V](idx: Vector[LocalDateTime], ds: Vector[V]) {
   val length: Int = math.min(idx.length, ds.length)
   val index: Vector[LocalDateTime] = idx.take(length)
   val values: Vector[V] = ds.take(length)
+  val dataPoints: Vector[(LocalDateTime, V)] = index.zip(values)
 
   /** Check is series is empty */
   def isEmpty: Boolean = index.isEmpty || values.isEmpty
@@ -237,9 +271,11 @@ case class TimeSeries[V](idx: Vector[LocalDateTime], ds: Vector[V]) {
     }
   }
 
+  /** Shift index by specific time duration */
   def shiftTime(d: Duration, forward: Boolean): TimeSeries[V] = {
     val idx = index.map(i => if (forward) i.plus(d) else i.minus(d))
     TimeSeries(idx, values)
   }
+
 }
 
