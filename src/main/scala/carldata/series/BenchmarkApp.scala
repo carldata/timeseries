@@ -14,13 +14,15 @@ object BenchmarkApp{
   /** map over series */
   def measureMap(ts: TimeSeries[Float]): Unit = ts.map(x => x._2 + 2)
   /** Group by time. 100x slower then map. */
-  def measureGroupBy(ts: TimeSeries[Float]): Unit = ts.groupByTime(_.withSecond(0), _.sum)
+  def measureGroupBy(ts: TimeSeries[Float]): Unit = ts.groupByTime(_.withMinute(0), _.sum)
   /** Rolling window */
-  def measureRollingWindow(ts: TimeSeries[Float]): Unit = ts.rollingWindow(Duration.ofMinutes(1), _.sum)
+  def measureRollingWindow(ts: TimeSeries[Float]): Unit = ts.rollingWindow(Duration.ofHours(1), _.sum)
   /** Resample */
-  def measureResample(ts: TimeSeries[Float]): Unit =  TimeSeries.resample(ts, Duration.ofMinutes(1))
+  def measureResample(ts: TimeSeries[Float]): Unit =  TimeSeries.resample(ts, Duration.ofHours(1))
   /** Rolling window */
-  def measureIntegrateByTime(ts: TimeSeries[Float]): Unit = TimeSeries.integrateByTime(ts, Duration.ofMinutes(1))
+  def measureIntegrateByTime(ts: TimeSeries[Float]): Unit = TimeSeries.integrateByTime(ts, Duration.ofHours(1))
+  /** Rolling window */
+  def measureStep(ts: TimeSeries[Float]): Unit = TimeSeries.step(ts, Duration.ofMinutes(1))
 
 
   /** Run benchmarks */
@@ -45,6 +47,9 @@ object BenchmarkApp{
     println("\n5. Measure: integrateByTime")
     measure(size1M, measureIntegrateByTime)
 
+    println("\n6. Measure: step (This will create 1M series as a output)")
+    measure(size1M/5, measureStep)
+
     println()
   }
 
@@ -53,7 +58,7 @@ object BenchmarkApp{
   /** Run several tests anr report result */
   def measure(size: Int, f: TimeSeries[Float] => Unit): Unit = {
     val xs = 1.to(size).toVector
-    val ts = TimeSeries.fromTimestamps(xs.map(x => (x.toLong*5, x.toFloat)))
+    val ts = TimeSeries.fromTimestamps(xs.map(x => (x.toLong*5*60, x.toFloat)))
     val time: Quantity[Double] = withWarmer(new Warmer.Default).measure {
       f(ts)
     }
