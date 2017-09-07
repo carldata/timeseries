@@ -19,43 +19,22 @@ object TimeSeries {
     new TimeSeries[V](Seq[(LocalDateTime, V)]())
   }
 
-  /** Create new index with the step equal to duration, for a given time range */
-  private def reindex(start: LocalDateTime, end: LocalDateTime, delta: Duration): Vector[LocalDateTime] = {
-    Iterator.iterate(start)(_.plusNanos(delta.toNanos)).takeWhile(_.isBefore(end)).toVector
+  /** Return new series, add default value to missing points */
+  def fillMissing[V: Numeric](xs: TimeSeries[V], delta: Duration, default: V)(implicit num: Fractional[V]): TimeSeries[V] = {
+    def f(x1: (LocalDateTime, V), x2: (LocalDateTime, V), tsh: LocalDateTime) = default
+
+    xs.resample(delta, f)
   }
 
-  /**
-    * Resample given TimeSeries with indexes separated by delta
-    */
-  def resample[V: Fractional](xs: TimeSeries[V], delta: Duration)(implicit num: Fractional[V]): TimeSeries[V] = {
-    if (xs.index.isEmpty) TimeSeries.empty[V](num)
-    else {
-      val ys: mutable.ListBuffer[V] = ListBuffer()
-      val ts = reindex(xs.index.head, xs.index.last.plusNanos(1), delta)
-
-      @tailrec def g(ts: Vector[LocalDateTime], xs: Vector[LocalDateTime], vs: Vector[V], prev: V): Unit = {
-        val tsh = ts.head
-        val xsh = xs.head
-        if (xsh.isEqual(tsh)) {
-          ys.append(vs.head)
-          if (ts.size != 1) g(ts.tail, xs.tail, vs.tail, vs.head)
-        }
-        else if (tsh.isBefore(xsh)) {
-          val ysh = if (ts.size != 1) ts.tail.head else xsh
-          val tx = num.fromInt(Duration.between(tsh, xsh).toMillis.toInt)
-          val ty = num.fromInt(Duration.between(tsh, ysh).toMillis.toInt)
-          val mu = num.plus(num.times(num.div(ty, num.plus(tx, ty)), vs.head), num.times(num.div(tx, num.plus(tx, ty)), prev))
-          ys.append(mu)
-          if (ts.size != 1) g(ts.tail, xs, vs, mu)
-        }
-        else {
-          g(ts, xs.tail, vs.tail, vs.head)
-        }
-      }
-
-      g(ts, xs.index, xs.values, num.fromInt(0))
-      TimeSeries(ts, ys.toVector)
+  /** Return new series by interpolate missing points */
+  def interpolate[V: Numeric](xs: TimeSeries[V], delta: Duration)(implicit num: Fractional[V]): TimeSeries[V] = {
+    def f(x1: (LocalDateTime, V), x2: (LocalDateTime, V), tsh: LocalDateTime) = {
+      val tx = num.fromInt(Duration.between(tsh, x1._1).toMillis.toInt)
+      val ty = num.fromInt(Duration.between(tsh, x2._1).toMillis.toInt)
+      num.plus(num.times(num.div(ty, num.plus(tx, ty)), x1._2), num.times(num.div(tx, num.plus(tx, ty)), x2._2))
     }
+
+    xs.resample(delta, f)
   }
 
   /** Return new series with difference between 2 points */
@@ -117,6 +96,11 @@ object TimeSeries {
     }
   }
 
+  /** Create new index with the step equal to duration, for a given time range */
+  private def reindex(start: LocalDateTime, end: LocalDateTime, delta: Duration): Vector[LocalDateTime] = {
+    Iterator.iterate(start)(_.plusNanos(delta.toNanos)).takeWhile(_.isBefore(end)).toVector
+  }
+
   /**
     * This function resamples index. But the values are not interpolated but just fractions
     * of current values.
@@ -133,7 +117,7 @@ object TimeSeries {
         val p = dp.head
         val xs = newIdx.takeWhile(_.isBefore(p._1))
         val len = xs.length
-        if(len > 0) {
+        if (len > 0) {
           val v = num.div(p._2, num.fromInt(len))
           0.until(len).foreach(_ => builder.append(v))
         }
@@ -220,6 +204,39 @@ case class TimeSeries[V](idx: Vector[LocalDateTime], ds: Vector[V]) {
         else xs += ((t, ArrayBuffer(v)))
       }
       TimeSeries(xs.map(_._1).toVector, xs.map(x => f(x._2)).toVector)
+    }
+  }
+
+  /**
+    * Resample given TimeSeries with indexes separated by delta
+    */
+  def resample(delta: Duration, f: ((LocalDateTime, V), (LocalDateTime, V), LocalDateTime) => V)(implicit num: Numeric[V]): TimeSeries[V] = {
+    if (index.isEmpty) TimeSeries.empty[V](num)
+    else {
+      val ys: mutable.ListBuffer[V] = ListBuffer()
+      val ts = Iterator.iterate(index.head)(_.plusNanos(delta.toNanos))
+        .takeWhile(_.isBefore(index.last.plusNanos(1))).toVector
+
+      @tailrec def g(ts: Vector[LocalDateTime], xs: Vector[LocalDateTime], vs: Vector[V], prev: V): Unit = {
+        val tsh = ts.head
+        val xsh = xs.head
+        if (xsh.isEqual(tsh)) {
+          ys.append(vs.head)
+          if (ts.size != 1) g(ts.tail, xs.tail, vs.tail, vs.head)
+        }
+        else if (tsh.isBefore(xsh)) {
+          val ysh = if (ts.size != 1) ts.tail.head else xsh
+          val mu = f((xsh, vs.head), (ysh, prev), tsh)
+          ys.append(mu)
+          if (ts.size != 1) g(ts.tail, xs, vs, mu)
+        }
+        else {
+          g(ts, xs.tail, vs.tail, vs.head)
+        }
+      }
+
+      g(ts, index, values, num.fromInt(0))
+      TimeSeries(ts, ys.toVector)
     }
   }
 
