@@ -59,7 +59,7 @@ object TimeSeries {
         if (num.lt(x._2, x._1)) num.minus(num.plus(x._2, overflowValue), x._1)
         else num.minus(x._2, x._1)
       }
-      TimeSeries(ts.index, vs)
+      TimeSeries(ts.index.tail, vs)
     }
   }
 
@@ -193,15 +193,15 @@ case class TimeSeries[V](idx: Vector[LocalDateTime], ds: Vector[V]) {
   }
 
   /** Aggregate date by time */
-  def groupByTime(g: LocalDateTime => LocalDateTime, f: Seq[V] => V): TimeSeries[V] = {
+  def groupByTime(g: LocalDateTime => LocalDateTime, f: Seq[(LocalDateTime, V)] => V): TimeSeries[V] = {
     if (isEmpty) this
     else {
-      val xs = ListBuffer[(LocalDateTime, ArrayBuffer[V])]((g(index.head), ArrayBuffer()))
+      val xs = ListBuffer[(LocalDateTime, ArrayBuffer[(LocalDateTime, V)])]((g(index.head), ArrayBuffer()))
       for ((k, v) <- index.zip(values)) {
         val last = xs.last
         val t = g(k)
-        if (last._1.isEqual(t)) last._2 += v
-        else xs += ((t, ArrayBuffer(v)))
+        if (last._1.isEqual(t)) last._2 += ((k,v))
+        else xs += ((t, ArrayBuffer((k, v))))
       }
       TimeSeries(xs.map(_._1).toVector, xs.map(x => f(x._2)).toVector)
     }
