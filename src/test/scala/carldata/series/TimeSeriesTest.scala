@@ -147,7 +147,7 @@ class TimeSeriesTest extends FlatSpec with Matchers {
     val series = TimeSeries(idx, Vector(1, 2, 3, 4, 5))
     val expected = TimeSeries(Vector(now, now.plusMinutes(1)), Vector(6, 9))
 
-    series.groupByTime(_.withSecond(0), _.sum) shouldBe expected
+    series.groupByTime(_.withSecond(0), _.unzip._2.sum) shouldBe expected
   }
 
   it should "find sum in rolling windows operation" in {

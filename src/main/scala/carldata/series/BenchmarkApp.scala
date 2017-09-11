@@ -14,7 +14,7 @@ object BenchmarkApp{
   /** map over series */
   def measureMap(ts: TimeSeries[Float]): Unit = ts.map(x => x._2 + 2)
   /** Group by time. 100x slower then map. */
-  def measureGroupBy(ts: TimeSeries[Float]): Unit = ts.groupByTime(_.withMinute(0), _.sum)
+  def measureGroupBy(ts: TimeSeries[Float]): Unit = ts.groupByTime(_.withMinute(0), _.unzip._2.sum)
   /** Rolling window */
   def measureRollingWindow(ts: TimeSeries[Float]): Unit = ts.rollingWindow(Duration.ofHours(1), _.sum)
   /** Resample */
