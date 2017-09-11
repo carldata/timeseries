@@ -59,7 +59,7 @@ object TimeSeries {
         if (num.lt(x._2, x._1)) num.minus(num.plus(x._2, overflowValue), x._1)
         else num.minus(x._2, x._1)
       }
-      TimeSeries(ts.index, vs)
+      TimeSeries(ts.index.tail, vs)
     }
   }
 
