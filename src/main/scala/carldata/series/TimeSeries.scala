@@ -277,8 +277,18 @@ case class TimeSeries[V](idx: Vector[LocalDateTime], ds: Vector[V]) {
     TimeSeries(idx, values)
   }
 
+  /** Remove outliers by set min/max values on their place */
+  def trimOutliers(min: V, max: V)(implicit num: Numeric[V]): TimeSeries[V] = {
+    val vs = values.map(x => {
+      if (num.compare(x, min) < 0) min
+      else if (num.compare(x, max) > 0) max
+      else x
+    })
+    TimeSeries(idx, vs)
+  }
+
   /** Inner join. Only include points which have the same data in both series */
-  def join[U](ts: TimeSeries[U]): TimeSeries[(V,U)] = {
+  def join[U](ts: TimeSeries[U]): TimeSeries[(V, U)] = {
     val builder: mutable.ListBuffer[(LocalDateTime, (V, U))] = ListBuffer()
 
     @tailrec def joinR(dp1: Vector[(LocalDateTime, V)],
@@ -287,11 +297,11 @@ case class TimeSeries[V](idx: Vector[LocalDateTime], ds: Vector[V]) {
       else {
         val p1 = dp1.head
         val p2 = dp2.head
-        if(p1._1.isEqual(p2._1)){
+        if (p1._1.isEqual(p2._1)) {
           builder.append((p1._1, (p1._2, p2._2)))
           joinR(dp1.tail, dp2.tail)
         }
-        else if(p1._1.isBefore(p2._1)) joinR(dp1.tail, dp2)
+        else if (p1._1.isBefore(p2._1)) joinR(dp1.tail, dp2)
         else joinR(dp1, dp2.tail)
 
       }
@@ -301,7 +311,7 @@ case class TimeSeries[V](idx: Vector[LocalDateTime], ds: Vector[V]) {
   }
 
   /** Left join. If right series doesn't have a data point then put default value. */
-  def joinLeft[U](ts: TimeSeries[U], default: U): TimeSeries[(V,U)] = {
+  def joinLeft[U](ts: TimeSeries[U], default: U): TimeSeries[(V, U)] = {
     val builder: mutable.ListBuffer[(LocalDateTime, (V, U))] = ListBuffer()
 
     @tailrec def joinR(dp1: Vector[(LocalDateTime, V)],
@@ -310,10 +320,10 @@ case class TimeSeries[V](idx: Vector[LocalDateTime], ds: Vector[V]) {
       else {
         val p1 = dp1.head
         val p2 = dp2.head
-        if(p1._1.isEqual(p2._1)){
+        if (p1._1.isEqual(p2._1)) {
           builder.append((p1._1, (p1._2, p2._2)))
           joinR(dp1.tail, dp2.tail)
-        } else if(p1._1.isBefore(p2._1)) {
+        } else if (p1._1.isBefore(p2._1)) {
           builder.append((p1._1, (p1._2, default)))
           joinR(dp1.tail, dp2)
         } else joinR(dp1, dp2.tail)
