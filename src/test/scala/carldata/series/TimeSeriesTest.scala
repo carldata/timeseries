@@ -255,6 +255,16 @@ class TimeSeriesTest extends FlatSpec with Matchers {
     TimeSeries.step(series, Duration.ofMinutes(15)) shouldBe expected
   }
 
+  it should "remove outliers" in {
+    val now = LocalDateTime.parse("2015-01-01T00:00:00")
+    val idx = Vector(now, now.plusMinutes(10), now.plusMinutes(30), now.plusMinutes(50), now.plusMinutes(80))
+    val series = TimeSeries(idx, Vector(1, 200, -3, 4, 5))
+    val expected = TimeSeries(idx, Vector(1, 5, 0, 4, 5))
+    val window = Duration.ofHours(1)
+
+    series.trimOutliers(0, 5) shouldBe expected
+  }
+
   it should "inner join 2 series" in {
     val now = LocalDateTime.parse("2015-01-01T00:00:00")
     val idx1 = Vector(now.plusMinutes(1), now.plusMinutes(2), now.plusMinutes(4), now.plusMinutes(5))

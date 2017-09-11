@@ -277,6 +277,16 @@ case class TimeSeries[V](idx: Vector[LocalDateTime], ds: Vector[V]) {
     TimeSeries(idx, values)
   }
 
+  /** Remove outliers by set min/max values on their place */
+  def trimOutliers(min: V, max: V)(implicit num: Numeric[V]): TimeSeries[V] = {
+    val vs = values.map(x => {
+      if (num.compare(x, min) < 0) min
+      else if (num.compare(x, max) > 0) max
+      else x
+    })
+    TimeSeries(idx, vs)
+  }
+
   /** Inner join. Only include points which have the same data in both series */
   def join[U](ts: TimeSeries[U]): TimeSeries[(V, U)] = {
     val builder: mutable.ListBuffer[(LocalDateTime, (V, U))] = ListBuffer()
