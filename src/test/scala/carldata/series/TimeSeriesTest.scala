@@ -110,7 +110,7 @@ class TimeSeriesTest extends FlatSpec with Matchers {
       now.plusMinutes(20), now.plusMinutes(25), now.plusMinutes(30))
     val series = TimeSeries(idx, Vector(1, 2, 3, 5, 8, 3, 2))
     val expected = TimeSeries(idx.tail, Vector(1, 1, 2, 3, 5, 9))
-    TimeSeries.diffOverflow(series, 10).values shouldBe expected.values
+    TimeSeries.diffOverflow(series, 10) shouldBe expected
   }
 
   it should "integrate values" in {
