@@ -2,6 +2,8 @@ package carldata.series
 
 import java.time.{Duration, LocalDateTime, ZoneOffset}
 
+import carldata.series.TimeSeries.reindex
+
 import scala.annotation.tailrec
 import scala.collection.mutable
 import scala.collection.mutable.{ArrayBuffer, ListBuffer}
@@ -251,8 +253,7 @@ case class TimeSeries[V](idx: Vector[LocalDateTime], ds: Vector[V]) {
     if (isEmpty) this
     else {
       val ys: mutable.ListBuffer[(LocalDateTime, V)] = ListBuffer()
-      val resampledIndex = Iterator.iterate(index.head)(_.plusNanos(delta.toNanos))
-        .takeWhile(_.isBefore(index.last.plusNanos(1))).toVector
+      val resampledIndex = reindex(index.head, index.last, delta)
 
       @tailrec def g(ts: Vector[LocalDateTime], xs: Vector[(LocalDateTime, V)], prev: (LocalDateTime, V)): Unit = {
         if(xs.nonEmpty) {
