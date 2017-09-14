@@ -303,4 +303,17 @@ class TimeSeriesTest extends FlatSpec with Matchers {
     series1.joinLeft(series2, 0) shouldBe expected
   }
 
+  it should "interpolate outliers" in {
+    def f(x: Float, y: Float): Float = {
+      (x + y) / 2
+    }
+
+    val now = LocalDateTime.parse("2015-01-01T00:00:00")
+    val idx = Vector(now.plusMinutes(1), now.plusMinutes(2), now.plusMinutes(3), now.plusMinutes(4), now.plusMinutes(5), now.plusMinutes(6))
+    val series = TimeSeries(idx, Vector(3f, 20f, 5f, 6f, 0f, 8f))
+    val expected = TimeSeries(idx, Vector(3f, 4f, 5f, 6f, 7f, 8f))
+
+    series.interpolateOutliers(1, 10, f) shouldBe expected
+  }
+
 }
