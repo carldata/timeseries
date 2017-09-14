@@ -200,7 +200,7 @@ case class TimeSeries[V](idx: Vector[LocalDateTime], ds: Vector[V]) {
       for ((k, v) <- index.zip(values)) {
         val last = xs.last
         val t = g(k)
-        if (last._1.isEqual(t)) last._2 += ((k,v))
+        if (last._1.isEqual(t)) last._2 += ((k, v))
         else xs += ((t, ArrayBuffer((k, v))))
       }
       TimeSeries(xs.map(_._1).toVector, xs.map(x => f(x._2)).toVector)
@@ -283,6 +283,17 @@ case class TimeSeries[V](idx: Vector[LocalDateTime], ds: Vector[V]) {
       if (num.compare(x, min) < 0) min
       else if (num.compare(x, max) > 0) max
       else x
+    })
+    TimeSeries(idx, vs)
+  }
+
+  /** Remove outliers by interpolate values on their place */
+  def interpolateOutliers(min: V, max: V, f: (V, V) => V)(implicit num: Numeric[V]) = {
+    val zipped = (num.zero +: values).zip(values).zip(values.tail :+ values.last)
+    val vs = zipped.map(x => {
+      if (num.compare(x._1._2, min) < 0) f(x._1._1, x._2)
+      else if (num.compare(x._1._2, max) > 0) f(x._1._1, x._2)
+      else x._1._2
     })
     TimeSeries(idx, vs)
   }
