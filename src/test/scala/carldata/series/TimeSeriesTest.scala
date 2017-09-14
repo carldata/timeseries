@@ -178,13 +178,26 @@ class TimeSeriesTest extends FlatSpec with Matchers {
     TimeSeries.interpolate(series, Duration.ofMinutes(1)) shouldBe expected
   }
 
-  it should "fill missing: missing values" in {
+  it should "resample with default value" in {
     val now = LocalDateTime.parse("2015-01-01T00:00:00")
     val idx = Vector(now.plusMinutes(1), now.plusMinutes(2), now.plusMinutes(3), now.plusMinutes(5))
     val series = TimeSeries(idx, Vector(1f, 2f, 3f, 5f))
     val expected = TimeSeries(Vector(now.plusMinutes(1), now.plusMinutes(2), now.plusMinutes(3), now.plusMinutes(4), now.plusMinutes(5)), Vector(1f, 2f, 3f, 1f, 5f))
 
-    TimeSeries.fillMissing(series, Duration.ofMinutes(1), 1f) shouldBe expected
+    series.resampleWithDefault(Duration.ofMinutes(1), 1f) shouldBe expected
+  }
+
+  it should "add missing values" in {
+    val now = LocalDateTime.parse("2015-01-01T00:00:00")
+    val idx = Vector(now, now.plusSeconds(15), now.plusSeconds(30), now.plusSeconds(45),
+      now.plusSeconds(65), now.plusSeconds(80))
+    val series = TimeSeries(idx, Vector(1f, 2f, 3f, 3f, 2f, 6f))
+    val idx2 = Vector(now, now.plusSeconds(15), now.plusSeconds(30), now.plusSeconds(45),
+      now.plusSeconds(60), now.plusSeconds(65), now.plusSeconds(80))
+    val expected = TimeSeries(idx2, Vector(1f, 2f, 3f, 3f, 3f, 2f, 6f))
+
+    def f(x1: (LocalDateTime, Float), x2: (LocalDateTime, Float), tsh: LocalDateTime) = x1._2
+    series.addMissing(Duration.ofMinutes(1), f) shouldBe expected
   }
 
   it should "interpolate: missing lots of values" in {

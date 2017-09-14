@@ -2,6 +2,8 @@ package carldata.series
 
 import java.time.{Duration, LocalDateTime, ZoneOffset}
 
+import carldata.series.TimeSeries.reindex
+
 import scala.annotation.tailrec
 import scala.collection.mutable
 import scala.collection.mutable.{ArrayBuffer, ListBuffer}
@@ -17,13 +19,6 @@ object TimeSeries {
   /** Create empty series */
   def empty[V: Numeric]: TimeSeries[V] = {
     new TimeSeries[V](Seq[(LocalDateTime, V)]())
-  }
-
-  /** Return new series, add default value to missing points */
-  def fillMissing[V: Numeric](xs: TimeSeries[V], delta: Duration, default: V)(implicit num: Fractional[V]): TimeSeries[V] = {
-    def f(x1: (LocalDateTime, V), x2: (LocalDateTime, V), tsh: LocalDateTime) = default
-
-    xs.resample(delta, f)
   }
 
   /** Return new series by interpolate missing points */
@@ -149,6 +144,9 @@ case class TimeSeries[V](idx: Vector[LocalDateTime], ds: Vector[V]) {
   /** Check is series is empty */
   def isEmpty: Boolean = index.isEmpty || values.isEmpty
 
+  /** Check is series is non empty */
+  def nonEmpty: Boolean = !isEmpty
+
   /** Safe get. If element is out of the bounds then 0 is returned */
   def get(i: Int)(implicit num: Numeric[V]): V = values.lift(i).getOrElse(num.zero)
 
@@ -237,6 +235,53 @@ case class TimeSeries[V](idx: Vector[LocalDateTime], ds: Vector[V]) {
 
       g(ts, index, values, num.fromInt(0))
       TimeSeries(ts, ys.toVector)
+    }
+  }
+
+  /** Return new series, add default value to missing points */
+  def resampleWithDefault(delta: Duration, default: V)(implicit num: Fractional[V]): TimeSeries[V] = {
+    def f(x1: (LocalDateTime, V), x2: (LocalDateTime, V), tsh: LocalDateTime) = default
+
+    resample(delta, f)
+  }
+
+  /**
+    * Add missing points to the time series. The output series will have all its own points
+    * and some new points if there are missing at every duration.
+    */
+  def addMissing(delta: Duration, f: ((LocalDateTime, V), (LocalDateTime, V), LocalDateTime) => V): TimeSeries[V] = {
+    if (isEmpty) this
+    else {
+      val ys: mutable.ListBuffer[(LocalDateTime, V)] = ListBuffer()
+      val resampledIndex = reindex(index.head, index.last, delta)
+
+      @tailrec def g(ts: Vector[LocalDateTime], xs: Vector[(LocalDateTime, V)], prev: (LocalDateTime, V)): Unit = {
+        if(xs.nonEmpty) {
+          val xsh = xs.head
+          if(ts.isEmpty){
+            ys.append(xs.head)
+            g(ts, xs.tail, xsh)
+
+          } else if (xsh._1.isEqual(ts.head)) {
+            ys.append(xs.head)
+            g(ts.tail, xs.tail, xsh)
+          }
+          else if (ts.head.isBefore(xsh._1)) {
+            val mu = f(prev, xsh, ts.head)
+            val dp = (ts.head, mu)
+            ys.append(dp)
+            g(ts.tail, xs, dp)
+          }
+          else {
+            ys.append(xs.head)
+            g(ts, xs.tail, xsh)
+          }
+        }
+      }
+
+      val dp = dataPoints
+      g(resampledIndex, dp, dp.head)
+      new TimeSeries(ys)
     }
   }
 
@@ -344,5 +389,6 @@ case class TimeSeries[V](idx: Vector[LocalDateTime], ds: Vector[V]) {
 
     new TimeSeries(joinR(dataPoints, ts.dataPoints))
   }
+
 }
 
