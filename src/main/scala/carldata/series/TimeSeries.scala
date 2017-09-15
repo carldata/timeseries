@@ -177,8 +177,8 @@ case class TimeSeries[V](idx: Vector[LocalDateTime], ds: Vector[V]) {
   }
 
   /** Map over values. */
-  def mapValues(f: V => V): TimeSeries[V] = {
-    val vs: Vector[V] = values.map(f)
+  def mapValues[U](f: V => U): TimeSeries[U] = {
+    val vs: Vector[U] = values.map(f)
     new TimeSeries(index, vs)
   }
 
