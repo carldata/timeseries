@@ -256,9 +256,9 @@ case class TimeSeries[V](idx: Vector[LocalDateTime], ds: Vector[V]) {
       val resampledIndex = reindex(index.head, index.last, delta)
 
       @tailrec def g(ts: Vector[LocalDateTime], xs: Vector[(LocalDateTime, V)], prev: (LocalDateTime, V)): Unit = {
-        if(xs.nonEmpty) {
+        if (xs.nonEmpty) {
           val xsh = xs.head
-          if(ts.isEmpty){
+          if (ts.isEmpty) {
             ys.append(xs.head)
             g(ts, xs.tail, xsh)
 
@@ -320,6 +320,17 @@ case class TimeSeries[V](idx: Vector[LocalDateTime], ds: Vector[V]) {
   def shiftTime(d: Duration, forward: Boolean): TimeSeries[V] = {
     val idx = index.map(i => if (forward) i.plus(d) else i.minus(d))
     TimeSeries(idx, values)
+  }
+
+  /** Remove outliers */
+  def removeOutliers(min: V, max: V)(implicit num: Numeric[V]): TimeSeries[V] = {
+    val ys = index.zip(values).flatMap(x => {
+      if (num.compare(x._2, min) < 0) None
+      else if (num.compare(x._2, max) > 0) None
+      else Some(x)
+    }).unzip
+
+    TimeSeries(ys._1, ys._2)
   }
 
   /** Remove outliers by set min/max values on their place */
