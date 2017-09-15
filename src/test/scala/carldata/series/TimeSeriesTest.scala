@@ -197,6 +197,7 @@ class TimeSeriesTest extends FlatSpec with Matchers {
     val expected = TimeSeries(idx2, Vector(1f, 2f, 3f, 3f, 3f, 2f, 6f))
 
     def f(x1: (LocalDateTime, Float), x2: (LocalDateTime, Float), tsh: LocalDateTime) = x1._2
+
     series.addMissing(Duration.ofMinutes(1), f) shouldBe expected
   }
 
@@ -268,7 +269,7 @@ class TimeSeriesTest extends FlatSpec with Matchers {
     TimeSeries.step(series, Duration.ofMinutes(15)) shouldBe expected
   }
 
-  it should "remove outliers" in {
+  it should "trim outliers" in {
     val now = LocalDateTime.parse("2015-01-01T00:00:00")
     val idx = Vector(now, now.plusMinutes(10), now.plusMinutes(30), now.plusMinutes(50), now.plusMinutes(80))
     val series = TimeSeries(idx, Vector(1, 200, -3, 4, 5))
@@ -315,5 +316,17 @@ class TimeSeriesTest extends FlatSpec with Matchers {
 
     series.interpolateOutliers(1, 10, f) shouldBe expected
   }
+
+  it should "remove outliers" in {
+
+    val now = LocalDateTime.parse("2015-01-01T00:00:00")
+    val idx = Vector(now.plusMinutes(1), now.plusMinutes(2), now.plusMinutes(3), now.plusMinutes(4), now.plusMinutes(5), now.plusMinutes(6))
+    val idx2 = Vector(now.plusMinutes(1), now.plusMinutes(3), now.plusMinutes(4), now.plusMinutes(6))
+    val series = TimeSeries(idx, Vector(3f, 20f, 5f, 6f, 0f, 8f))
+    val expected = TimeSeries(idx2, Vector(3f, 5f, 6f, 8f))
+
+    series.removeOutliers(1, 10) shouldBe expected
+  }
+
 
 }
