@@ -1,20 +1,34 @@
 package carldata.series
 
-import carldata.series.Stats._
 import org.scalatest._
 
 
 
 class StatsTest extends FlatSpec with Matchers {
 
-  "Stats" should "calculate mean" in {
-    val series: TimeSeries[Int] = TimeSeries.fromTimestamps(Seq((1, 1), (2, -3), (3, 6), (4, 6), (5, 6), (6, 8)))
-    series.mean shouldEqual 4
+  "MeanAndVariance" should "calculate for non empty data." in {
+    val series: TimeSeries[Double] = TimeSeries.fromTimestamps(Seq((1, 1), (2, -3), (3, 6), (4, 6), (5, 6), (6, 8)))
+    val result = Stats.meanAndVariance(series.values)
+    result.mean shouldEqual 4
+    result.variance - 14.33333 < 0.0001 shouldBe true
   }
 
-  it should "calculate stddev" in {
-    val series: TimeSeries[Int] = TimeSeries.fromTimestamps(Seq((1, 1), (2, -3), (3, 6), (4, 6), (5, 6), (6, 8)))
-    series.stddev - 3.78594 < 0.0001 shouldBe true
+  "AutoCovariance" should "equal to variance in lag == 0" in {
+    val series: TimeSeries[Double] = TimeSeries.fromTimestamps(Seq((1, 1), (2, -3), (3, 6), (4, 6), (5, 6), (6, 8)))
+    val mv = Stats.meanAndVariance(series.values)
+    mv.variance shouldBe Stats.autoCovariance(series.values, 0, 0, 6, mv.mean)
+  }
+
+  it should "calculate easy case" in {
+    val series: TimeSeries[Double] = TimeSeries.fromTimestamps(Seq((1, 1), (2, -3), (3, 6), (4, 6), (5, 6), (6, 8)))
+    val mv = Stats.meanAndVariance(series.values)
+    Stats.autoCovariance(series.values, 0, 2, 2, mv.mean) shouldBe -10
+  }
+
+  it should "not depend which is starting index" in {
+    val series: TimeSeries[Double] = TimeSeries.fromTimestamps(Seq((1, 1), (2, -3), (3, 6), (4, 6), (5, 6), (6, 8)))
+    val mv = Stats.meanAndVariance(series.values)
+    Stats.autoCovariance(series.values, 3, 0, 3, mv.mean) shouldBe Stats.autoCovariance(series.values, 0, 3, 3, mv.mean)
   }
 
 }
