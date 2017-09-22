@@ -1,8 +1,6 @@
 package carldata.series
 
-/**
-  * Created by Krzysztof Langner on 2017-03-25.
-  */
+/** Calculate Time Series statistics */
 object Stats {
 
   case class MeanAndVariance(mean: Double, variance: Double)
@@ -29,6 +27,14 @@ object Stats {
 
     if (vs.isEmpty) 0
     else vs.sum / vs.length
+  }
+
+  /** Calculate covariance between 2 places in the series */
+  def autoCorrelation[V: Fractional](values: Seq[V], pos1: Int, pos2: Int, size: Int): Double = {
+    val mean = meanAndVariance(values).mean
+    val c1 = autoCovariance(values, pos1, pos2, size, mean)
+    val c2 = autoCovariance(values, pos1, pos1, size, mean)
+    if(c2 == 0) 0.0 else c1/c2
   }
 
 }
