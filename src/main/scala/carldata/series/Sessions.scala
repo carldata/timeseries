@@ -1,8 +1,7 @@
 package carldata.series
 
 object Sessions {
-  case class Session(startIndex: Int, endIndex: Int) {
-  }
+  case class Session(startIndex: Int, endIndex: Int)
 
   def findSessions[V: Numeric](ts: TimeSeries[V]): Seq[Session] = {
     val tss = ts.values.zipWithIndex
