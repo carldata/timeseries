@@ -1,5 +1,7 @@
 package carldata.series
 
+import java.time.Duration
+
 object Sessions {
   case class Session(startIndex: Int, endIndex: Int)
 
@@ -19,5 +21,20 @@ object Sessions {
       else
         z
     }.reverse
+  }
+
+
+  def findSessions[V: Numeric](ts: TimeSeries[V], maxTolerance: Duration)(implicit num: Fractional[V]): Seq[Session] = {
+    if (maxTolerance.compareTo(Duration.between(ts.head.get._1, ts.last.get._1)) >= 0)
+      Seq(Session(0, ts.length-1))
+    else {
+      val seriesRolled = ts.rollingWindow(maxTolerance, sx => sx.sum)
+      Sessions.findSessions[V](seriesRolled.map(x =>
+        if (seriesRolled.slice(x._1, x._1.plusMinutes(maxTolerance.toMinutes).plusNanos(1)).values.contains(0))
+          num.fromInt(0)
+        else
+          x._2
+      ))
+    }
   }
 }
