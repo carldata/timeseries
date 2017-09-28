@@ -35,17 +35,12 @@ object Sessions {
     * */
 
   def findSessions[V: Numeric](ts: TimeSeries[V], tolerance: Duration)(implicit num: Fractional[V]): Seq[Session] = {
-    if (tolerance.compareTo(Duration.between(ts.head.get._1, ts.last.get._1)) >= 0)
-      Seq(Session(0, ts.length - 1))
-    else {
       val xs = Sessions.findSessions(ts)
-      val is = ts.index.zipWithIndex.map(x => (x._2, x._1))
-      xs.tail.foldLeft[Seq[Session]](Seq(xs.head))((zs, x) => {
-        if (tolerance.compareTo(Duration.between(is(zs.head.endIndex)._2, is(x.startIndex)._2)) >= 0)
-          Session(zs.head.startIndex, x.endIndex) +: zs.tail //merge sessions
+      xs.tail.foldLeft[List[Session]](List(xs.head))((zs, x) => {
+        if (tolerance.compareTo(Duration.between(ts.index(zs.head.endIndex), ts.index(x.startIndex))) >= 0)
+          Session(zs.head.startIndex, x.endIndex) :: zs.tail //merge sessions
         else
-          x +: zs
+          x :: zs
       }).reverse
-    }
   }
 }

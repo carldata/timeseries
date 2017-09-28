@@ -161,6 +161,5 @@ class SessionsTest extends FlatSpec with Matchers {
   it should "return proper result for toleration greater than signal" in {
     val expected = Seq(Session(0, 29))
     Sessions.findSessions(seriesOfTypicalRain, Duration.ofMinutes(100)) shouldBe expected
-    Sessions.findSessions(seriesOfEvanescentRain, Duration.ofMinutes(100)) shouldBe expected
   }
 }
