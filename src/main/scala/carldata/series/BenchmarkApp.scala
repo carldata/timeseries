@@ -53,7 +53,7 @@ object BenchmarkApp{
     measure(size1M/5, measureStep)
 
     println("\n7. Measure: findSessions")
-    measure(size1M/100, measureSessions)
+    measure(size1M, measureSessions)
 
     println()
   }
