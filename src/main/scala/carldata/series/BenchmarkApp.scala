@@ -23,6 +23,8 @@ object BenchmarkApp{
   def measureIntegrateByTime(ts: TimeSeries[Float]): Unit = TimeSeries.integrateByTime(ts, Duration.ofHours(1))
   /** Rolling window */
   def measureStep(ts: TimeSeries[Float]): Unit = TimeSeries.step(ts, Duration.ofMinutes(1))
+  /** Find sessions */
+  def measureSessions(ts: TimeSeries[Float]): Unit = Sessions.findSessions(ts, Duration.ofMinutes(10))
 
 
   /** Run benchmarks */
@@ -49,6 +51,9 @@ object BenchmarkApp{
 
     println("\n6. Measure: step (This will create 1M series as a output)")
     measure(size1M/5, measureStep)
+
+    println("\n7. Measure: findSessions")
+    measure(size1M/100, measureSessions)
 
     println()
   }
