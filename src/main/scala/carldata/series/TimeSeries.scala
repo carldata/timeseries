@@ -190,7 +190,13 @@ case class TimeSeries[V](idx: Vector[LocalDateTime], ds: Vector[V]) {
     new TimeSeries(d)
   }
 
-  /** Aggregate date by time */
+  /**
+    * Aggregate data points.
+    *
+    * @param g This function transforms current data point time into new time. All points with the same
+    *          time will be integrated into single point
+    * @param f This function defines how to aggregate points with the same transformed time
+    */
   def groupByTime(g: LocalDateTime => LocalDateTime, f: Seq[(LocalDateTime, V)] => V): TimeSeries[V] = {
     if (isEmpty) this
     else {
@@ -206,7 +212,10 @@ case class TimeSeries[V](idx: Vector[LocalDateTime], ds: Vector[V]) {
   }
 
   /**
-    * Resample given TimeSeries with indexes separated by delta
+    * Resample given TimeSeries with indexes separated by delta.
+    * This function will ensure that series is evenly spaced.
+    * @param delta  Distance between points
+    * @param f      Function which approximates missing points
     */
   def resample(delta: Duration, f: ((LocalDateTime, V), (LocalDateTime, V), LocalDateTime) => V)(implicit num: Numeric[V]): TimeSeries[V] = {
     if (index.isEmpty) TimeSeries.empty[V](num)
@@ -238,7 +247,9 @@ case class TimeSeries[V](idx: Vector[LocalDateTime], ds: Vector[V]) {
     }
   }
 
-  /** Return new series, add default value to missing points */
+  /**
+    * Resample series. If there are any missing points then they will be replaced by given default value
+    */
   def resampleWithDefault(delta: Duration, default: V)(implicit num: Fractional[V]): TimeSeries[V] = {
     def f(x1: (LocalDateTime, V), x2: (LocalDateTime, V), tsh: LocalDateTime) = default
 
@@ -248,6 +259,8 @@ case class TimeSeries[V](idx: Vector[LocalDateTime], ds: Vector[V]) {
   /**
     * Add missing points to the time series. The output series will have all its own points
     * and some new points if there are missing at every duration.
+    * @param delta  Expected distance between points
+    * @param f      This function will approximate missing points.
     */
   def addMissing(delta: Duration, f: ((LocalDateTime, V), (LocalDateTime, V), LocalDateTime) => V): TimeSeries[V] = {
     if (isEmpty) this
@@ -344,7 +357,7 @@ case class TimeSeries[V](idx: Vector[LocalDateTime], ds: Vector[V]) {
   }
 
   /** Remove outliers by interpolate values on their place */
-  def interpolateOutliers(min: V, max: V, f: (V, V) => V)(implicit num: Numeric[V]) = {
+  def interpolateOutliers(min: V, max: V, f: (V, V) => V)(implicit num: Numeric[V]): TimeSeries[V] = {
     val zipped = (num.zero +: values).zip(values).zip(values.tail :+ values.last)
     val vs = zipped.map(x => {
       if (num.compare(x._1._2, min) < 0) f(x._1._1, x._2)
