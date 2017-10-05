@@ -20,7 +20,7 @@ object BenchmarkApp{
   /** Resample */
   def measureResample(ts: TimeSeries[Float]): Unit =  TimeSeries.interpolate(ts, Duration.ofHours(1))
   /** Rolling window */
-  def measureIntegrateByTime(ts: TimeSeries[Float]): Unit = TimeSeries.integrateByTime(ts, Duration.ofHours(1))
+  def measureIntegrateByTime(ts: TimeSeries[Float]): Unit = TimeSeries.integrateByTime(ts, _.withMinute(0))
   /** Rolling window */
   def measureStep(ts: TimeSeries[Float]): Unit = TimeSeries.step(ts, Duration.ofMinutes(1))
   /** Find sessions */

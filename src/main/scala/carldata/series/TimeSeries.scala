@@ -71,20 +71,22 @@ object TimeSeries {
     * Integrate series for selected window.
     * Windows are not overlapping and sum starts at 0 at the beginning of each window
     */
-  def integrateByTime[V: Numeric](ts: TimeSeries[V], windowSize: Duration)(implicit num: Numeric[V]): TimeSeries[V] = {
+  def integrateByTime[V: Numeric](ts: TimeSeries[V], g: LocalDateTime => LocalDateTime)
+                                 (implicit num: Numeric[V]): TimeSeries[V] = {
     if (ts.isEmpty) ts
     else {
-      val end = ts.index.head.plus(windowSize)
+      val startTime = g(ts.index.head)
       // This buffer could be used inside foldLeft, but then Intellij Idea will show wrong errors in += operation.
-      val xs = ArrayBuffer.empty[V]
-      ts.index.zip(ts.values).foldLeft[(V, LocalDateTime)]((num.zero, end)) { (acc, x) =>
-        if (x._1.isBefore(acc._2)) {
-          val v = num.plus(acc._1, x._2)
+      val xs = ListBuffer.empty[V]
+      ts.dataPoints.foldLeft[(LocalDateTime, V)]((startTime, num.zero)) { (acc, x) =>
+        val t = g(x._1)
+        if (t.isEqual(acc._1)) {
+          val v = num.plus(acc._2, x._2)
           xs += v
-          (v, acc._2)
+          (acc._1, v)
         } else {
           xs += x._2
-          (x._2, acc._2.plus(windowSize))
+          (t, x._2)
         }
       }
       TimeSeries(ts.index, xs.toVector)
