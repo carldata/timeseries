@@ -1,5 +1,7 @@
 package carldata.series
 
+import java.time.LocalDateTime
+
 sealed trait CronElement
 
 case class NumberElement(v: Int) extends CronElement
@@ -29,7 +31,24 @@ object TimeConverter {
     }
   }
 
-  def mkConverter() = {}
+  def mkConverter(c: CronLike): LocalDateTime => LocalDateTime = {
+
+
+    def floor(x: Int, c: CronElement): Int = {
+      c match {
+        case n: NumberElement => n.v
+        case r: RepeatElement => (x / r.v) * r.v
+        case l: ListElement => l.s.sorted.reverse.find(n => n < x).getOrElse(0)
+        case a: AnyElement => x
+      }
+    }
+
+    def f(dt: LocalDateTime): LocalDateTime = {
+      dt.withMinute(floor(dt.getMinute, c.minutes))
+    }
+
+    f
+  }
 
   private def isAny(s: String): Option[AnyElement] = {
     if (s.length == 1 && s == "*") Some(AnyElement())
