@@ -1,6 +1,7 @@
 package carldata.series
 
 import java.time.LocalDateTime
+import java.time.temporal.{TemporalAdjuster, TemporalAdjusters}
 
 
 object TimeConverter {
@@ -32,14 +33,28 @@ object TimeConverter {
   def mkConverter(c: CronLike): LocalDateTime => LocalDateTime = { dt =>
     def floor(x: Int, c: CronElement): Int = {
       c match {
-        case n: NumberElement => n.v
+        case n: NumberElement => if (x >= n.v) n.v else -(n.v)
         case r: RepeatElement => (x / r.v) * r.v
         case l: ListElement => l.s.sorted.reverse.find(n => n < x).getOrElse(0)
         case _ => x
       }
     }
 
-    dt.withMinute(floor(dt.getMinute, c.minutes))
+    val t: Seq[Int] = Seq(
+      floor(dt.getMinute, c.minutes)
+      , floor(dt.getHour, c.hour)
+      , floor(dt.getDayOfMonth, c.dayOfMonth)
+      , floor(dt.getMonthValue, c.month)
+      , floor(dt.getDayOfWeek.getValue, c.dayOfWeek)
+    )
+    var res = if (t(0) > 0) dt.withMinute(t(0)) else dt.minusHours(1).withMinute(t(0))
+    res = if (t(1) > 0) res.withHour(t(1)) else res.minusDays(1).withHour(Math.abs(t(1))).withMinute(59)
+    res = if (t(3) > 0) {
+      if (t(3) == dt.getMonthValue) res.withMonth(t(3))
+      else res.withMonth(Math.abs(t(3))).`with`(TemporalAdjusters.lastDayOfMonth()).withHour(23).withMinute(59)
+    } else res.minusYears(1).withMonth(Math.abs(t(3))).`with`(TemporalAdjusters.lastDayOfMonth()).withHour(23).withMinute(59)
+
+    res
   }
 
   private def parseAny(s: String): Option[CronElement] = {

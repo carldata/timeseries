@@ -67,4 +67,46 @@ class TimeConverterTest extends FlatSpec with Matchers {
     TimeConverter.mkConverter(cron).apply(dt) shouldBe expected
   }
 
+  it should "parse and convert cron type */5 * * * *" in {
+    val dt = LocalDateTime.of(2017, 10, 10, 12, 7)
+    val expected = LocalDateTime.of(2017, 10, 10, 12, 5)
+    TimeConverter.mkConverter(TimeConverter.mkCronLike("*/5 * * * *").get).apply(dt) shouldBe expected
+  }
+
+  it should "parse and convert cron type 2,3,14 * * * *" in {
+    val dt = LocalDateTime.of(2017, 10, 10, 12, 7)
+    val expected = LocalDateTime.of(2017, 10, 10, 12, 3)
+    TimeConverter.mkConverter(TimeConverter.mkCronLike("2,3,14 * * * *").get).apply(dt) shouldBe expected
+  }
+
+  it should "parse and convert cron type * 12 * * *" in {
+    val dt = LocalDateTime.of(2017, 10, 10, 11, 7)
+    val expected = LocalDateTime.of(2017, 10, 9, 12, 59)
+    TimeConverter.mkConverter(TimeConverter.mkCronLike("* 12 * * *").get).apply(dt) shouldBe expected
+  }
+
+  it should "parse and convert cron type * * * 4 * case 1" in {
+    val dt = LocalDateTime.of(2017, 10, 10, 11, 7)
+    val expected = LocalDateTime.of(2017, 4, 30, 23, 59)
+    TimeConverter.mkConverter(TimeConverter.mkCronLike("* * * 4 *").get).apply(dt) shouldBe expected
+  }
+
+  it should "parse and convert cron type * * * 4 * case 2" in {
+    val dt = LocalDateTime.of(2017, 4, 10, 11, 7)
+    val expected = LocalDateTime.of(2017, 4, 10, 11, 7)
+    TimeConverter.mkConverter(TimeConverter.mkCronLike("* * * 4 *").get).apply(dt) shouldBe expected
+  }
+
+  it should "parse and convert cron type * * * 4 * case 3" in {
+    val dt = LocalDateTime.of(2017, 1, 10, 11, 7)
+    val expected = LocalDateTime.of(2016, 4, 30, 23, 59)
+    TimeConverter.mkConverter(TimeConverter.mkCronLike("* * * 4 *").get).apply(dt) shouldBe expected
+  }
+
+/*  it should "parse and convert cron type * * * * 3" in {
+    val dt = LocalDateTime.of(2017, 10, 10, 11, 7)
+    val expected = LocalDateTime.of(2016, 4, 30, 23, 59)
+    TimeConverter.mkConverter(TimeConverter.mkCronLike("* * * * 3").get).apply(dt) shouldBe expected
+  }*/
+
 }
