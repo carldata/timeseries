@@ -2,38 +2,34 @@ package carldata.series
 
 import java.time.LocalDateTime
 
-sealed trait CronElement
-
-case class NumberElement(v: Int) extends CronElement
-
-case class RepeatElement(v: Int) extends CronElement
-
-case class ListElement(s: Seq[Int]) extends CronElement
-
-case class AnyElement() extends CronElement
-
-case class CronLike(minutes: CronElement, hour: CronElement, dayOfMonth: CronElement, month: CronElement
-                    , dayOfWeek: CronElement)
 
 object TimeConverter {
 
+  sealed trait CronElement
+
+  case class NumberElement(v: Int) extends CronElement
+
+  case class RepeatElement(v: Int) extends CronElement
+
+  case class ListElement(s: Seq[Int]) extends CronElement
+
+  case class AnyElement() extends CronElement
+
+  case class CronLike(minutes: CronElement, hour: CronElement, dayOfMonth: CronElement, month: CronElement
+                      , dayOfWeek: CronElement)
+
   def mkCronLike(s: String): Either[String, CronLike] = {
     val xs = s.split(" ")
-      .map(x => (isNumber(x), x))
-      .map(x => if (x._1.isEmpty) (isRepetition(x._2), x._2) else x)
-      .map(x => if (x._1.isEmpty) (isList(x._2), x._2) else x)
-      .map(x => if (x._1.isEmpty) (isAny(x._2), x._2) else x)
-    if (xs.map(x => x._1).contains(None))
+      .map(parseElement)
+    if (xs.contains(None) || xs.length != 5)
       Left("Provided cron was incorrect")
     else {
-      val ys = xs.map(x => x._1.get)
+      val ys = xs.map(x => x.get)
       Right(CronLike(ys(0), ys(1), ys(2), ys(3), ys(4)))
     }
   }
 
-  def mkConverter(c: CronLike): LocalDateTime => LocalDateTime = {
-
-
+  def mkConverter(c: CronLike): LocalDateTime => LocalDateTime = { dt =>
     def floor(x: Int, c: CronElement): Int = {
       c match {
         case n: NumberElement => n.v
@@ -43,19 +39,15 @@ object TimeConverter {
       }
     }
 
-    def f(dt: LocalDateTime): LocalDateTime = {
-      dt.withMinute(floor(dt.getMinute, c.minutes))
-    }
-
-    f
+    dt.withMinute(floor(dt.getMinute, c.minutes))
   }
 
-  private def isAny(s: String): Option[AnyElement] = {
+  private def parseAny(s: String): Option[AnyElement] = {
     if (s.length == 1 && s == "*") Some(AnyElement())
     else None
   }
 
-  private def isList(s: String): Option[ListElement] = {
+  private def parseList(s: String): Option[ListElement] = {
     if (s.contains(",")) {
       val xs = s.split(",")
       if (xs.nonEmpty) {
@@ -72,18 +64,24 @@ object TimeConverter {
     else None
   }
 
-  private def isNumber(s: String): Option[NumberElement] = {
+  private def parseNumber(s: String): Option[NumberElement] = {
     if (Character.isDigit(s(0)) && !s.contains(",")) Some(NumberElement(s.toInt))
     else None
   }
 
-  private def isRepetition(s: String): Option[RepeatElement] = {
+  private def parseRepetition(s: String): Option[RepeatElement] = {
     if (s.contains("/")) {
-      val x = isNumber(s.split("/")(1))
+      val x = parseNumber(s.split("/")(1))
       if (x.isDefined) Some(RepeatElement(x.get.v))
       else None
     }
     else None
+  }
+
+  private def parseElement(s: String): Option[CronElement] = {
+    Seq(parseNumber(s), parseRepetition(s), parseList(s), parseAny(s))
+      .find(x => x.isDefined)
+      .flatten
   }
 
 

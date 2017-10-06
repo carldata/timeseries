@@ -1,7 +1,8 @@
 package carldata.series
 
-import java.time.{Duration, LocalDateTime, ZoneOffset}
+import java.time.LocalDateTime
 
+import carldata.series.TimeConverter._
 import org.scalatest._
 
 
