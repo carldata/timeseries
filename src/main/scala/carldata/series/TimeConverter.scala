@@ -13,19 +13,19 @@ object TimeConverter {
 
   case class ListElement(s: Seq[Int]) extends CronElement
 
-  case class AnyElement() extends CronElement
+  case object AnyElement extends CronElement
 
   case class CronLike(minutes: CronElement, hour: CronElement, dayOfMonth: CronElement, month: CronElement
                       , dayOfWeek: CronElement)
 
-  def mkCronLike(s: String): Either[String, CronLike] = {
+  def mkCronLike(s: String): Option[CronLike] = {
     val xs = s.split(" ")
       .map(parseElement)
     if (xs.contains(None) || xs.length != 5)
-      Left("Provided cron was incorrect")
+      None
     else {
       val ys = xs.map(x => x.get)
-      Right(CronLike(ys(0), ys(1), ys(2), ys(3), ys(4)))
+      Some(CronLike(ys(0), ys(1), ys(2), ys(3), ys(4)))
     }
   }
 
@@ -35,24 +35,24 @@ object TimeConverter {
         case n: NumberElement => n.v
         case r: RepeatElement => (x / r.v) * r.v
         case l: ListElement => l.s.sorted.reverse.find(n => n < x).getOrElse(0)
-        case a: AnyElement => x
+        case _ => x
       }
     }
 
     dt.withMinute(floor(dt.getMinute, c.minutes))
   }
 
-  private def parseAny(s: String): Option[AnyElement] = {
-    if (s.length == 1 && s == "*") Some(AnyElement())
+  private def parseAny(s: String): Option[CronElement] = {
+    if (s.length == 1 && s == "*") Some(AnyElement)
     else None
   }
 
-  private def parseList(s: String): Option[ListElement] = {
+  private def parseList(s: String): Option[CronElement] = {
     if (s.contains(",")) {
       val xs = s.split(",")
       if (xs.nonEmpty) {
         val ys = xs.map(x =>
-          if (Character.isDigit(x(0))) Some(x.toInt)
+          if (x.forall(y => Character.isDigit(y))) Some(x.toInt)
           else None
         )
         if (ys.contains(None)) None
@@ -64,15 +64,15 @@ object TimeConverter {
     else None
   }
 
-  private def parseNumber(s: String): Option[NumberElement] = {
-    if (Character.isDigit(s(0)) && !s.contains(",")) Some(NumberElement(s.toInt))
+  private def parseNumber(s: String): Option[CronElement] = {
+    if (s.forall(x => Character.isDigit(x)) && !s.contains(",")) Some(NumberElement(s.toInt))
     else None
   }
 
-  private def parseRepetition(s: String): Option[RepeatElement] = {
+  private def parseRepetition(s: String): Option[CronElement] = {
     if (s.contains("/")) {
       val x = parseNumber(s.split("/")(1))
-      if (x.isDefined) Some(RepeatElement(x.get.v))
+      if (x.isDefined) Some(RepeatElement(x.get.asInstanceOf[NumberElement].v))
       else None
     }
     else None
