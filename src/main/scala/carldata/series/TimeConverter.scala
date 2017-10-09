@@ -40,13 +40,6 @@ object TimeConverter {
       }
     }
 
-    def isAny(c: CronElement): Boolean = {
-      c match {
-        case AnyElement => true
-        case _ => false
-      }
-    }
-
     def setDayOfWeek(t1: Int, ct2: CronElement, dt: LocalDateTime): LocalDateTime = {
       ct2 match {
         case nt2: NumberElement =>
@@ -71,30 +64,35 @@ object TimeConverter {
       else dt.withMonth(Math.abs(t(3))).`with`(TemporalAdjusters.lastDayOfMonth()).withHour(23).withMinute(59)
     } else dt.minusYears(1).withMonth(Math.abs(t(3))).`with`(TemporalAdjusters.lastDayOfMonth()).withHour(23).withMinute(59)
 
-    if (!isAny(c.dayOfMonth)) res = if (t(2) > 0) {
-      if (t(2) == dt.getDayOfMonth) res.withDayOfMonth(t(2))
-      else res.withDayOfMonth(Math.abs(t(2))).withHour(23).withMinute(59)
-    } else res.minusMonths(1).withDayOfMonth(Math.abs(t(2))).withHour(23).withMinute(59)
+    if (c.dayOfMonth != AnyElement) {
+      res = if (t(2) > 0) {
+        if (t(2) == dt.getDayOfMonth) res.withDayOfMonth(t(2))
+        else res.withDayOfMonth(Math.abs(t(2))).withHour(23).withMinute(59)
+      } else res.minusMonths(1).withDayOfMonth(Math.abs(t(2))).withHour(23).withMinute(59)
+    }
+    if (c.dayOfWeek != AnyElement) {
+      res = if (t(4) > 0) {
+        if (t(4) == dt.getDayOfWeek.getValue) res
+        else setDayOfWeek(dt.getDayOfWeek.getValue, c.dayOfWeek, res).withHour(23).withMinute(59)
+      } else setDayOfWeek(dt.getDayOfWeek.getValue, c.dayOfWeek, res).withHour(23).withMinute(59)
 
-    if (!isAny(c.dayOfWeek)) res = if (t(4) > 0) {
-      if (t(4) == dt.getDayOfWeek.getValue) res
-      else setDayOfWeek(dt.getDayOfWeek.getValue, c.dayOfWeek, res).withHour(23).withMinute(59)
-    } else setDayOfWeek(dt.getDayOfWeek.getValue, c.dayOfWeek, res).withHour(23).withMinute(59)
-
-
-    if (!isAny(c.hour)) res = if (t(1) > 0) res.withHour(t(1)) else res.minusDays(1).withHour(Math.abs(t(1))).withMinute(59)
-    if (!isAny(c.minutes)) res = if (t(0) > 0) res.withMinute(t(0)) else res.minusHours(1).withMinute(t(0))
+    }
+    if (c.hour != AnyElement) {
+      res = if (t(1) > 0) res.withHour(t(1)) else res.minusDays(1).withHour(Math.abs(t(1))).withMinute(59)
+    }
+    if (c.minutes != AnyElement) {
+      res = if (t(0) > 0) res.withMinute(t(0)) else res.minusHours(1).withMinute(t(0))
+    }
 
     res
   }
 
   private def parseAny(s: String): Option[CronElement] = {
-    if (s.length == 1 && s == "*") Some(AnyElement)
+    if (s == "*") Some(AnyElement)
     else None
   }
 
   private def parseList(s: String): Option[CronElement] = {
-    if (s.contains(",")) {
       val xs = s.split(",")
       if (xs.nonEmpty) {
         val ys = xs.map(x =>
@@ -106,8 +104,6 @@ object TimeConverter {
           Some(ListElement(ys.flatten))
       }
       else None
-    }
-    else None
   }
 
   private def parseNumber(s: String): Option[CronElement] = {
