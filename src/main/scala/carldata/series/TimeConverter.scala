@@ -47,6 +47,17 @@ object TimeConverter {
       }
     }
 
+    def setDayOfWeek(t1: Int, ct2: CronElement, dt: LocalDateTime): LocalDateTime = {
+      ct2 match {
+        case nt2: NumberElement =>
+          val t2 = nt2.v
+          if (t1 == t2) dt
+          else if (t1 > t2) dt.minusDays(t1 - t2)
+          else dt.minusDays(7 - (t2 - t1))
+        case _ => dt
+      }
+    }
+
     val t: Seq[Int] = Seq(
       floor(dt.getMinute, c.minutes)
       , floor(dt.getHour, c.hour)
@@ -64,6 +75,11 @@ object TimeConverter {
       if (t(2) == dt.getDayOfMonth) res.withDayOfMonth(t(2))
       else res.withDayOfMonth(Math.abs(t(2))).withHour(23).withMinute(59)
     } else res.minusMonths(1).withDayOfMonth(Math.abs(t(2))).withHour(23).withMinute(59)
+
+    if (!isAny(c.dayOfWeek)) res = if (t(4) > 0) {
+      if (t(4) == dt.getDayOfWeek.getValue) res
+      else setDayOfWeek(dt.getDayOfWeek.getValue, c.dayOfWeek, res).withHour(23).withMinute(59)
+    } else setDayOfWeek(dt.getDayOfWeek.getValue, c.dayOfWeek, res).withHour(23).withMinute(59)
 
 
     if (!isAny(c.hour)) res = if (t(1) > 0) res.withHour(t(1)) else res.minusDays(1).withHour(Math.abs(t(1))).withMinute(59)
