@@ -34,7 +34,7 @@ sbt -mem 4000 run
   * IO
     * [x] Read data from CSV string
   * Advanced functionality
-    * [ ] Finding sessions (periods of activity)
+    * [x] Finding sessions (periods of activity)
     * [ ] Finding patterns
   * Anomaly detection
     * [ ] Outliers
