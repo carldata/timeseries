@@ -103,10 +103,35 @@ class TimeConverterTest extends FlatSpec with Matchers {
     TimeConverter.mkConverter(TimeConverter.mkCronLike("* * * 4 *").get).apply(dt) shouldBe expected
   }
 
-/*  it should "parse and convert cron type * * * * 3" in {
-    val dt = LocalDateTime.of(2017, 10, 10, 11, 7)
-    val expected = LocalDateTime.of(2016, 4, 30, 23, 59)
+  it should "parse and convert cron type * * 14 * * case 1: after" in {
+    val dt = LocalDateTime.of(2017, 10, 15, 11, 7)
+    val expected = LocalDateTime.of(2017, 10, 14, 23, 59)
+    TimeConverter.mkConverter(TimeConverter.mkCronLike("* * 14 * *").get).apply(dt) shouldBe expected
+  }
+
+  it should "parse and convert cron type * * 14 * * case 2" in {
+    val dt = LocalDateTime.of(2017, 10, 14, 11, 7)
+    val expected = LocalDateTime.of(2017, 10, 14, 11, 7)
+    TimeConverter.mkConverter(TimeConverter.mkCronLike("* * 14 * *").get).apply(dt) shouldBe expected
+  }
+
+  it should "parse and convert cron type * * 14 * * case 3: before" in {
+    val dt = LocalDateTime.of(2017, 10, 13, 11, 7)
+    val expected = LocalDateTime.of(2017, 9, 14, 23, 59)
+    TimeConverter.mkConverter(TimeConverter.mkCronLike("* * 14 * *").get).apply(dt) shouldBe expected
+  }
+
+/*  it should "parse and convert cron type * * * * 3 case 1: after" in {
+    val dt = LocalDateTime.of(2017, 10, 13, 11, 7)
+    val expected = LocalDateTime.of(2017, 10, 11, 23, 59)
+    TimeConverter.mkConverter(TimeConverter.mkCronLike("* * * * 3").get).apply(dt) shouldBe expected
+  }
+
+  it should "parse and convert cron type * * * * 3 case 2" in {
+    val dt = LocalDateTime.of(2017, 10, 11, 11, 7)
+    val expected = LocalDateTime.of(2016, 10, 11, 11, 7)
     TimeConverter.mkConverter(TimeConverter.mkCronLike("* * * * 3").get).apply(dt) shouldBe expected
   }*/
+
 
 }

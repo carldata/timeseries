@@ -40,6 +40,13 @@ object TimeConverter {
       }
     }
 
+    def isAny(c: CronElement): Boolean = {
+      c match {
+        case AnyElement => true
+        case _ => false
+      }
+    }
+
     val t: Seq[Int] = Seq(
       floor(dt.getMinute, c.minutes)
       , floor(dt.getHour, c.hour)
@@ -47,12 +54,20 @@ object TimeConverter {
       , floor(dt.getMonthValue, c.month)
       , floor(dt.getDayOfWeek.getValue, c.dayOfWeek)
     )
-    var res = if (t(0) > 0) dt.withMinute(t(0)) else dt.minusHours(1).withMinute(t(0))
-    res = if (t(1) > 0) res.withHour(t(1)) else res.minusDays(1).withHour(Math.abs(t(1))).withMinute(59)
-    res = if (t(3) > 0) {
-      if (t(3) == dt.getMonthValue) res.withMonth(t(3))
-      else res.withMonth(Math.abs(t(3))).`with`(TemporalAdjusters.lastDayOfMonth()).withHour(23).withMinute(59)
-    } else res.minusYears(1).withMonth(Math.abs(t(3))).`with`(TemporalAdjusters.lastDayOfMonth()).withHour(23).withMinute(59)
+
+    var res = if (t(3) > 0) {
+      if (t(3) == dt.getMonthValue) dt.withMonth(t(3))
+      else dt.withMonth(Math.abs(t(3))).`with`(TemporalAdjusters.lastDayOfMonth()).withHour(23).withMinute(59)
+    } else dt.minusYears(1).withMonth(Math.abs(t(3))).`with`(TemporalAdjusters.lastDayOfMonth()).withHour(23).withMinute(59)
+
+    if (!isAny(c.dayOfMonth)) res = if (t(2) > 0) {
+      if (t(2) == dt.getDayOfMonth) res.withDayOfMonth(t(2))
+      else res.withDayOfMonth(Math.abs(t(2))).withHour(23).withMinute(59)
+    } else res.minusMonths(1).withDayOfMonth(Math.abs(t(2))).withHour(23).withMinute(59)
+
+
+    if (!isAny(c.hour)) res = if (t(1) > 0) res.withHour(t(1)) else res.minusDays(1).withHour(Math.abs(t(1))).withMinute(59)
+    if (!isAny(c.minutes)) res = if (t(0) > 0) res.withMinute(t(0)) else res.minusHours(1).withMinute(t(0))
 
     res
   }
