@@ -70,18 +70,26 @@ object TimeConverter {
         else res.withDayOfMonth(Math.abs(t(2))).withHour(23).withMinute(59)
       } else res.minusMonths(1).withDayOfMonth(Math.abs(t(2))).withHour(23).withMinute(59)
     }
+
     if (c.dayOfWeek != AnyElement) {
       res = if (t(4) > 0) {
         if (t(4) == dt.getDayOfWeek.getValue) res
         else setDayOfWeek(dt.getDayOfWeek.getValue, c.dayOfWeek, res).withHour(23).withMinute(59)
       } else setDayOfWeek(dt.getDayOfWeek.getValue, c.dayOfWeek, res).withHour(23).withMinute(59)
+    }
 
-    }
     if (c.hour != AnyElement) {
-      res = if (t(1) > 0) res.withHour(t(1)) else res.minusDays(1).withHour(Math.abs(t(1))).withMinute(59)
+      res = if (t(1) > 0) {
+        if (t(1) == dt.getHour) res
+        else res.withHour(t(1)).withMinute(59)
+      } else res.minusDays(1).withHour(Math.abs(t(1))).withMinute(59)
     }
+
     if (c.minutes != AnyElement) {
-      res = if (t(0) > 0) res.withMinute(t(0)) else res.minusHours(1).withMinute(t(0))
+      res = if (t.head > 0) {
+        if (t.head == dt.getMinute) res
+        else res.withMinute(t.head)
+      } else res.minusHours(1).withMinute(Math.abs(t.head))
     }
 
     res
@@ -93,17 +101,17 @@ object TimeConverter {
   }
 
   private def parseList(s: String): Option[CronElement] = {
-      val xs = s.split(",")
-      if (xs.nonEmpty) {
-        val ys = xs.map(x =>
-          if (x.forall(y => Character.isDigit(y))) Some(x.toInt)
-          else None
-        )
-        if (ys.contains(None)) None
-        else
-          Some(ListElement(ys.flatten))
-      }
-      else None
+    val xs = s.split(",")
+    if (xs.nonEmpty) {
+      val ys = xs.map(x =>
+        if (x.forall(y => Character.isDigit(y))) Some(x.toInt)
+        else None
+      )
+      if (ys.contains(None)) None
+      else
+        Some(ListElement(ys.flatten))
+    }
+    else None
   }
 
   private def parseNumber(s: String): Option[CronElement] = {
