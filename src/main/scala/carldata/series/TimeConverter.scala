@@ -47,6 +47,7 @@ object TimeConverter {
           if (t1 == t2) dt
           else if (t1 > t2) dt.minusDays(t1 - t2)
           else dt.minusDays(7 - (t2 - t1))
+        case rt2: RepeatElement => setDayOfWeek(t1, NumberElement(rt2.v), dt)
         case _ => dt
       }
     }
@@ -59,30 +60,42 @@ object TimeConverter {
       , floor(dt.getDayOfWeek.getValue, c.dayOfWeek)
     )
 
-    var res = if (t(3) > 0) {
-      if (t(3) == dt.getMonthValue) dt.withMonth(t(3))
-      else dt.withMonth(Math.abs(t(3))).`with`(TemporalAdjusters.lastDayOfMonth()).withHour(23).withMinute(59)
-    } else dt.minusYears(1).withMonth(Math.abs(t(3))).`with`(TemporalAdjusters.lastDayOfMonth()).withHour(23).withMinute(59)
+    var res = if (c.month != AnyElement) {
+      if (c.month.isInstanceOf[RepeatElement]) dt.withMonth(t(3)).withDayOfMonth(1).withHour(0).withMinute(0)
+      else if (t(3) > 0) {
+        if (t(3) == dt.getMonthValue) dt.withMonth(t(3))
+        else dt.withMonth(Math.abs(t(3))).`with`(TemporalAdjusters.lastDayOfMonth()).withHour(23).withMinute(59)
+      } else dt.minusYears(1).withMonth(Math.abs(t(3))).`with`(TemporalAdjusters.lastDayOfMonth()).withHour(23).withMinute(59)
+    } else dt
 
     if (c.dayOfMonth != AnyElement) {
-      res = if (t(2) > 0) {
-        if (t(2) == dt.getDayOfMonth) res.withDayOfMonth(t(2))
-        else res.withDayOfMonth(Math.abs(t(2))).withHour(23).withMinute(59)
-      } else res.minusMonths(1).withDayOfMonth(Math.abs(t(2))).withHour(23).withMinute(59)
+      res = if (c.dayOfMonth.isInstanceOf[RepeatElement]) res.withDayOfMonth(t(2)).withHour(0).withMinute(0)
+      else {
+        if (t(2) > 0) {
+          if (t(2) == dt.getDayOfMonth) res.withDayOfMonth(t(2))
+          else res.withDayOfMonth(Math.abs(t(2))).withHour(23).withMinute(59)
+        } else res.minusMonths(1).withDayOfMonth(Math.abs(t(2))).withHour(23).withMinute(59)
+      }
     }
 
     if (c.dayOfWeek != AnyElement) {
-      res = if (t(4) > 0) {
-        if (t(4) == dt.getDayOfWeek.getValue) res
-        else setDayOfWeek(dt.getDayOfWeek.getValue, c.dayOfWeek, res).withHour(23).withMinute(59)
-      } else setDayOfWeek(dt.getDayOfWeek.getValue, c.dayOfWeek, res).withHour(23).withMinute(59)
+      res = if (c.dayOfWeek.isInstanceOf[RepeatElement]) setDayOfWeek(t(4), c.dayOfWeek, res).withHour(0).withMinute(0)
+      else {
+        if (t(4) > 0) {
+          if (t(4) == dt.getDayOfWeek.getValue) res
+          else setDayOfWeek(dt.getDayOfWeek.getValue, c.dayOfWeek, res).withHour(23).withMinute(59)
+        } else setDayOfWeek(dt.getDayOfWeek.getValue, c.dayOfWeek, res).withHour(23).withMinute(59)
+      }
     }
 
     if (c.hour != AnyElement) {
-      res = if (t(1) > 0) {
-        if (t(1) == dt.getHour) res
-        else res.withHour(t(1)).withMinute(59)
-      } else res.minusDays(1).withHour(Math.abs(t(1))).withMinute(59)
+      res = if (c.hour.isInstanceOf[RepeatElement]) res.withHour(t(1)).withMinute(0)
+      else {
+        if (t(1) > 0) {
+          if (t(1) == dt.getHour) res
+          else res.withHour(t(1)).withMinute(59)
+        } else res.minusDays(1).withHour(Math.abs(t(1))).withMinute(59)
+      }
     }
 
     if (c.minutes != AnyElement) {
@@ -92,7 +105,8 @@ object TimeConverter {
       } else res.minusHours(1).withMinute(Math.abs(t.head))
     }
 
-    res
+    res.withSecond(0)
+      .withNano(0)
   }
 
   private def parseAny(s: String): Option[CronElement] = {
