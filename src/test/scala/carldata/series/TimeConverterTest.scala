@@ -90,6 +90,36 @@ class TimeConverterTest extends FlatSpec with Matchers {
     TimeConverter.mkConverter(TimeConverter.mkCronLike("*/5 * * * *").get)(dt) shouldBe expected
   }
 
+  it should "parse and convert cron type */1 * * * * with seconds part" in {
+    val dt = LocalDateTime.of(2017, 10, 10, 12, 7, 11 ,11)
+    val expected = LocalDateTime.of(2017, 10, 10, 12, 7)
+    TimeConverter.mkConverter(TimeConverter.mkCronLike("*/1 * * * *").get)(dt) shouldBe expected
+  }
+
+  it should "parse and convert cron type * */3 * * * " in {
+    val dt = LocalDateTime.of(2017, 10, 10, 12, 7)
+    val expected = LocalDateTime.of(2017, 10, 10, 12, 0)
+    TimeConverter.mkConverter(TimeConverter.mkCronLike("* */3 * * *").get)(dt) shouldBe expected
+  }
+
+  it should "parse and convert cron type * * */2 * * " in {
+    val dt = LocalDateTime.of(2017, 10, 9, 12, 7)
+    val expected = LocalDateTime.of(2017, 10, 8, 0, 0)
+    TimeConverter.mkConverter(TimeConverter.mkCronLike("* * */2 * *").get)(dt) shouldBe expected
+  }
+
+  it should "parse and convert cron type * * * */5 * " in {
+    val dt = LocalDateTime.of(2017, 6, 9, 12, 7)
+    val expected = LocalDateTime.of(2017, 5, 1, 0, 0)
+    TimeConverter.mkConverter(TimeConverter.mkCronLike("* * * */5 *").get)(dt) shouldBe expected
+  }
+
+  it should "parse and convert cron type * * * * */3" in {
+    val dt = LocalDateTime.of(2017, 10, 12, 12, 7) //Friday
+    val expected = LocalDateTime.of(2017, 10, 11, 0, 0) //Wednesday
+    TimeConverter.mkConverter(TimeConverter.mkCronLike("* * * * */6").get)(dt) shouldBe expected
+  }
+
   it should "parse and convert cron type 2,3,14 * * * *" in {
     val dt = LocalDateTime.of(2017, 10, 10, 12, 7)
     val expected = LocalDateTime.of(2017, 10, 10, 12, 3)
