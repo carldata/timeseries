@@ -8,6 +8,9 @@ object Sessions {
 
   case class Session(startIndex: Int, endIndex: Int)
 
+  /**
+    * Session is continuous period where the data point value is not 0
+    */
   def findSessions[V: Numeric](ts: TimeSeries[V]): Seq[Session] = {
     val tss = ts.values.zipWithIndex
     // where: (_1, _2, _3) = (index of the first of compared pair, first pair value, second pair value)
