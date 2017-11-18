@@ -167,6 +167,21 @@ case class TimeSeries[V](idx: Vector[LocalDateTime], ds: Vector[V]) {
     } yield (i, v)
   }
 
+  /** Return new Time Series where index is always increasing */
+  def ensureIncreasing: TimeSeries[V] = {
+    if (isEmpty) this
+    else {
+      val ds = dataPoints
+      val xs = ListBuffer[(LocalDateTime, V)](ds.head)
+      ds.tail.foreach{ d =>
+        if(d._1.isAfter(xs.last._1)){
+          xs.append(d)
+        }
+      }
+      new TimeSeries(xs.toVector)
+    }
+  }
+
   /** Filter by index and value */
   def filter(f: ((LocalDateTime, V)) => Boolean): TimeSeries[V] = {
     new TimeSeries(index.zip(values).filter(f))

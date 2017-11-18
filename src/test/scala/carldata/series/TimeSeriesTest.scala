@@ -91,7 +91,13 @@ class TimeSeriesTest extends FlatSpec with Matchers {
     series.filter(x => x._2 > 0).length shouldBe 2
   }
 
-  it should "return subseries" in {
+  it should "ensure that the index is increasing" in {
+    val series: TimeSeries[Int] = TimeSeries.fromTimestamps(Seq((1, 1), (2, 2), (5, 5), (3, 3), (4, 4), (6, 6)))
+    val expected: TimeSeries[Int] = TimeSeries.fromTimestamps(Seq((1, 1), (2, 2), (5, 5), (6, 6)))
+    series.ensureIncreasing shouldBe expected
+  }
+
+  it should "return sub series" in {
     val series: TimeSeries[Int] = TimeSeries.fromTimestamps(Seq((1, 1), (2, -3), (3, 6), (4, 6), (5, 6), (6, 6)))
     val start = LocalDateTime.ofEpochSecond(2, 0, ZoneOffset.UTC)
     val end = LocalDateTime.ofEpochSecond(6, 0, ZoneOffset.UTC)

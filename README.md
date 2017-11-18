@@ -10,7 +10,7 @@ Library for processing Time Series.
  
  Add the following dependency to the build.sbt
  ```scala
- libraryDependencies += "io.github.carldata" %% "timeseries" % "0.4.5"
+ libraryDependencies += "io.github.carldata" %% "timeseries" % "0.4.6"
  ```
 
 Running benchmarks
