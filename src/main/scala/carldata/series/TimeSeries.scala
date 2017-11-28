@@ -201,22 +201,40 @@ case class TimeSeries[V](idx: Vector[LocalDateTime], ds: Vector[V]) {
 
   /** Merges series A into B */
   def merge(ts: TimeSeries[V]): TimeSeries[V] = {
-    def f(t: (LocalDateTime, V)): Boolean = !index.contains(t._1)
+    val res: mutable.ListBuffer[(LocalDateTime, V)] = ListBuffer()
 
     @tailrec
     def insert(xs: TimeSeries[V], ys: TimeSeries[V]): TimeSeries[V] = {
-      if (ys.head.isDefined) {
-        val (idxFront, idxBack) = xs.index.splitAt(xs.index.indexWhere(x => x.isAfter(ys.head.get._1)))
-        val (vsFront, vsBack) = xs.values.splitAt(idxFront.size)
-        val idx: Vector[LocalDateTime] = idxFront ++ List(ys.head.get._1) ++ idxBack
-        val vs: Vector[V] = vsFront ++ List(ys.head.get._2) ++ vsBack
-        insert(new TimeSeries[V](idx, vs), new TimeSeries[V](ys.index.tail, ys.values.tail))
+      if (xs.nonEmpty) {
+        val x = xs.head.get
+        if (ys.nonEmpty) {
+          val y = ys.head.get
+          if (y._1.isBefore(x._1)) {
+            res.append(y)
+            insert(xs, new TimeSeries[V](ys.index.tail, ys.values.tail))
+          }
+          else if (y._1.isAfter(x._1)) {
+            res.append((x._1, x._2))
+            insert(new TimeSeries[V](xs.index.tail, xs.values.tail), ys)
+          }
+          else {
+            res.append(x)
+            insert(new TimeSeries[V](xs.index.tail, xs.values.tail), new TimeSeries[V](ys.index.tail, ys.values.tail))
+          }
+        }
+        else {
+          xs.dataPoints.foreach(x=>res.append(x))
+          val rs = res.unzip
+          new TimeSeries[V](rs._1.toVector, rs._2.toVector)
+        }
       }
-      else xs
+      else {
+        val rs = res.unzip
+        new TimeSeries[V](rs._1.toVector, rs._2.toVector)
+      }
     }
 
-    val ys = ts.filter(f)
-    insert(this, ys)
+    insert(this, ts)
   }
 
 
