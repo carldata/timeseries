@@ -173,8 +173,8 @@ case class TimeSeries[V](idx: Vector[LocalDateTime], ds: Vector[V]) {
     else {
       val ds = dataPoints
       val xs = ListBuffer[(LocalDateTime, V)](ds.head)
-      ds.tail.foreach{ d =>
-        if(d._1.isAfter(xs.last._1)){
+      ds.tail.foreach { d =>
+        if (d._1.isAfter(xs.last._1)) {
           xs.append(d)
         }
       }
@@ -198,6 +198,43 @@ case class TimeSeries[V](idx: Vector[LocalDateTime], ds: Vector[V]) {
     val vs: Vector[U] = values.map(f)
     new TimeSeries(index, vs)
   }
+
+  /** Merges series A into B */
+  def merge(ts: TimeSeries[V]): TimeSeries[V] = {
+    val res: mutable.ListBuffer[(LocalDateTime, V)] = ListBuffer()
+
+    @tailrec
+    def insert(xs: Vector[(LocalDateTime, V)], ys: Vector[(LocalDateTime, V)]): Vector[(LocalDateTime, V)] = {
+
+      if (xs.nonEmpty) {
+        val x = xs.head
+        if (ys.nonEmpty) {
+          val y = ys.head
+          if (y._1.isBefore(x._1)) {
+            res.append(y)
+            insert(xs, ys.tail)
+          }
+          else if (y._1.isAfter(x._1)) {
+            res.append((x._1, x._2))
+            insert(xs.tail, ys)
+          }
+          else {
+            res.append(x)
+            insert(xs.tail, ys.tail)
+          }
+        }
+        else {
+          xs.foreach(x => res.append(x))
+          res.toVector
+        }
+      }
+      else res.toVector
+    }
+    
+    val rs = insert(this.dataPoints, ts.dataPoints)
+    new TimeSeries[V](rs)
+  }
+
 
   /** Get slice of series with left side inclusive and right side exclusive
     * this operation is based on index.
@@ -231,8 +268,9 @@ case class TimeSeries[V](idx: Vector[LocalDateTime], ds: Vector[V]) {
   /**
     * Resample given TimeSeries with indexes separated by delta.
     * This function will ensure that series is evenly spaced.
-    * @param delta  Distance between points
-    * @param f      Function which approximates missing points
+    *
+    * @param delta Distance between points
+    * @param f     Function which approximates missing points
     */
   def resample(delta: Duration, f: ((LocalDateTime, V), (LocalDateTime, V), LocalDateTime) => V)(implicit num: Numeric[V]): TimeSeries[V] = {
     if (index.isEmpty) TimeSeries.empty[V](num)
@@ -276,8 +314,9 @@ case class TimeSeries[V](idx: Vector[LocalDateTime], ds: Vector[V]) {
   /**
     * Add missing points to the time series. The output series will have all its own points
     * and some new points if there are missing at every duration.
-    * @param delta  Expected distance between points
-    * @param f      This function will approximate missing points.
+    *
+    * @param delta Expected distance between points
+    * @param f     This function will approximate missing points.
     */
   def addMissing(delta: Duration, f: ((LocalDateTime, V), (LocalDateTime, V), LocalDateTime) => V): TimeSeries[V] = {
     if (isEmpty) this

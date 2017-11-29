@@ -22,14 +22,8 @@ class CsvTest extends FlatSpec with Matchers {
     val now = LocalDateTime.parse("2015-01-01T00:00:00")
     val idx = Vector(now, now.plusMinutes(1), now.plusMinutes(2), now.plusMinutes(3))
     val series = TimeSeries(idx, Vector(1f, 4f, 6f, 9f))
-    val expected =
-      """time,value
-        |2015-01-01T00:00:00,1.0
-        |2015-01-01T00:01:00,4.0
-        |2015-01-01T00:02:00,6.0
-        |2015-01-01T00:03:00,9.0""".stripMargin
     val csv = Csv.toCsv(series)
-    expected shouldBe csv
+    series shouldBe Csv.fromString(csv)
   }
 
 }
