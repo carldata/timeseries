@@ -204,37 +204,35 @@ case class TimeSeries[V](idx: Vector[LocalDateTime], ds: Vector[V]) {
     val res: mutable.ListBuffer[(LocalDateTime, V)] = ListBuffer()
 
     @tailrec
-    def insert(xs: TimeSeries[V], ys: TimeSeries[V]): TimeSeries[V] = {
+    def insert(xs: Vector[(LocalDateTime, V)], ys: Vector[(LocalDateTime, V)]): Vector[(LocalDateTime, V)] = {
+
       if (xs.nonEmpty) {
-        val x = xs.head.get
+        val x = xs.head
         if (ys.nonEmpty) {
-          val y = ys.head.get
+          val y = ys.head
           if (y._1.isBefore(x._1)) {
             res.append(y)
-            insert(xs, new TimeSeries[V](ys.index.tail, ys.values.tail))
+            insert(xs, ys.tail)
           }
           else if (y._1.isAfter(x._1)) {
             res.append((x._1, x._2))
-            insert(new TimeSeries[V](xs.index.tail, xs.values.tail), ys)
+            insert(xs.tail, ys)
           }
           else {
             res.append(x)
-            insert(new TimeSeries[V](xs.index.tail, xs.values.tail), new TimeSeries[V](ys.index.tail, ys.values.tail))
+            insert(xs.tail, ys.tail)
           }
         }
         else {
-          xs.dataPoints.foreach(x=>res.append(x))
-          val rs = res.unzip
-          new TimeSeries[V](rs._1.toVector, rs._2.toVector)
+          xs.foreach(x => res.append(x))
+          res.toVector
         }
       }
-      else {
-        val rs = res.unzip
-        new TimeSeries[V](rs._1.toVector, rs._2.toVector)
-      }
+      else res.toVector
     }
-
-    insert(this, ts)
+    
+    val rs = insert(this.dataPoints, ts.dataPoints)
+    new TimeSeries[V](rs)
   }
 
 
