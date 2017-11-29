@@ -230,7 +230,7 @@ case class TimeSeries[V](idx: Vector[LocalDateTime], ds: Vector[V]) {
       }
       else res.toVector
     }
-    
+
     val rs = insert(this.dataPoints, ts.dataPoints)
     new TimeSeries[V](rs)
   }
@@ -470,5 +470,30 @@ case class TimeSeries[V](idx: Vector[LocalDateTime], ds: Vector[V]) {
     new TimeSeries(joinR(dataPoints, ts.dataPoints))
   }
 
+  /** Outer join. If one of the series doesn't have a data point then put default(left or right) value. */
+  def joinOuter[U](ts: TimeSeries[U], defaultLeft: V, defaultRight: U): TimeSeries[(V, U)] = {
+    val builder: mutable.ListBuffer[(LocalDateTime, (V, U))] = ListBuffer()
+
+    @tailrec def joinR(dp1: Vector[(LocalDateTime, V)],
+                       dp2: Vector[(LocalDateTime, U)]): Seq[(LocalDateTime, (V, U))] = {
+      if (dp1.isEmpty | dp2.isEmpty) builder
+      else {
+        val p1 = dp1.head
+        val p2 = dp2.head
+        if (p1._1.isEqual(p2._1)) {
+          builder.append((p1._1, (p1._2, p2._2)))
+          joinR(dp1.tail, dp2.tail)
+        } else if (p1._1.isBefore(p2._1)) {
+          builder.append((p1._1, (p1._2, defaultRight)))
+          joinR(dp1.tail, dp2)
+        } else {
+          builder.append((p2._1, (defaultLeft, p2._2)))
+          joinR(dp1, dp2.tail)
+        }
+      }
+    }
+
+    new TimeSeries(joinR(dataPoints, ts.dataPoints))
+  }
 }
 
