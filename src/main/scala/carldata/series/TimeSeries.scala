@@ -230,7 +230,7 @@ case class TimeSeries[V](idx: Vector[LocalDateTime], ds: Vector[V]) {
       }
       else res.toVector
     }
-    
+
     val rs = insert(this.dataPoints, ts.dataPoints)
     new TimeSeries[V](rs)
   }
@@ -427,18 +427,18 @@ case class TimeSeries[V](idx: Vector[LocalDateTime], ds: Vector[V]) {
   def join[U](ts: TimeSeries[U]): TimeSeries[(V, U)] = {
     val builder: mutable.ListBuffer[(LocalDateTime, (V, U))] = ListBuffer()
 
-    @tailrec def joinR(dp1: Vector[(LocalDateTime, V)],
-                       dp2: Vector[(LocalDateTime, U)]): Seq[(LocalDateTime, (V, U))] = {
-      if (dp1.isEmpty | dp2.isEmpty) builder
+    @tailrec def joinR(xs: Vector[(LocalDateTime, V)],
+                       ys: Vector[(LocalDateTime, U)]): Seq[(LocalDateTime, (V, U))] = {
+      if (xs.isEmpty || ys.isEmpty) builder
       else {
-        val p1 = dp1.head
-        val p2 = dp2.head
-        if (p1._1.isEqual(p2._1)) {
-          builder.append((p1._1, (p1._2, p2._2)))
-          joinR(dp1.tail, dp2.tail)
+        val x = xs.head
+        val y = ys.head
+        if (x._1.isEqual(y._1)) {
+          builder.append((x._1, (x._2, y._2)))
+          joinR(xs.tail, ys.tail)
         }
-        else if (p1._1.isBefore(p2._1)) joinR(dp1.tail, dp2)
-        else joinR(dp1, dp2.tail)
+        else if (x._1.isBefore(y._1)) joinR(xs.tail, ys)
+        else joinR(xs, ys.tail)
 
       }
     }
@@ -450,25 +450,56 @@ case class TimeSeries[V](idx: Vector[LocalDateTime], ds: Vector[V]) {
   def joinLeft[U](ts: TimeSeries[U], default: U): TimeSeries[(V, U)] = {
     val builder: mutable.ListBuffer[(LocalDateTime, (V, U))] = ListBuffer()
 
-    @tailrec def joinR(dp1: Vector[(LocalDateTime, V)],
-                       dp2: Vector[(LocalDateTime, U)]): Seq[(LocalDateTime, (V, U))] = {
-      if (dp1.isEmpty | dp2.isEmpty) builder
+    @tailrec def joinR(xs: Vector[(LocalDateTime, V)],
+                       ys: Vector[(LocalDateTime, U)]): Seq[(LocalDateTime, (V, U))] = {
+      if (xs.isEmpty || ys.isEmpty) builder
       else {
-        val p1 = dp1.head
-        val p2 = dp2.head
-        if (p1._1.isEqual(p2._1)) {
-          builder.append((p1._1, (p1._2, p2._2)))
-          joinR(dp1.tail, dp2.tail)
-        } else if (p1._1.isBefore(p2._1)) {
-          builder.append((p1._1, (p1._2, default)))
-          joinR(dp1.tail, dp2)
-        } else joinR(dp1, dp2.tail)
-
+        val x = xs.head
+        val y = ys.head
+        if (x._1.isEqual(y._1)) {
+          builder.append((x._1, (x._2, y._2)))
+          joinR(xs.tail, ys.tail)
+        } else if (x._1.isBefore(y._1)) {
+          builder.append((x._1, (x._2, default)))
+          joinR(xs.tail, ys)
+        } else joinR(xs, ys.tail)
       }
     }
 
     new TimeSeries(joinR(dataPoints, ts.dataPoints))
   }
 
+  /** Outer join. If one of the series doesn't have a data point then put default(left or right) value. */
+  def joinOuter[U](ts: TimeSeries[U], defaultLeft: V, defaultRight: U): TimeSeries[(V, U)] = {
+    val builder: mutable.ListBuffer[(LocalDateTime, (V, U))] = ListBuffer()
+
+    @tailrec def joinR(xs: Vector[(LocalDateTime, V)],
+                       ys: Vector[(LocalDateTime, U)]): Seq[(LocalDateTime, (V, U))] = {
+      if (xs.isEmpty) {
+        ys.foreach(y => builder.append((y._1, (defaultLeft, y._2))))
+        builder
+      }
+      else if (ys.isEmpty) {
+        xs.foreach(x => builder.append((x._1, (x._2, defaultRight))))
+        builder
+      }
+      else {
+        val x = xs.head
+        val y = ys.head
+        if (x._1.isEqual(y._1)) {
+          builder.append((x._1, (x._2, y._2)))
+          joinR(xs.tail, ys.tail)
+        } else if (x._1.isBefore(y._1)) {
+          builder.append((x._1, (x._2, defaultRight)))
+          joinR(xs.tail, ys)
+        } else {
+          builder.append((y._1, (defaultLeft, y._2)))
+          joinR(xs, ys.tail)
+        }
+      }
+    }
+
+    new TimeSeries(joinR(dataPoints, ts.dataPoints))
+  }
 }
 
