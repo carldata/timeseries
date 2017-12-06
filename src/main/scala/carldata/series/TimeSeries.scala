@@ -32,6 +32,8 @@ object TimeSeries {
     xs.resample(delta, f)
   }
 
+
+
   /** Return new series with difference between 2 points */
   def differentiate[V: Numeric](ts: TimeSeries[V])(implicit num: Numeric[V]): TimeSeries[V] = {
     if (ts.isEmpty) ts
@@ -166,6 +168,7 @@ case class TimeSeries[V](idx: Vector[LocalDateTime], ds: Vector[V]) {
       v <- values.lastOption
     } yield (i, v)
   }
+
 
   /** Return new Time Series where index is always increasing */
   def ensureIncreasing: TimeSeries[V] = {
