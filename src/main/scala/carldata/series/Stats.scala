@@ -38,11 +38,15 @@ object Stats {
 
   /** Calculate covariance with two-pass algorithm. */
   def covariance[V: Fractional](xs: Seq[V], ys: Seq[V])(implicit num: Fractional[V]): Double = {
-    val xs2 = xs.map(num.toDouble)
-    val ys2 = ys.map(num.toDouble)
-    val mean1 = xs2.sum / xs.length
-    val mean2 = ys2.sum / ys.length
-    val vs = xs2.zip(ys2).map(x => (x._1 - mean1) * (x._2 - mean2))
-    vs.sum / xs2.length
+    if (xs.isEmpty || ys.isEmpty) 0
+    else {
+      val xs2 = xs.map(num.toDouble)
+      val ys2 = ys.map(num.toDouble)
+
+      val mean1 = xs2.sum / xs.length
+      val mean2 = ys2.sum / ys.length
+      val vs = xs2.zip(ys2).map(x => (x._1 - mean1) * (x._2 - mean2))
+      vs.sum / xs2.length
+    }
   }
 }
