@@ -31,10 +31,9 @@ object Stats {
 
   /** Calculate correlation between 2 places in the series */
   def autoCorrelation[V: Fractional](values: Seq[V], pos1: Int, pos2: Int, size: Int): Double = {
-    val mean = meanAndVariance(values).mean
-    val c1 = autoCovariance(values, pos1, pos2, size, mean)
-    val c2 = autoCovariance(values, pos1, pos1, size, mean)
-    if (c2 == 0) 0.0 else c1 / c2
+    val MeanAndVariance(mean, variance) = meanAndVariance(values)
+    if(variance == 0) 0
+    else autoCovariance(values, pos1, pos2, size, mean) / variance
   }
 
   /** Calculate covariance with two-pass algorithm. */
