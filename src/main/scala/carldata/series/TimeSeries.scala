@@ -32,22 +32,7 @@ object TimeSeries {
     xs.resample(delta, f)
   }
 
-  /** Calculate covariance with two-pass algorithm. */
-  def covariance[V: Fractional](xs: TimeSeries[V], ys: TimeSeries[V])(implicit num: Fractional[V]): V = {
-    def sumFractional(vs: Vector[V]): V = {
-      val x = sumFractional(vs.tail)
-      num.plus(vs.head, x)
-    }
 
-    val length = num.fromInt(xs.length)
-    val mean1: V = num.div(sumFractional(xs.values), length)
-    val mean2: V = num.div(sumFractional(ys.values), length)
-    val vs = xs.values.zip(ys.values)
-      .map { x =>
-        num.div(num.times(num.minus(x._1, mean1), num.minus(x._2, mean2)), length)
-      }
-    num.div(sumFractional(vs), length)
-  }
 
   /** Return new series with difference between 2 points */
   def differentiate[V: Numeric](ts: TimeSeries[V])(implicit num: Numeric[V]): TimeSeries[V] = {

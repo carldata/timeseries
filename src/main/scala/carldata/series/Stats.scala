@@ -29,12 +29,34 @@ object Stats {
     else vs.sum / vs.length
   }
 
-  /** Calculate covariance between 2 places in the series */
+  /** Calculate correlation between 2 places in the series */
   def autoCorrelation[V: Fractional](values: Seq[V], pos1: Int, pos2: Int, size: Int): Double = {
     val mean = meanAndVariance(values).mean
     val c1 = autoCovariance(values, pos1, pos2, size, mean)
     val c2 = autoCovariance(values, pos1, pos1, size, mean)
-    if(c2 == 0) 0.0 else c1/c2
+    if (c2 == 0) 0.0 else c1 / c2
   }
 
+  /** Calculate covariance with two-pass algorithm. */
+  def covariance[V: Fractional](xs: Seq[V], ys: Seq[V])(implicit num: Fractional[V]): V = {
+    def sumFractional(vs: Seq[V]): V = {
+      if (vs.nonEmpty) {
+        val x = sumFractional(vs.tail)
+        num.plus(vs.head, x)
+      }
+      else num.zero
+    }
+
+    xs.foreach(println)
+    ys.foreach(println)
+    val length = num.fromInt(xs.length)
+    val mean1: V = num.div(sumFractional(xs), length)
+    val mean2: V = num.div(sumFractional(ys), length)
+    val vs = xs.zip(ys)
+      .map { x =>
+        num.times(num.minus(x._1, mean1), num.minus(x._2, mean2))
+      }
+    println(mean1)
+    num.div(sumFractional(vs), length)
+  }
 }
