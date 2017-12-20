@@ -297,6 +297,23 @@ class TimeSeriesTest extends FlatSpec with Matchers {
     series1.join(series2) shouldBe expected
   }
 
+  it should "inner join 4 series" in {
+    val now = LocalDateTime.parse("2015-01-01T00:00:00")
+    val idx1 = Vector(now.plusMinutes(1), now.plusMinutes(2), now.plusMinutes(4), now.plusMinutes(5))
+    val idx2 = Vector(now.plusMinutes(2), now.plusMinutes(3), now.plusMinutes(4), now.plusMinutes(5))
+    val idx3 = Vector(now.plusMinutes(3), now.plusMinutes(4), now.plusMinutes(5), now.plusMinutes(6))
+    val idx4 = Vector(now.plusMinutes(4), now.plusMinutes(5), now.plusMinutes(6), now.plusMinutes(7))
+    val vs = Vector(1, 4, 6, 8)
+    val series1 = TimeSeries(idx1, vs)
+    val series2 = TimeSeries(idx2, vs)
+    val series3 = TimeSeries(idx3, vs)
+    val series4 = TimeSeries(idx4, vs)
+    val idx5 = Vector(now.plusMinutes(4), now.plusMinutes(5))
+    val expected = TimeSeries(idx5, Vector(List(6, 6, 4, 1), List(8, 8, 6, 4)))
+
+    TimeSeries.join(Seq(series1, series2, series3, series4)) shouldBe expected
+  }
+
   it should "left join 2 series" in {
     val now = LocalDateTime.parse("2015-01-01T00:00:00")
     val idx1 = Vector(now.plusMinutes(1), now.plusMinutes(2), now.plusMinutes(4), now.plusMinutes(5))

@@ -33,7 +33,6 @@ object TimeSeries {
   }
 
 
-
   /** Return new series with difference between 2 points */
   def differentiate[V: Numeric](ts: TimeSeries[V])(implicit num: Numeric[V]): TimeSeries[V] = {
     if (ts.isEmpty) ts
@@ -128,6 +127,12 @@ object TimeSeries {
     TimeSeries(index.take(vs.length), vs)
   }
 
+  def join[V](ts: Seq[TimeSeries[V]]): TimeSeries[Seq[V]] = {
+    if (ts.isEmpty) new TimeSeries(Seq())
+    else ts.tail.foldLeft(ts.head.mapValues(x => Seq(x))) {
+      (acc, x) => acc.join(x).mapValues(y => y._1 :+ y._2)
+    }
+  }
 }
 
 /**
