@@ -128,21 +128,11 @@ object TimeSeries {
   }
 
   def join[V](ts: Seq[TimeSeries[V]]): TimeSeries[Seq[V]] = {
-    def joinR(xs: TimeSeries[Seq[V]], ys: Seq[TimeSeries[V]]): Seq[(LocalDateTime, (Seq[V]))] = {
-      if (xs.isEmpty && ys.isEmpty) Seq()
-      else if (ys.isEmpty) xs.dataPoints
-      else {
-        val res = xs.join(ys.head)
-        val vs = res.dataPoints.map(x => x._2._1.:+(x._2._2))
-        joinR(TimeSeries(res.index, vs), ys.tail)
-      }
+    if (ts.isEmpty) new TimeSeries(Seq())
+    else ts.tail.foldLeft(ts.head.mapValues(x => Seq(x))) {
+      (acc, x) => acc.join(x).mapValues(y => y._1 :+ y._2)
     }
-
-    val head = TimeSeries(ts.head.index, ts.head.dataPoints.map(x => Seq(x._2)))
-    new TimeSeries(joinR(head, ts.tail))
   }
-
-
 }
 
 /**
