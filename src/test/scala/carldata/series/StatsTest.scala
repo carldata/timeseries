@@ -4,7 +4,6 @@ import carldata.series.Stats.MeanAndVariance
 import org.scalatest._
 
 
-
 class StatsTest extends FlatSpec with Matchers {
 
   "MeanAndVariance" should "calculate for non empty data." in {
@@ -49,6 +48,12 @@ class StatsTest extends FlatSpec with Matchers {
 
   it should "work with empty series" in {
     Stats.autoCorrelation[Double](Seq(), 0, 2, 2) shouldBe 0
+  }
+
+  "Covariance" should "calculate easy case" in {
+    val series1: TimeSeries[Double] = TimeSeries.fromTimestamps(Seq((1, 1), (2, 2)))
+    val series2: TimeSeries[Double] = TimeSeries.fromTimestamps(Seq((1, 1), (2, 4)))
+    Stats.covariance(series1.values, series2.values) shouldBe 0.75
   }
 
 }

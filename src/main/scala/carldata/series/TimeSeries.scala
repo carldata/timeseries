@@ -32,6 +32,7 @@ object TimeSeries {
     xs.resample(delta, f)
   }
 
+
   /** Return new series with difference between 2 points */
   def differentiate[V: Numeric](ts: TimeSeries[V])(implicit num: Numeric[V]): TimeSeries[V] = {
     if (ts.isEmpty) ts
@@ -126,6 +127,12 @@ object TimeSeries {
     TimeSeries(index.take(vs.length), vs)
   }
 
+  def join[V](ts: Seq[TimeSeries[V]]): TimeSeries[Seq[V]] = {
+    if (ts.isEmpty) new TimeSeries(Seq())
+    else ts.tail.foldLeft(ts.head.mapValues(x => Seq(x))) {
+      (acc, x) => acc.join(x).mapValues(y => y._1 :+ y._2)
+    }
+  }
 }
 
 /**
@@ -166,6 +173,7 @@ case class TimeSeries[V](idx: Vector[LocalDateTime], ds: Vector[V]) {
       v <- values.lastOption
     } yield (i, v)
   }
+
 
   /** Return new Time Series where index is always increasing */
   def ensureIncreasing: TimeSeries[V] = {
