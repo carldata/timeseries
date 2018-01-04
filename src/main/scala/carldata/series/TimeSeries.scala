@@ -17,7 +17,7 @@ object TimeSeries {
   }
 
   /** Create empty series */
-  def empty[V: Numeric]: TimeSeries[V] = {
+  def empty[V]: TimeSeries[V] = {
     new TimeSeries[V](Seq[(LocalDateTime, V)]())
   }
 
@@ -273,7 +273,7 @@ case class TimeSeries[V](idx: Vector[LocalDateTime], ds: Vector[V]) {
     * @param f     Function which approximates missing points
     */
   def resample(delta: Duration, f: ((LocalDateTime, V), (LocalDateTime, V), LocalDateTime) => V)(implicit num: Numeric[V]): TimeSeries[V] = {
-    if (index.isEmpty) TimeSeries.empty[V](num)
+    if (index.isEmpty) TimeSeries.empty[V]
     else {
       val ys: mutable.ListBuffer[V] = ListBuffer()
       val ts = Iterator.iterate(index.head)(_.plusNanos(delta.toNanos))
