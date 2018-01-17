@@ -2,7 +2,7 @@ name := "timeseries"
 
 organization := "io.github.carldata"
 
-version := "0.4.7"
+version := "0.4.8"
 
 scalaVersion := "2.12.3"
 
