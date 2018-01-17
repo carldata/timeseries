@@ -36,13 +36,15 @@ object TimeSeries {
   def almostEqual[V: Numeric](xs: TimeSeries[V], ys: TimeSeries[V], epsilon: V)(implicit num: Numeric[V]): Boolean = {
     def diff(x: (V, V)): V = num.abs(num.minus(x._1, x._2))
 
-    def compare(x: V): Boolean = if (num.compare(num.minus(epsilon, x), num.zero) >= 0) true else false
+    def compare(x: V): Boolean = num.compare(num.minus(epsilon, x), num.zero) >= 0
 
-    xs.join(ys)
-      .mapValues(diff)
-      .values
-      .map(compare)
-      .foldLeft(true)(_ && _)
+    if (xs.length == ys.length)
+      xs.join(ys)
+        .mapValues(diff)
+        .values
+        .map(compare)
+        .foldLeft(true)(_ && _)
+    else false
   }
 
 
