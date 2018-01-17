@@ -389,5 +389,29 @@ class TimeSeriesTest extends FlatSpec with Matchers {
     series.removeOutliers(1, 10) shouldBe expected
   }
 
+  it should "check if 2 ts is almost equal (true)" in {
+    val now = LocalDateTime.parse("2015-01-01T00:00:00")
+    val idx1 = Vector(now.plusMinutes(1), now.plusMinutes(2), now.plusMinutes(4), now.plusMinutes(5))
+    val idx2 = Vector(now.plusMinutes(1), now.plusMinutes(2), now.plusMinutes(4), now.plusMinutes(5))
+    val vs = Vector(1.2005f, 1.000054f, 1.000034f, 1.000022f)
+    val vs2 = Vector(1.2005f, 1.000053f, 1.000030f, 1.000020f)
+    val series1 = TimeSeries(idx1, vs)
+    val series2 = TimeSeries(idx2, vs2)
+
+    TimeSeries.almostEqual(series1,series2, 0.00001f) shouldBe true
+  }
+
+  it should "check if 2 ts is almost equal (false)" in {
+    val now = LocalDateTime.parse("2015-01-01T00:00:00")
+    val idx1 = Vector(now.plusMinutes(1), now.plusMinutes(2), now.plusMinutes(4), now.plusMinutes(5))
+    val idx2 = Vector(now.plusMinutes(1), now.plusMinutes(2), now.plusMinutes(4), now.plusMinutes(5))
+    val vs = Vector(1.005f, 1.000054f, 1.000034f, 1.000022f)
+    val vs2 = Vector(1.2005f, 1.000053f, 1.000030f, 1.000020f)
+    val series1 = TimeSeries(idx1, vs)
+    val series2 = TimeSeries(idx2, vs2)
+
+    TimeSeries.almostEqual(series1,series2, 0.00001f) shouldBe false
+  }
+
 
 }

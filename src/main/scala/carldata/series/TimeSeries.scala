@@ -32,6 +32,19 @@ object TimeSeries {
     xs.resample(delta, f)
   }
 
+  /** Return true if between two points(with the same index) difference is equal or less than epsilon */
+  def almostEqual[V: Numeric](xs: TimeSeries[V], ys: TimeSeries[V], epsilon: V)(implicit num: Numeric[V]): Boolean = {
+    def diff(x: (V, V)): V = num.abs(num.minus(x._1, x._2))
+
+    def compare(x: V): Boolean = if (num.compare(num.minus(epsilon, x), num.zero) >= 0) true else false
+
+    xs.join(ys)
+      .mapValues(diff)
+      .values
+      .map(compare)
+      .foldLeft(true)(_ && _)
+  }
+
 
   /** Return new series with difference between 2 points */
   def differentiate[V: Numeric](ts: TimeSeries[V])(implicit num: Numeric[V]): TimeSeries[V] = {
