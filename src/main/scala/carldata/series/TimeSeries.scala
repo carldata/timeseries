@@ -38,14 +38,11 @@ object TimeSeries {
 
     def compare(x: V): Boolean = num.compare(num.minus(epsilon, x), num.zero) >= 0
 
-    if (xs.index.zip(ys.index)
-      .map(x => x._1 == x._2)
-      .foldLeft(true)(_ && _))
-      xs.join(ys)
-        .mapValues(diff)
-        .values
+    if (xs.index == ys.index)
+      xs.values.zip(ys.values)
+        .map(diff)
         .map(compare)
-        .foldLeft(true)(_ && _)
+        .forall(_ == true)
     else false
   }
 
