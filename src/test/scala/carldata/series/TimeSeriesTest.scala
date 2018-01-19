@@ -168,7 +168,7 @@ class TimeSeriesTest extends FlatSpec with Matchers {
   it should "interpolate: don't change series without missing values" in {
     val now = LocalDateTime.parse("2015-01-01T00:00:00")
     val idx = Vector(now, now.plusMinutes(10), now.plusMinutes(20), now.plusMinutes(30), now.plusMinutes(40))
-    val series = TimeSeries(idx, Vector(1f, 2f, 3f, 4f, 5f))
+    val series = TimeSeries(idx, Vector(1, 2f, 3f, 4f, 5f))
     val expected = TimeSeries(idx, Vector(1f, 2f, 3f, 4f, 5f))
 
     TimeSeries.interpolate(series, Duration.ofMinutes(10)) shouldBe expected
@@ -393,12 +393,12 @@ class TimeSeriesTest extends FlatSpec with Matchers {
     val now = LocalDateTime.parse("2015-01-01T00:00:00")
     val idx1 = Vector(now.plusMinutes(1), now.plusMinutes(2), now.plusMinutes(4), now.plusMinutes(5))
     val idx2 = Vector(now.plusMinutes(1), now.plusMinutes(2), now.plusMinutes(4), now.plusMinutes(5))
-    val vs = Vector(1.2005f, 1.000054f, 1.000034f, 1.000022f)
-    val vs2 = Vector(1.2005f, 1.000053f, 1.000030f, 1.000020f)
+    val vs = Vector(1.2005, 1.000054, 1.000034, 1.000022)
+    val vs2 = Vector(1.2005, 1.000053, 1.000030, 1.000020)
     val series1 = TimeSeries(idx1, vs)
     val series2 = TimeSeries(idx2, vs2)
 
-    TimeSeries.almostEqual(series1, series2, 0.00001f) shouldBe true
+    TimeSeries.almostEqual(series1, series2, 0.00001) shouldBe true
   }
 
   it should "check if 2 ts is almost equal (false)" in {
