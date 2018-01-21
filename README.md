@@ -34,6 +34,16 @@ sbt -mem 4000 run
     * [x] mean, variance and standard deviation
   * IO
     * [x] Read data from CSV string
+  * Generators
+    * [x] Constant series
+    * [ ] Random noise
+    * [ ] Random Walk
+    * [ ] periodic pattern
+  * ARIMA
+    * [ ] Check is series is stationary
+    * [ ] AR(p) - Autoregressive
+    * [ ] I(d) - Integrate
+    * [ ] MA(q) - Moving average
   * Advanced functionality
     * [x] Finding sessions (periods of activity)
 
