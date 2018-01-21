@@ -3,7 +3,12 @@ package carldata.series
 import java.time.LocalDateTime
 import java.time.temporal.TemporalAdjusters
 
-
+/**
+  * This module contains functions which convert cron like string into
+  * function f: LocalDateTime => LocalDateTime.
+  *
+  * Example expression: "k 2 * 4 *"
+  */
 object TimeConverter {
 
   sealed trait CronElement
@@ -19,6 +24,7 @@ object TimeConverter {
   case class CronLike(minutes: CronElement, hour: CronElement, dayOfMonth: CronElement, month: CronElement
                       , dayOfWeek: CronElement)
 
+  /** Parse expression */
   def mkCronLike(s: String): Option[CronLike] = {
     val xs = s.split(" ")
       .map(parseElement)
@@ -30,6 +36,7 @@ object TimeConverter {
     }
   }
 
+  /** Convert expression into date conversion function */
   def mkConverter(c: CronLike): LocalDateTime => LocalDateTime = { dt =>
     def floor(x: Int, c: CronElement): Int = {
       c match {

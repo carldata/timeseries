@@ -33,8 +33,7 @@ object Sessions {
     *                  (2, 0, 1, 0, 0, 2, 3, 4, 5, 7, 0)
     *                  the Duration.ofSeconds(1) will be following sessions detected: [Session(0,0), Session(2,2), Session(5, 9)]
     *                  the Duration.ofSeconds(2) will be following sessions detected: [Session(0,2), Session(5, 9)]
-    * */
-
+    */
   def findSessions[V: Numeric](ts: TimeSeries[V], tolerance: Duration)(implicit num: Fractional[V]): Seq[Session] = {
       val xs = Sessions.findSessions(ts)
       xs.tail.foldLeft[List[Session]](List(xs.head))((zs, x) => {

@@ -28,6 +28,7 @@ sbt -mem 4000 run
     * [x] groupBy
     * [x] Rolling window
     * [x] Resampling 
+    * [x] join and merge
   * Calculate statistics
     * [x] min, max
     * [x] mean, variance and standard deviation
