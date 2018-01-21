@@ -56,4 +56,11 @@ class StatsTest extends FlatSpec with Matchers {
     Stats.covariance(series1.values, series2.values) shouldBe 0.75
   }
 
+  "Correlation" should "calculate easy case" in {
+    val xs: Seq[Double] = Seq(1, 2, 3, 4, 5)
+    val ys: Seq[Double] = Seq(3, 4, 7, 2, 3)
+    println(Stats.correlation(xs, ys))
+    Stats.correlation(xs, ys) + 0.1644 < 0.0001 shouldBe true
+  }
+
 }

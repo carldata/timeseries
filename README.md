@@ -32,6 +32,7 @@ sbt -mem 4000 run
   * Calculate statistics
     * [x] min, max
     * [x] mean, variance and standard deviation
+    * [x] covariance and correlation
   * IO
     * [x] Read data from CSV string
   * Generators

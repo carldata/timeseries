@@ -49,4 +49,19 @@ object Stats {
       vs.sum / xs2.length
     }
   }
+
+  /** Calculate correlation between 2 series */
+  def correlation[V: Fractional](xs: Seq[V], ys: Seq[V])(implicit num: Fractional[V]): Double = {
+    val xs2 = xs.map(num.toDouble)
+    val ys2 = ys.map(num.toDouble)
+    val MeanAndVariance(mean1, variance1) = meanAndVariance(xs2)
+    val MeanAndVariance(mean2, variance2) = meanAndVariance(ys2)
+
+    if (variance1*variance2 == 0) 0
+    else {
+      val vs = xs2.zip(ys2).map(x => (x._1 - mean1) * (x._2 - mean2))
+      vs.sum / (variance1 * variance2)
+    }
+  }
+
 }
