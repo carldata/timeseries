@@ -1,6 +1,7 @@
 package carldata.series
 
-import java.time.Duration
+import java.time.temporal.{ChronoField, ChronoUnit}
+import java.time.{Duration, Instant, LocalTime}
 
 import org.scalameter._
 
@@ -14,13 +15,13 @@ object BenchmarkApp{
   /** map over series */
   def measureMap(ts: TimeSeries[Float]): Unit = ts.map(x => x._2 + 2)
   /** Group by time. 100x slower then map. */
-  def measureGroupBy(ts: TimeSeries[Float]): Unit = ts.groupByTime(_.withMinute(0), _.unzip._2.sum)
+  def measureGroupBy(ts: TimeSeries[Float]): Unit = ts.groupByTime(resetMinutes, _.unzip._2.sum)
   /** Rolling window */
   def measureRollingWindow(ts: TimeSeries[Float]): Unit = ts.rollingWindow(Duration.ofHours(1), _.sum)
   /** Resample */
   def measureResample(ts: TimeSeries[Float]): Unit =  TimeSeries.interpolate(ts, Duration.ofHours(1))
   /** Rolling window */
-  def measureIntegrateByTime(ts: TimeSeries[Float]): Unit = TimeSeries.integrateByTime(ts, _.withMinute(0))
+  def measureIntegrateByTime(ts: TimeSeries[Float]): Unit = TimeSeries.integrateByTime(ts, resetMinutes)
   /** Rolling window */
   def measureStep(ts: TimeSeries[Float]): Unit = TimeSeries.step(ts, Duration.ofMinutes(1))
   /** Find sessions */
@@ -31,6 +32,8 @@ object BenchmarkApp{
   def main(args: Array[String]): Unit = {
     val size100K = 100000
     val size1M = 1000000
+
+    measureMemory()
 
     println("\n1. Measure: map")
     measure(size1M, measureMap)
@@ -72,4 +75,17 @@ object BenchmarkApp{
     println(s"$sizeFormatted points: $time.")
   }
 
+  def measureMemory(): Unit = {
+    val xs = 1.to(1000000).map(_.toLong*5*60).toVector
+
+    System.gc()
+    val freeBefore = Runtime.getRuntime.freeMemory()
+    val ts: TimeSeries[Double] = TimeSeries.fromTimestamps(xs.map(x => (x, x.toDouble)))
+    System.gc()
+    val freeAfter = Runtime.getRuntime.freeMemory()
+
+    println("Allocated: %d".format((freeBefore-freeAfter)/1048576))
+  }
+
+  private def resetMinutes(t : Instant): Instant = t.truncatedTo(ChronoUnit.HOURS)
 }

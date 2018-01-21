@@ -1,8 +1,6 @@
 package carldata.series
 
-import java.time.{Duration, LocalDateTime}
-
-import scala.collection.immutable
+import java.time.Duration
 
 object Sessions {
 

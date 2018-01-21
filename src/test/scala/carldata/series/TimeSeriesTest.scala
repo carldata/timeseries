@@ -1,6 +1,7 @@
 package carldata.series
 
-import java.time.{Duration, LocalDateTime, ZoneOffset}
+import java.time.temporal.ChronoUnit
+import java.time.{Duration, Instant}
 
 import org.scalatest._
 
@@ -8,14 +9,14 @@ import org.scalatest._
 class TimeSeriesTest extends FlatSpec with Matchers {
 
   "TimeSeries" should "have length equal to its index" in {
-    val now = LocalDateTime.now()
-    val series = new TimeSeries(Seq((now, 1), (now.plusMinutes(1), 2), (now.plusMinutes(2), 3)))
+    val now = Instant.now()
+    val series = new TimeSeries(Seq((now, 1), (now.plusSeconds(1), 2), (now.plusSeconds(2), 3)))
     series.length shouldBe 3
   }
 
   it should "be build from the rows" in {
-    val now = LocalDateTime.now()
-    val series = TimeSeries(Vector(now, now.plusMinutes(1), now.plusMinutes(2)), Vector(1, 2, 3, 4, 5.6))
+    val now = Instant.now()
+    val series = TimeSeries(Vector(now, now.plusSeconds(1), now.plusSeconds(2)), Vector(1, 2, 3, 4, 5.6))
     series.length shouldBe 3
   }
 
@@ -35,8 +36,8 @@ class TimeSeriesTest extends FlatSpec with Matchers {
   }
 
   it should "return first element of a Series" in {
-    val now = LocalDateTime.now()
-    val series = TimeSeries(Vector(now, now.plusMinutes(1), now.plusMinutes(2)), Vector(1, 2, 3, 4, 5.6))
+    val now = Instant.now()
+    val series = TimeSeries(Vector(now, now.plusSeconds(1), now.plusSeconds(2)), Vector(1, 2, 3, 4, 5.6))
     series.head shouldBe Some((now, 1))
   }
 
@@ -46,9 +47,9 @@ class TimeSeriesTest extends FlatSpec with Matchers {
   }
 
   it should "return last element of a Series" in {
-    val now = LocalDateTime.now()
-    val series = TimeSeries(Vector(now, now.plusMinutes(1), now.plusMinutes(2)), Vector(1, 2, 3, 4, 5.6))
-    series.last shouldBe Some((now.plusMinutes(2), 3))
+    val now = Instant.now()
+    val series = TimeSeries(Vector(now, now.plusSeconds(1), now.plusSeconds(2)), Vector(1, 2, 3, 4, 5.6))
+    series.last shouldBe Some((now.plusSeconds(2), 3))
   }
 
   it should "return None as last element for empty Series" in {
@@ -99,8 +100,8 @@ class TimeSeriesTest extends FlatSpec with Matchers {
 
   it should "return sub series" in {
     val series: TimeSeries[Int] = TimeSeries.fromTimestamps(Seq((1, 1), (2, -3), (3, 6), (4, 6), (5, 6), (6, 6)))
-    val start = LocalDateTime.ofEpochSecond(2, 0, ZoneOffset.UTC)
-    val end = LocalDateTime.ofEpochSecond(6, 0, ZoneOffset.UTC)
+    val start = Instant.ofEpochSecond(2)
+    val end = Instant.ofEpochSecond(6)
     series.slice(start, end).length shouldBe 4
   }
 
@@ -111,12 +112,18 @@ class TimeSeriesTest extends FlatSpec with Matchers {
   }
 
   it should "differentiate with the overflow" in {
-    val now = LocalDateTime.parse("2015-01-01T00:00:00")
-    val idx = Vector(now, now.plusMinutes(5), now.plusMinutes(10), now.plusMinutes(15),
-      now.plusMinutes(20), now.plusMinutes(25), now.plusMinutes(30))
+    val now = Instant.now()
+    val idx = Vector(now, now.plusSeconds(5), now.plusSeconds(10), now.plusSeconds(15),
+      now.plusSeconds(20), now.plusSeconds(25), now.plusSeconds(30))
     val series = TimeSeries(idx, Vector(1, 2, 3, 5, 8, 3, 2))
     val expected = TimeSeries(idx.tail, Vector(1, 1, 2, 3, 5, 9))
     TimeSeries.diffOverflow(series, 10) shouldBe expected
+  }
+
+  it should "differentiate empty series" in {
+    val series = TimeSeries.empty[Int]
+    series.values.sum shouldBe 0
+    TimeSeries.differentiate(series).values shouldBe series.values
   }
 
   it should "integrate values" in {
@@ -132,32 +139,27 @@ class TimeSeriesTest extends FlatSpec with Matchers {
   }
 
   it should "integrate by time" in {
-    val now = LocalDateTime.parse("2015-01-01T00:00:00")
+    val now = Instant.EPOCH
     val idx = Vector(now, now.plusSeconds(34), now.plusSeconds(44), now.plusSeconds(65), now.plusSeconds(74))
     val series = TimeSeries(idx, Vector(1, 2, 3, 4, 5))
     val expected = TimeSeries(idx, Vector(1, 3, 6, 4, 9))
 
-    TimeSeries.integrateByTime(series, _.withSecond(0)) shouldBe expected
-  }
-
-  it should "work with empty series" in {
-    val series = TimeSeries.empty[Int]
-    series.values.sum shouldBe 0
-    TimeSeries.differentiate(series).values shouldBe series.values
+    TimeSeries.integrateByTime(series, _.truncatedTo(ChronoUnit.MINUTES)) shouldBe expected
   }
 
   it should "group by minute" in {
-    val now = LocalDateTime.parse("2015-01-01T00:00:00")
+    val now = Instant.EPOCH
     val idx = Vector(now, now.plusSeconds(34), now.plusSeconds(44), now.plusSeconds(65), now.plusSeconds(74))
     val series = TimeSeries(idx, Vector(1, 2, 3, 4, 5))
-    val expected = TimeSeries(Vector(now, now.plusMinutes(1)), Vector(6, 9))
+    val expected = TimeSeries(Vector(now, now.plusSeconds(60)), Vector(6, 9))
 
-    series.groupByTime(_.withSecond(0), _.unzip._2.sum) shouldBe expected
+    series.groupByTime(_.truncatedTo(ChronoUnit.MINUTES), _.unzip._2.sum) shouldBe expected
   }
 
   it should "find sum in rolling windows operation" in {
-    val now = LocalDateTime.parse("2015-01-01T00:00:00")
-    val idx = Vector(now, now.plusMinutes(10), now.plusMinutes(30), now.plusMinutes(50), now.plusMinutes(80))
+    val now = Instant.EPOCH
+    val idx = Vector(now, now.plusSeconds(10*60), now.plusSeconds(30*60), now.plusSeconds(50*60),
+      now.plusSeconds(80*60))
     val series = TimeSeries(idx, Vector(1, 2, 3, 4, 5))
     val expected = TimeSeries(idx, Vector(1, 3, 6, 10, 12))
     val window = Duration.ofHours(1)
@@ -166,62 +168,42 @@ class TimeSeriesTest extends FlatSpec with Matchers {
   }
 
   it should "interpolate: don't change series without missing values" in {
-    val now = LocalDateTime.parse("2015-01-01T00:00:00")
-    val idx = Vector(now, now.plusMinutes(10), now.plusMinutes(20), now.plusMinutes(30), now.plusMinutes(40))
+    val now = Instant.EPOCH
+    val idx = Vector(now, now.plusSeconds(10), now.plusSeconds(20), now.plusSeconds(30), now.plusSeconds(40))
     val series = TimeSeries(idx, Vector(1, 2f, 3f, 4f, 5f))
     val expected = TimeSeries(idx, Vector(1f, 2f, 3f, 4f, 5f))
 
-    TimeSeries.interpolate(series, Duration.ofMinutes(10)) shouldBe expected
+    TimeSeries.interpolate(series, Duration.ofSeconds(10)) shouldBe expected
   }
 
   it should "interpolate: missing values" in {
-    val now = LocalDateTime.parse("2015-01-01T00:00:00")
-    val idx = Vector(now.plusMinutes(1), now.plusMinutes(2), now.plusMinutes(3), now.plusMinutes(5))
+    val now = Instant.EPOCH
+    val idx = Vector(now.plusSeconds(1), now.plusSeconds(2), now.plusSeconds(3), now.plusSeconds(5))
     val series = TimeSeries(idx, Vector(1f, 2f, 3f, 5f))
-    val expected = TimeSeries(Vector(now.plusMinutes(1), now.plusMinutes(2), now.plusMinutes(3), now.plusMinutes(4), now.plusMinutes(5)), Vector(1f, 2f, 3f, 4f, 5f))
+    val expected = TimeSeries(Vector(now.plusSeconds(1), now.plusSeconds(2), now.plusSeconds(3), now.plusSeconds(4),
+      now.plusSeconds(5)), Vector(1f, 2f, 3f, 4f, 5f))
 
-    TimeSeries.interpolate(series, Duration.ofMinutes(1)) shouldBe expected
-  }
-
-  it should "resample with default value" in {
-    val now = LocalDateTime.parse("2015-01-01T00:00:00")
-    val idx = Vector(now.plusMinutes(1), now.plusMinutes(2), now.plusMinutes(3), now.plusMinutes(5))
-    val series = TimeSeries(idx, Vector(1f, 2f, 3f, 5f))
-    val expected = TimeSeries(Vector(now.plusMinutes(1), now.plusMinutes(2), now.plusMinutes(3), now.plusMinutes(4), now.plusMinutes(5)), Vector(1f, 2f, 3f, 1f, 5f))
-
-    series.resampleWithDefault(Duration.ofMinutes(1), 1f) shouldBe expected
-  }
-
-  it should "add missing values" in {
-    val now = LocalDateTime.parse("2015-01-01T00:00:00")
-    val idx = Vector(now, now.plusSeconds(15), now.plusSeconds(30), now.plusSeconds(45),
-      now.plusSeconds(65), now.plusSeconds(80))
-    val series = TimeSeries(idx, Vector(1f, 2f, 3f, 3f, 2f, 6f))
-    val idx2 = Vector(now, now.plusSeconds(15), now.plusSeconds(30), now.plusSeconds(45),
-      now.plusSeconds(60), now.plusSeconds(65), now.plusSeconds(80))
-    val expected = TimeSeries(idx2, Vector(1f, 2f, 3f, 3f, 3f, 2f, 6f))
-
-    def f(x1: (LocalDateTime, Float), x2: (LocalDateTime, Float), tsh: LocalDateTime) = x1._2
-
-    series.addMissing(Duration.ofMinutes(1), f) shouldBe expected
+    TimeSeries.interpolate(series, Duration.ofSeconds(1)) shouldBe expected
   }
 
   it should "interpolate: missing lots of values" in {
-    val now = LocalDateTime.parse("2015-01-01T00:00:00")
-    val idx = Vector(now.plusMinutes(1), now.plusMinutes(5))
+    val now = Instant.EPOCH
+    val idx = Vector(now.plusSeconds(1), now.plusSeconds(5))
     val series = TimeSeries(idx, Vector(1f, 5f))
-    val expected = TimeSeries(Vector(now.plusMinutes(1), now.plusMinutes(2), now.plusMinutes(3), now.plusMinutes(4), now.plusMinutes(5)), Vector(1f, 2f, 3f, 4f, 5f))
+    val expected = TimeSeries(Vector(now.plusSeconds(1), now.plusSeconds(2), now.plusSeconds(3),
+      now.plusSeconds(4), now.plusSeconds(5)), Vector(1f, 2f, 3f, 4f, 5f))
 
-    TimeSeries.interpolate(series, Duration.ofMinutes(1)) shouldBe expected
+    TimeSeries.interpolate(series, Duration.ofSeconds(1)) shouldBe expected
   }
 
   it should "interpolate: middle values" in {
-    val now = LocalDateTime.parse("2015-01-01T00:00:00")
-    val idx = Vector(now.plusMinutes(1), now.plusMinutes(4), now.plusMinutes(6))
+    val now = Instant.EPOCH
+    val idx = Vector(now.plusSeconds(1), now.plusSeconds(4), now.plusSeconds(6))
     val series = TimeSeries(idx, Vector(1f, 4f, 6f))
-    val expected = TimeSeries(Vector(now.plusMinutes(1), now.plusMinutes(3), now.plusMinutes(5)), Vector(1f, 3f, 5f))
+    val expected = TimeSeries(Vector(now.plusSeconds(1), now.plusSeconds(3), now.plusSeconds(5)),
+      Vector(1f, 3f, 5f))
 
-    TimeSeries.interpolate(series, Duration.ofMinutes(2)) shouldBe expected
+    TimeSeries.interpolate(series, Duration.ofSeconds(2)) shouldBe expected
   }
 
   it should "interpolate: empty series" in {
@@ -229,95 +211,117 @@ class TimeSeriesTest extends FlatSpec with Matchers {
     TimeSeries.interpolate(emptySeries, Duration.ofMinutes(2)) shouldBe emptySeries
   }
 
+  it should "resample with default value" in {
+    val now = Instant.EPOCH
+    val idx = Vector(now.plusSeconds(1), now.plusSeconds(2), now.plusSeconds(3), now.plusSeconds(5))
+    val series = TimeSeries(idx, Vector(1f, 2f, 3f, 5f))
+    val expected = TimeSeries(Vector(now.plusSeconds(1), now.plusSeconds(2), now.plusSeconds(3),
+      now.plusSeconds(4), now.plusSeconds(5)), Vector(1f, 2f, 3f, 1f, 5f))
+
+    series.resampleWithDefault(Duration.ofSeconds(1), 1f) shouldBe expected
+  }
+
+  it should "add missing values" in {
+    val now = Instant.EPOCH
+    val idx = Vector(now, now.plusSeconds(15), now.plusSeconds(30), now.plusSeconds(45),
+      now.plusSeconds(65), now.plusSeconds(80))
+    val series = TimeSeries(idx, Vector(1f, 2f, 3f, 3f, 2f, 6f))
+    val idx2 = Vector(now, now.plusSeconds(15), now.plusSeconds(30), now.plusSeconds(45),
+      now.plusSeconds(60), now.plusSeconds(65), now.plusSeconds(80))
+    val expected = TimeSeries(idx2, Vector(1f, 2f, 3f, 3f, 3f, 2f, 6f))
+
+    def f(x1: (Instant, Float), x2: (Instant, Float), tsh: Instant) = x1._2
+
+    series.addMissing(Duration.ofMinutes(1), f) shouldBe expected
+  }
+
   it should "repeat values" in {
-    val now = LocalDateTime.parse("2015-01-01T00:00:00")
-    val idx = Vector(now, now.plusMinutes(15), now.plusMinutes(30), now.plusMinutes(45))
+    val now = Instant.EPOCH
+    val idx = Vector(now, now.plusSeconds(15), now.plusSeconds(30), now.plusSeconds(45))
     val series = TimeSeries(idx, Vector(1, 4, 6, 8))
-    val idx2 = Vector(now.plusMinutes(60), now.plusMinutes(75), now.plusMinutes(90), now.plusMinutes(105))
+    val idx2 = Vector(now.plusSeconds(60), now.plusSeconds(75), now.plusSeconds(90), now.plusSeconds(105))
     val expected = TimeSeries(idx ++ idx2, Vector(1, 4, 6, 8, 1, 4, 6, 8))
 
-    series.repeat(now, now.plusHours(2), Duration.ofHours(1)) shouldBe expected
+    series.repeat(now, now.plusSeconds(2*60), Duration.ofMinutes(1)) shouldBe expected
   }
 
   it should "shift time forward" in {
-    val now = LocalDateTime.parse("2015-01-01T00:00:00")
-    val idx = Vector(now, now.plusMinutes(15), now.plusMinutes(30), now.plusMinutes(45))
+    val now = Instant.EPOCH
+    val idx = Vector(now, now.plusSeconds(15), now.plusSeconds(30), now.plusSeconds(45))
     val vs = Vector(1, 4, 6, 8)
     val series = TimeSeries(idx, vs)
-    val idx2 = Vector(now.plusMinutes(60), now.plusMinutes(75), now.plusMinutes(90), now.plusMinutes(105))
+    val idx2 = Vector(now.plusSeconds(60), now.plusSeconds(75), now.plusSeconds(90), now.plusSeconds(105))
     val expected = TimeSeries(idx2, vs)
 
-    series.shiftTime(Duration.ofHours(1), forward = true) shouldBe expected
+    series.shiftTime(Duration.ofMinutes(1), forward = true) shouldBe expected
   }
 
   it should "shift time backward" in {
-    val now = LocalDateTime.parse("2015-01-01T00:00:00")
-    val idx = Vector(now.plusMinutes(60), now.plusMinutes(75), now.plusMinutes(90), now.plusMinutes(105))
+    val now = Instant.EPOCH
+    val idx = Vector(now.plusSeconds(60), now.plusSeconds(75), now.plusSeconds(90), now.plusSeconds(105))
     val vs = Vector(1, 4, 6, 8)
     val series = TimeSeries(idx, vs)
-    val idx2 = Vector(now, now.plusMinutes(15), now.plusMinutes(30), now.plusMinutes(45))
+    val idx2 = Vector(now, now.plusSeconds(15), now.plusSeconds(30), now.plusSeconds(45))
     val expected = TimeSeries(idx2, vs)
 
-    series.shiftTime(Duration.ofHours(1), forward = false) shouldBe expected
+    series.shiftTime(Duration.ofMinutes(1), forward = false) shouldBe expected
   }
 
   it should "step index" in {
-    val now = LocalDateTime.parse("2015-01-01T00:00:00")
-    val idx = Vector(now, now.plusHours(1), now.plusHours(2))
+    val now = Instant.EPOCH
+    val idx = Vector(now, now.plusSeconds(60), now.plusSeconds(2*60))
     val vs = Vector(10f, 8f, 12f)
     val series = TimeSeries(idx, vs)
-    val idx2 = Vector(
-      now, now.plusMinutes(15), now.plusMinutes(30), now.plusMinutes(45),
-      now.plusMinutes(60), now.plusMinutes(75), now.plusMinutes(90), now.plusMinutes(105))
+    val idx2 = Vector(now, now.plusSeconds(15), now.plusSeconds(30), now.plusSeconds(45),
+      now.plusSeconds(60), now.plusSeconds(75), now.plusSeconds(90), now.plusSeconds(105))
     val expected = TimeSeries(idx2, Vector(2, 2, 2, 2, 3, 3, 3, 3))
 
-    TimeSeries.step(series, Duration.ofMinutes(15)) shouldBe expected
+    TimeSeries.step(series, Duration.ofSeconds(15)) shouldBe expected
   }
 
   it should "trim outliers" in {
-    val now = LocalDateTime.parse("2015-01-01T00:00:00")
-    val idx = Vector(now, now.plusMinutes(10), now.plusMinutes(30), now.plusMinutes(50), now.plusMinutes(80))
+    val now = Instant.EPOCH
+    val idx = Vector(now, now.plusSeconds(10), now.plusSeconds(30), now.plusSeconds(50), now.plusSeconds(80))
     val series = TimeSeries(idx, Vector(1, 200, -3, 4, 5))
     val expected = TimeSeries(idx, Vector(1, 5, 0, 4, 5))
-    val window = Duration.ofHours(1)
 
     series.trimOutliers(0, 5) shouldBe expected
   }
 
   it should "inner join 2 series" in {
-    val now = LocalDateTime.parse("2015-01-01T00:00:00")
-    val idx1 = Vector(now.plusMinutes(1), now.plusMinutes(2), now.plusMinutes(4), now.plusMinutes(5))
-    val idx2 = Vector(now.plusMinutes(2), now.plusMinutes(3), now.plusMinutes(4), now.plusMinutes(5))
+    val now = Instant.now()
+    val idx1 = Vector(now.plusSeconds(1), now.plusSeconds(2), now.plusSeconds(4), now.plusSeconds(5))
+    val idx2 = Vector(now.plusSeconds(2), now.plusSeconds(3), now.plusSeconds(4), now.plusSeconds(5))
     val vs = Vector(1, 4, 6, 8)
     val series1 = TimeSeries(idx1, vs)
     val series2 = TimeSeries(idx2, vs)
-    val idx3 = Vector(now.plusMinutes(2), now.plusMinutes(4), now.plusMinutes(5))
+    val idx3 = Vector(now.plusSeconds(2), now.plusSeconds(4), now.plusSeconds(5))
     val expected = TimeSeries(idx3, Vector((4, 1), (6, 6), (8, 8)))
 
     series1.join(series2) shouldBe expected
   }
 
   it should "inner join 4 series" in {
-    val now = LocalDateTime.parse("2015-01-01T00:00:00")
-    val idx1 = Vector(now.plusMinutes(1), now.plusMinutes(2), now.plusMinutes(4), now.plusMinutes(5))
-    val idx2 = Vector(now.plusMinutes(2), now.plusMinutes(3), now.plusMinutes(4), now.plusMinutes(5))
-    val idx3 = Vector(now.plusMinutes(3), now.plusMinutes(4), now.plusMinutes(5), now.plusMinutes(6))
-    val idx4 = Vector(now.plusMinutes(4), now.plusMinutes(5), now.plusMinutes(6), now.plusMinutes(7))
+    val now = Instant.now()
+    val idx1 = Vector(now.plusSeconds(1), now.plusSeconds(2), now.plusSeconds(4), now.plusSeconds(5))
+    val idx2 = Vector(now.plusSeconds(2), now.plusSeconds(3), now.plusSeconds(4), now.plusSeconds(5))
+    val idx3 = Vector(now.plusSeconds(3), now.plusSeconds(4), now.plusSeconds(5), now.plusSeconds(6))
+    val idx4 = Vector(now.plusSeconds(4), now.plusSeconds(5), now.plusSeconds(6), now.plusSeconds(7))
     val vs = Vector(1, 4, 6, 8)
     val series1 = TimeSeries(idx1, vs)
     val series2 = TimeSeries(idx2, vs)
     val series3 = TimeSeries(idx3, vs)
     val series4 = TimeSeries(idx4, vs)
-    val idx5 = Vector(now.plusMinutes(4), now.plusMinutes(5))
+    val idx5 = Vector(now.plusSeconds(4), now.plusSeconds(5))
     val expected = TimeSeries(idx5, Vector(List(6, 6, 4, 1), List(8, 8, 6, 4)))
 
     TimeSeries.join(Seq(series1, series2, series3, series4)) shouldBe expected
   }
 
   it should "left join 2 series" in {
-    val now = LocalDateTime.parse("2015-01-01T00:00:00")
-    val idx1 = Vector(now.plusMinutes(1), now.plusMinutes(2), now.plusMinutes(4), now.plusMinutes(5))
-    val idx2 = Vector(now.plusMinutes(2), now.plusMinutes(3), now.plusMinutes(4), now.plusMinutes(5))
+    val now = Instant.now()
+    val idx1 = Vector(now.plusSeconds(1), now.plusSeconds(2), now.plusSeconds(4), now.plusSeconds(5))
+    val idx2 = Vector(now.plusSeconds(2), now.plusSeconds(3), now.plusSeconds(4), now.plusSeconds(5))
     val vs = Vector(1, 4, 6, 8)
     val series1 = TimeSeries(idx1, vs)
     val series2 = TimeSeries(idx2, vs)
@@ -327,10 +331,11 @@ class TimeSeriesTest extends FlatSpec with Matchers {
   }
 
   it should "outer join 2 series" in {
-    val now = LocalDateTime.parse("2015-01-01T00:00:00")
-    val idx1 = Vector(now.plusMinutes(1), now.plusMinutes(2), now.plusMinutes(4), now.plusMinutes(5))
-    val idx2 = Vector(now.plusMinutes(2), now.plusMinutes(3), now.plusMinutes(4), now.plusMinutes(5))
-    val idx3 = Vector(now.plusMinutes(1), now.plusMinutes(2), now.plusMinutes(3), now.plusMinutes(4), now.plusMinutes(5))
+    val now = Instant.now()
+    val idx1 = Vector(now.plusSeconds(1), now.plusSeconds(2), now.plusSeconds(4), now.plusSeconds(5))
+    val idx2 = Vector(now.plusSeconds(2), now.plusSeconds(3), now.plusSeconds(4), now.plusSeconds(5))
+    val idx3 = Vector(now.plusSeconds(1), now.plusSeconds(2), now.plusSeconds(3), now.plusSeconds(4),
+      now.plusSeconds(5))
     val vs = Vector(1, 4, 6, 8)
     val series1 = TimeSeries(idx1, vs)
     val series2 = TimeSeries(idx2, vs)
@@ -340,9 +345,8 @@ class TimeSeriesTest extends FlatSpec with Matchers {
   }
 
   it should "outer join 2 series(one empty)" in {
-    val now = LocalDateTime.parse("2015-01-01T00:00:00")
-    val idx1 = Vector(now.plusMinutes(1), now.plusMinutes(2), now.plusMinutes(4), now.plusMinutes(5))
-    val idx3 = Vector(now.plusMinutes(1), now.plusMinutes(2), now.plusMinutes(3), now.plusMinutes(4), now.plusMinutes(5))
+    val now = Instant.now()
+    val idx1 = Vector(now.plusSeconds(1), now.plusSeconds(2), now.plusSeconds(4), now.plusSeconds(5))
     val vs = Vector(1f, 4f, 6f, 8f)
     val series1 = TimeSeries(idx1, vs)
     val series2 = TimeSeries.empty[Float]
@@ -352,26 +356,25 @@ class TimeSeriesTest extends FlatSpec with Matchers {
   }
 
   it should "merge 2 series" in {
-    val now = LocalDateTime.parse("2015-01-01T00:00:00")
-    val idx1 = Vector(now.plusMinutes(1), now.plusMinutes(2), now.plusMinutes(4), now.plusMinutes(5))
-    val idx2 = Vector(now.plusMinutes(2), now.plusMinutes(3), now.plusMinutes(4), now.plusMinutes(5))
+    val now = Instant.now()
+    val idx1 = Vector(now.plusSeconds(1), now.plusSeconds(2), now.plusSeconds(4), now.plusSeconds(5))
+    val idx2 = Vector(now.plusSeconds(2), now.plusSeconds(3), now.plusSeconds(4), now.plusSeconds(5))
     val vs1 = Vector(1, 4, 6, 8)
     val vs2 = Vector(2, 3, 5, 9)
     val series1 = TimeSeries(idx1, vs1)
     val series2 = TimeSeries(idx2, vs2)
-    val idx3 = Vector(now.plusMinutes(1), now.plusMinutes(2), now.plusMinutes(3), now.plusMinutes(4), now.plusMinutes(5))
+    val idx3 = Vector(now.plusSeconds(1), now.plusSeconds(2), now.plusSeconds(3), now.plusSeconds(4), now.plusSeconds(5))
     val expected = TimeSeries(idx3, Vector(1, 4, 3, 6, 8))
 
     series1.merge(series2) shouldBe expected
   }
 
   it should "interpolate outliers" in {
-    def f(x: Float, y: Float): Float = {
-      (x + y) / 2
-    }
+    def f(x: Float, y: Float): Float = (x + y) / 2
 
-    val now = LocalDateTime.parse("2015-01-01T00:00:00")
-    val idx = Vector(now.plusMinutes(1), now.plusMinutes(2), now.plusMinutes(3), now.plusMinutes(4), now.plusMinutes(5), now.plusMinutes(6))
+    val now = Instant.now()
+    val idx = Vector(now.plusSeconds(1), now.plusSeconds(2), now.plusSeconds(3), now.plusSeconds(4),
+      now.plusSeconds(5), now.plusSeconds(6))
     val series = TimeSeries(idx, Vector(3f, 20f, 5f, 6f, 0f, 8f))
     val expected = TimeSeries(idx, Vector(3f, 4f, 5f, 6f, 7f, 8f))
 
@@ -379,10 +382,10 @@ class TimeSeriesTest extends FlatSpec with Matchers {
   }
 
   it should "remove outliers" in {
-
-    val now = LocalDateTime.parse("2015-01-01T00:00:00")
-    val idx = Vector(now.plusMinutes(1), now.plusMinutes(2), now.plusMinutes(3), now.plusMinutes(4), now.plusMinutes(5), now.plusMinutes(6))
-    val idx2 = Vector(now.plusMinutes(1), now.plusMinutes(3), now.plusMinutes(4), now.plusMinutes(6))
+    val now = Instant.now()
+    val idx = Vector(now.plusSeconds(1), now.plusSeconds(2), now.plusSeconds(3), now.plusSeconds(4), now.plusSeconds(5),
+      now.plusSeconds(6))
+    val idx2 = Vector(now.plusSeconds(1), now.plusSeconds(3), now.plusSeconds(4), now.plusSeconds(6))
     val series = TimeSeries(idx, Vector(3f, 20f, 5f, 6f, 0f, 8f))
     val expected = TimeSeries(idx2, Vector(3f, 5f, 6f, 8f))
 
@@ -390,9 +393,9 @@ class TimeSeriesTest extends FlatSpec with Matchers {
   }
 
   it should "check if 2 ts is almost equal (true)" in {
-    val now = LocalDateTime.parse("2015-01-01T00:00:00")
-    val idx1 = Vector(now.plusMinutes(1), now.plusMinutes(2), now.plusMinutes(4), now.plusMinutes(5))
-    val idx2 = Vector(now.plusMinutes(1), now.plusMinutes(2), now.plusMinutes(4), now.plusMinutes(5))
+    val now = Instant.now()
+    val idx1 = Vector(now.plusSeconds(1), now.plusSeconds(2), now.plusSeconds(4), now.plusSeconds(5))
+    val idx2 = Vector(now.plusSeconds(1), now.plusSeconds(2), now.plusSeconds(4), now.plusSeconds(5))
     val vs = Vector(1.2005, 1.000054, 1.000034, 1.000022)
     val vs2 = Vector(1.2005, 1.000053, 1.000030, 1.000020)
     val series1 = TimeSeries(idx1, vs)
@@ -402,9 +405,9 @@ class TimeSeriesTest extends FlatSpec with Matchers {
   }
 
   it should "check if 2 ts is almost equal (false)" in {
-    val now = LocalDateTime.parse("2015-01-01T00:00:00")
-    val idx1 = Vector(now.plusMinutes(1), now.plusMinutes(2), now.plusMinutes(4), now.plusMinutes(5))
-    val idx2 = Vector(now.plusMinutes(1), now.plusMinutes(2), now.plusMinutes(4), now.plusMinutes(5))
+    val now = Instant.now()
+    val idx1 = Vector(now.plusSeconds(1), now.plusSeconds(2), now.plusSeconds(4), now.plusSeconds(5))
+    val idx2 = Vector(now.plusSeconds(1), now.plusSeconds(2), now.plusSeconds(4), now.plusSeconds(5))
     val vs = Vector(1.005f, 1.000054f, 1.000034f, 1.000022f)
     val vs2 = Vector(1.2005f, 1.000053f, 1.000030f, 1.000020f)
     val series1 = TimeSeries(idx1, vs)
@@ -413,9 +416,9 @@ class TimeSeriesTest extends FlatSpec with Matchers {
     TimeSeries.almostEqual(series1, series2, 0.00001f) shouldBe false
   }
   it should "check if 2 ts is almost equal - extra size" in {
-    val now = LocalDateTime.parse("2015-01-01T00:00:00")
-    val idx1 = Vector(now.plusMinutes(1), now.plusMinutes(2), now.plusMinutes(4), now.plusMinutes(5))
-    val idx2 = Vector(now, now.plusMinutes(1), now.plusMinutes(2), now.plusMinutes(4), now.plusMinutes(5))
+    val now = Instant.now()
+    val idx1 = Vector(now.plusSeconds(1), now.plusSeconds(2), now.plusSeconds(4), now.plusSeconds(5))
+    val idx2 = Vector(now, now.plusSeconds(1), now.plusSeconds(2), now.plusSeconds(4), now.plusSeconds(5))
     val vs = Vector(1f, 2.2f, 2.4f, 10.7f)
     val vs2 = Vector(0.5f, 1f, 2.2f, 2.4f, 10.7f)
     val series1 = TimeSeries(idx1, vs)
@@ -425,9 +428,9 @@ class TimeSeriesTest extends FlatSpec with Matchers {
   }
 
   it should "check if 2 ts is almost equal- different index" in {
-    val now = LocalDateTime.parse("2015-01-01T00:00:00")
-    val idx1 = Vector(now.plusMinutes(1), now.plusMinutes(2), now.plusMinutes(4), now.plusMinutes(5))
-    val idx2 = Vector(now.plusMinutes(1), now.plusMinutes(2), now.plusMinutes(4), now.plusMinutes(6))
+    val now = Instant.now()
+    val idx1 = Vector(now.plusSeconds(1), now.plusSeconds(2), now.plusSeconds(4), now.plusSeconds(5))
+    val idx2 = Vector(now.plusSeconds(1), now.plusSeconds(2), now.plusSeconds(4), now.plusSeconds(6))
     val vs = Vector(1.2005f, 1.000054f, 1.000034f, 1.000022f)
     val vs2 = Vector(1.2005f, 1.000053f, 1.000030f, 1.000020f)
     val series1 = TimeSeries(idx1, vs)
