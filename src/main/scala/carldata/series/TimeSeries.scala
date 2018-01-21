@@ -1,6 +1,6 @@
 package carldata.series
 
-import java.time.{Duration, LocalDateTime, ZoneOffset}
+import java.time.{Duration, Instant}
 
 import carldata.series.TimeSeries.reindex
 
@@ -13,17 +13,17 @@ object TimeSeries {
 
   /** Create TimeSeries from timestamps */
   def fromTimestamps[V: Numeric](rows: Seq[(Long, V)]): TimeSeries[V] = {
-    new TimeSeries(rows.map(r => (LocalDateTime.ofEpochSecond(r._1, 0, ZoneOffset.UTC), r._2)))
+    new TimeSeries(rows.map(r => (Instant.ofEpochSecond(r._1), r._2)))
   }
 
   /** Create empty series */
   def empty[V]: TimeSeries[V] = {
-    new TimeSeries[V](Seq[(LocalDateTime, V)]())
+    new TimeSeries[V](Seq[(Instant, V)]())
   }
 
   /** Return new series by interpolate missing points */
   def interpolate[V: Numeric](xs: TimeSeries[V], delta: Duration)(implicit num: Fractional[V]): TimeSeries[V] = {
-    def f(x1: (LocalDateTime, V), x2: (LocalDateTime, V), tsh: LocalDateTime) = {
+    def f(x1: (Instant, V), x2: (Instant, V), tsh: Instant) = {
       val tx = num.fromInt(Duration.between(tsh, x1._1).toMillis.toInt)
       val ty = num.fromInt(Duration.between(tsh, x2._1).toMillis.toInt)
       num.plus(num.times(num.div(ty, num.plus(tx, ty)), x1._2), num.times(num.div(tx, num.plus(tx, ty)), x2._2))
@@ -89,16 +89,16 @@ object TimeSeries {
     * Integrate series for selected window.
     * Windows are not overlapping and sum starts at 0 at the beginning of each window
     */
-  def integrateByTime[V: Numeric](ts: TimeSeries[V], g: LocalDateTime => LocalDateTime)
+  def integrateByTime[V: Numeric](ts: TimeSeries[V], g: Instant => Instant)
                                  (implicit num: Numeric[V]): TimeSeries[V] = {
     if (ts.isEmpty) ts
     else {
       val startTime = g(ts.index.head)
       // This buffer could be used inside foldLeft, but then Intellij Idea will show wrong errors in += operation.
       val xs = ListBuffer.empty[V]
-      ts.dataPoints.foldLeft[(LocalDateTime, V)]((startTime, num.zero)) { (acc, x) =>
+      ts.dataPoints.foldLeft[(Instant, V)]((startTime, num.zero)) { (acc, x) =>
         val t = g(x._1)
-        if (t.isEqual(acc._1)) {
+        if (t == acc._1) {
           val v = num.plus(acc._2, x._2)
           xs += v
           (acc._1, v)
@@ -112,7 +112,7 @@ object TimeSeries {
   }
 
   /** Create new index with the step equal to duration, for a given time range */
-  private def reindex(start: LocalDateTime, end: LocalDateTime, delta: Duration): Vector[LocalDateTime] = {
+  private def reindex(start: Instant, end: Instant, delta: Duration): Vector[Instant] = {
     Iterator.iterate(start)(_.plusNanos(delta.toNanos)).takeWhile(_.isBefore(end)).toVector
   }
 
@@ -126,7 +126,7 @@ object TimeSeries {
     val index = reindex(ts.index.head, ts.index.last, d)
     val builder: mutable.ListBuffer[V] = ListBuffer()
 
-    @tailrec def stepR(dp: Vector[(LocalDateTime, V)], newIdx: Vector[LocalDateTime]): Vector[V] = {
+    @tailrec def stepR(dp: Vector[(Instant, V)], newIdx: Vector[Instant]): Vector[V] = {
       if (dp.isEmpty) builder.toVector
       else {
         val p = dp.head
@@ -156,16 +156,16 @@ object TimeSeries {
   * TimeSeries contains data indexed by DateTime. The type of stored data
   * is parametric.
   */
-case class TimeSeries[V](idx: Vector[LocalDateTime], ds: Vector[V]) {
+case class TimeSeries[V](idx: Vector[Instant], ds: Vector[V]) {
 
-  def this(d: Seq[(LocalDateTime, V)]) = {
+  def this(d: Seq[(Instant, V)]) = {
     this(d.map(_._1).toVector, d.map(_._2).toVector)
   }
 
   val length: Int = math.min(idx.length, ds.length)
-  val index: Vector[LocalDateTime] = idx.take(length)
+  val index: Vector[Instant] = idx.take(length)
   val values: Vector[V] = ds.take(length)
-  val dataPoints: Vector[(LocalDateTime, V)] = index.zip(values)
+  val dataPoints: Vector[(Instant, V)] = index.zip(values)
 
   /** Check is series is empty */
   def isEmpty: Boolean = index.isEmpty || values.isEmpty
@@ -176,7 +176,7 @@ case class TimeSeries[V](idx: Vector[LocalDateTime], ds: Vector[V]) {
   /** Safe get. If element is out of the bounds then 0 is returned */
   def get(i: Int)(implicit num: Numeric[V]): V = values.lift(i).getOrElse(num.zero)
 
-  def head: Option[(LocalDateTime, V)] = {
+  def head: Option[(Instant, V)] = {
     for {
       i <- index.headOption
       v <- values.headOption
@@ -184,7 +184,7 @@ case class TimeSeries[V](idx: Vector[LocalDateTime], ds: Vector[V]) {
   }
 
   /** Get last element of the series */
-  def last: Option[(LocalDateTime, V)] = {
+  def last: Option[(Instant, V)] = {
     for {
       i <- index.lastOption
       v <- values.lastOption
@@ -197,7 +197,7 @@ case class TimeSeries[V](idx: Vector[LocalDateTime], ds: Vector[V]) {
     if (isEmpty) this
     else {
       val ds = dataPoints
-      val xs = ListBuffer[(LocalDateTime, V)](ds.head)
+      val xs = ListBuffer[(Instant, V)](ds.head)
       ds.tail.foreach { d =>
         if (d._1.isAfter(xs.last._1)) {
           xs.append(d)
@@ -208,12 +208,12 @@ case class TimeSeries[V](idx: Vector[LocalDateTime], ds: Vector[V]) {
   }
 
   /** Filter by index and value */
-  def filter(f: ((LocalDateTime, V)) => Boolean): TimeSeries[V] = {
+  def filter(f: ((Instant, V)) => Boolean): TimeSeries[V] = {
     new TimeSeries(index.zip(values).filter(f))
   }
 
   /** Map by index and value. Create new values */
-  def map(f: ((LocalDateTime, V)) => V): TimeSeries[V] = {
+  def map(f: ((Instant, V)) => V): TimeSeries[V] = {
     val vs: Vector[V] = index.zip(values).map(f)
     new TimeSeries(index, vs)
   }
@@ -226,10 +226,10 @@ case class TimeSeries[V](idx: Vector[LocalDateTime], ds: Vector[V]) {
 
   /** Merges series A into B */
   def merge(ts: TimeSeries[V]): TimeSeries[V] = {
-    val res: mutable.ListBuffer[(LocalDateTime, V)] = ListBuffer()
+    val res: mutable.ListBuffer[(Instant, V)] = ListBuffer()
 
     @tailrec
-    def insert(xs: Vector[(LocalDateTime, V)], ys: Vector[(LocalDateTime, V)]): Vector[(LocalDateTime, V)] = {
+    def insert(xs: Vector[(Instant, V)], ys: Vector[(Instant, V)]): Vector[(Instant, V)] = {
 
       if (xs.nonEmpty) {
         val x = xs.head
@@ -264,8 +264,8 @@ case class TimeSeries[V](idx: Vector[LocalDateTime], ds: Vector[V]) {
   /** Get slice of series with left side inclusive and right side exclusive
     * this operation is based on index.
     */
-  def slice(start: LocalDateTime, end: LocalDateTime): TimeSeries[V] = {
-    val d = index.zip(values).filter(x => (x._1.isAfter(start) || x._1.isEqual(start)) && x._1.isBefore(end))
+  def slice(start: Instant, end: Instant): TimeSeries[V] = {
+    val d = index.zip(values).filter(x => (x._1.isAfter(start) || x._1 == start) && x._1.isBefore(end))
     new TimeSeries(d)
   }
 
@@ -276,14 +276,14 @@ case class TimeSeries[V](idx: Vector[LocalDateTime], ds: Vector[V]) {
     *          time will be integrated into single point
     * @param f This function defines how to aggregate points with the same transformed time
     */
-  def groupByTime(g: LocalDateTime => LocalDateTime, f: Seq[(LocalDateTime, V)] => V): TimeSeries[V] = {
+  def groupByTime(g: Instant => Instant, f: Seq[(Instant, V)] => V): TimeSeries[V] = {
     if (isEmpty) this
     else {
-      val xs = ListBuffer[(LocalDateTime, ArrayBuffer[(LocalDateTime, V)])]((g(index.head), ArrayBuffer()))
+      val xs = ListBuffer[(Instant, ArrayBuffer[(Instant, V)])]((g(index.head), ArrayBuffer()))
       for ((k, v) <- index.zip(values)) {
         val last = xs.last
         val t = g(k)
-        if (last._1.isEqual(t)) last._2 += ((k, v))
+        if (last._1 == t) last._2 += ((k, v))
         else xs += ((t, ArrayBuffer((k, v))))
       }
       TimeSeries(xs.map(_._1).toVector, xs.map(x => f(x._2)).toVector)
@@ -297,17 +297,17 @@ case class TimeSeries[V](idx: Vector[LocalDateTime], ds: Vector[V]) {
     * @param delta Distance between points
     * @param f     Function which approximates missing points
     */
-  def resample(delta: Duration, f: ((LocalDateTime, V), (LocalDateTime, V), LocalDateTime) => V)(implicit num: Numeric[V]): TimeSeries[V] = {
+  def resample(delta: Duration, f: ((Instant, V), (Instant, V), Instant) => V)(implicit num: Numeric[V]): TimeSeries[V] = {
     if (index.isEmpty) TimeSeries.empty[V]
     else {
       val ys: mutable.ListBuffer[V] = ListBuffer()
       val ts = Iterator.iterate(index.head)(_.plusNanos(delta.toNanos))
         .takeWhile(_.isBefore(index.last.plusNanos(1))).toVector
 
-      @tailrec def g(ts: Vector[LocalDateTime], xs: Vector[LocalDateTime], vs: Vector[V], prev: V): Unit = {
+      @tailrec def g(ts: Vector[Instant], xs: Vector[Instant], vs: Vector[V], prev: V): Unit = {
         val tsh = ts.head
         val xsh = xs.head
-        if (xsh.isEqual(tsh)) {
+        if (xsh == tsh) {
           ys.append(vs.head)
           if (ts.size != 1) g(ts.tail, xs.tail, vs.tail, vs.head)
         }
@@ -331,7 +331,7 @@ case class TimeSeries[V](idx: Vector[LocalDateTime], ds: Vector[V]) {
     * Resample series. If there are any missing points then they will be replaced by given default value
     */
   def resampleWithDefault(delta: Duration, default: V)(implicit num: Fractional[V]): TimeSeries[V] = {
-    def f(x1: (LocalDateTime, V), x2: (LocalDateTime, V), tsh: LocalDateTime) = default
+    def f(x1: (Instant, V), x2: (Instant, V), tsh: Instant) = default
 
     resample(delta, f)
   }
@@ -343,20 +343,20 @@ case class TimeSeries[V](idx: Vector[LocalDateTime], ds: Vector[V]) {
     * @param delta Expected distance between points
     * @param f     This function will approximate missing points.
     */
-  def addMissing(delta: Duration, f: ((LocalDateTime, V), (LocalDateTime, V), LocalDateTime) => V): TimeSeries[V] = {
+  def addMissing(delta: Duration, f: ((Instant, V), (Instant, V), Instant) => V): TimeSeries[V] = {
     if (isEmpty) this
     else {
-      val ys: mutable.ListBuffer[(LocalDateTime, V)] = ListBuffer()
+      val ys: mutable.ListBuffer[(Instant, V)] = ListBuffer()
       val resampledIndex = reindex(index.head, index.last, delta)
 
-      @tailrec def g(ts: Vector[LocalDateTime], xs: Vector[(LocalDateTime, V)], prev: (LocalDateTime, V)): Unit = {
+      @tailrec def g(ts: Vector[Instant], xs: Vector[(Instant, V)], prev: (Instant, V)): Unit = {
         if (xs.nonEmpty) {
           val xsh = xs.head
           if (ts.isEmpty) {
             ys.append(xs.head)
             g(ts, xs.tail, xsh)
 
-          } else if (xsh._1.isEqual(ts.head)) {
+          } else if (xsh._1 == ts.head) {
             ys.append(xs.head)
             g(ts.tail, xs.tail, xsh)
           }
@@ -382,7 +382,7 @@ case class TimeSeries[V](idx: Vector[LocalDateTime], ds: Vector[V]) {
   /** Rolling window operation */
   def rollingWindow(windowSize: Duration, f: Seq[V] => V): TimeSeries[V] = {
 
-    @tailrec def g(v: Vector[(LocalDateTime, V)], out: Vector[V]): Vector[V] = {
+    @tailrec def g(v: Vector[(Instant, V)], out: Vector[V]): Vector[V] = {
       if (v.nonEmpty) {
         val splitIndex: Int = v.indexWhere(x => x._1.isBefore(v.head._1.minus(windowSize).minusNanos(1)))
         val window = if (splitIndex > 0) v.take(splitIndex) else v
@@ -395,11 +395,11 @@ case class TimeSeries[V](idx: Vector[LocalDateTime], ds: Vector[V]) {
   }
 
   /** Repeat series */
-  def repeat(start: LocalDateTime, end: LocalDateTime, d: Duration): TimeSeries[V] = {
+  def repeat(start: Instant, end: Instant, d: Duration): TimeSeries[V] = {
     val ts = slice(start, start.plus(d))
     if (ts.isEmpty) ts
     else {
-      @tailrec def repeatR(offset: Duration, dp: (Vector[LocalDateTime], Vector[V])): (Vector[LocalDateTime], Vector[V]) = {
+      @tailrec def repeatR(offset: Duration, dp: (Vector[Instant], Vector[V])): (Vector[Instant], Vector[V]) = {
         val idx = ts.index.map(_.plus(offset))
         if (idx.head.isBefore(end)) repeatR(offset.plus(d), (dp._1 ++ idx, dp._2 ++ ts.values))
         else dp
@@ -450,15 +450,15 @@ case class TimeSeries[V](idx: Vector[LocalDateTime], ds: Vector[V]) {
 
   /** Inner join. Only include points which have the same data in both series */
   def join[U](ts: TimeSeries[U]): TimeSeries[(V, U)] = {
-    val builder: mutable.ListBuffer[(LocalDateTime, (V, U))] = ListBuffer()
+    val builder: mutable.ListBuffer[(Instant, (V, U))] = ListBuffer()
 
-    @tailrec def joinR(xs: Vector[(LocalDateTime, V)],
-                       ys: Vector[(LocalDateTime, U)]): Seq[(LocalDateTime, (V, U))] = {
+    @tailrec def joinR(xs: Vector[(Instant, V)],
+                       ys: Vector[(Instant, U)]): Seq[(Instant, (V, U))] = {
       if (xs.isEmpty || ys.isEmpty) builder
       else {
         val x = xs.head
         val y = ys.head
-        if (x._1.isEqual(y._1)) {
+        if (x._1 == y._1) {
           builder.append((x._1, (x._2, y._2)))
           joinR(xs.tail, ys.tail)
         }
@@ -473,15 +473,15 @@ case class TimeSeries[V](idx: Vector[LocalDateTime], ds: Vector[V]) {
 
   /** Left join. If right series doesn't have a data point then put default value. */
   def joinLeft[U](ts: TimeSeries[U], default: U): TimeSeries[(V, U)] = {
-    val builder: mutable.ListBuffer[(LocalDateTime, (V, U))] = ListBuffer()
+    val builder: mutable.ListBuffer[(Instant, (V, U))] = ListBuffer()
 
-    @tailrec def joinR(xs: Vector[(LocalDateTime, V)],
-                       ys: Vector[(LocalDateTime, U)]): Seq[(LocalDateTime, (V, U))] = {
+    @tailrec def joinR(xs: Vector[(Instant, V)],
+                       ys: Vector[(Instant, U)]): Seq[(Instant, (V, U))] = {
       if (xs.isEmpty || ys.isEmpty) builder
       else {
         val x = xs.head
         val y = ys.head
-        if (x._1.isEqual(y._1)) {
+        if (x._1 == y._1) {
           builder.append((x._1, (x._2, y._2)))
           joinR(xs.tail, ys.tail)
         } else if (x._1.isBefore(y._1)) {
@@ -496,10 +496,10 @@ case class TimeSeries[V](idx: Vector[LocalDateTime], ds: Vector[V]) {
 
   /** Outer join. If one of the series doesn't have a data point then put default(left or right) value. */
   def joinOuter[U](ts: TimeSeries[U], defaultLeft: V, defaultRight: U): TimeSeries[(V, U)] = {
-    val builder: mutable.ListBuffer[(LocalDateTime, (V, U))] = ListBuffer()
+    val builder: mutable.ListBuffer[(Instant, (V, U))] = ListBuffer()
 
-    @tailrec def joinR(xs: Vector[(LocalDateTime, V)],
-                       ys: Vector[(LocalDateTime, U)]): Seq[(LocalDateTime, (V, U))] = {
+    @tailrec def joinR(xs: Vector[(Instant, V)],
+                       ys: Vector[(Instant, U)]): Seq[(Instant, (V, U))] = {
       if (xs.isEmpty) {
         ys.foreach(y => builder.append((y._1, (defaultLeft, y._2))))
         builder
@@ -511,7 +511,7 @@ case class TimeSeries[V](idx: Vector[LocalDateTime], ds: Vector[V]) {
       else {
         val x = xs.head
         val y = ys.head
-        if (x._1.isEqual(y._1)) {
+        if (x._1 == y._1) {
           builder.append((x._1, (x._2, y._2)))
           joinR(xs.tail, ys.tail)
         } else if (x._1.isBefore(y._1)) {

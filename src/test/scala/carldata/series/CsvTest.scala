@@ -1,6 +1,6 @@
 package carldata.series
 
-import java.time.LocalDateTime
+import java.time.Instant
 
 import org.scalatest._
 
@@ -19,8 +19,8 @@ class CsvTest extends FlatSpec with Matchers {
   }
 
   it should "save series to string" in {
-    val now = LocalDateTime.parse("2015-01-01T00:00:00")
-    val idx = Vector(now, now.plusMinutes(1), now.plusMinutes(2), now.plusMinutes(3))
+    val now = Instant.ofEpochSecond(1000)
+    val idx = Vector(now, now.plusSeconds(1), now.plusSeconds(2), now.plusSeconds(3))
     val series = TimeSeries(idx, Vector(1f, 4f, 6f, 9f))
     val csv = Csv.toCsv(series)
     series shouldBe Csv.fromString(csv)

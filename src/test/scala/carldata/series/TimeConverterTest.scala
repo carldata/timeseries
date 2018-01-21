@@ -29,12 +29,10 @@ class TimeConverterTest extends FlatSpec with Matchers {
   }
 
   it should "parse cron string 5a,1,2 2 * 4 *" in {
-    val expected = CronLike(ListElement(Seq(5, 1, 2)), NumberElement(2), AnyElement, NumberElement(4), AnyElement)
     TimeConverter.mkCronLike("5a,1,2 2 * 4 *") shouldBe None
   }
 
   it should "parse cron string 5a 2 * 4 *" in {
-    val expected = CronLike(ListElement(Seq(5, 1, 2)), NumberElement(2), AnyElement, NumberElement(4), AnyElement)
     TimeConverter.mkCronLike("5a 2 * 4 *") shouldBe None
   }
 

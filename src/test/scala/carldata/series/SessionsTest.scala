@@ -6,7 +6,7 @@ import carldata.series.Sessions.Session
 import org.scalatest._
 
 class SessionsTest extends FlatSpec with Matchers {
-  val seriesOfTypicalRain = Csv.fromString(
+  private val seriesOfTypicalRain = Csv.fromString(
     """time,value
       |2008-01-01T12:35:00, 4
       |2008-01-01T12:36:00, 2
@@ -39,7 +39,7 @@ class SessionsTest extends FlatSpec with Matchers {
       |2008-01-01T13:03:00, 1
       |2008-01-01T13:04:00, 3""".stripMargin)
 
-  val seriesOfEvanescentRain = Csv.fromString(
+  private val seriesOfEvanescentRain = Csv.fromString(
     """time,value
       |2008-01-01T12:35:00, 0
       |2008-01-01T12:36:00, 0
@@ -72,7 +72,7 @@ class SessionsTest extends FlatSpec with Matchers {
       |2008-01-01T13:03:00, 0
       |2008-01-01T13:04:00, 0""".stripMargin)
 
-  val seriesOfAllRain = Csv.fromString(
+  private val seriesOfAllRain = Csv.fromString(
     """time,value
       |2008-01-01T12:35:00, 4
       |2008-01-01T12:36:00, 5
@@ -85,7 +85,7 @@ class SessionsTest extends FlatSpec with Matchers {
       |2008-01-01T12:43:00, 2
       |2008-01-01T12:44:00, 5""".stripMargin)
 
-  val seriesOfNoRain = Csv.fromString(
+  private val seriesOfNoRain = Csv.fromString(
     """time,value
       |2008-01-01T12:35:00, 0
       |2008-01-01T12:36:00, 0

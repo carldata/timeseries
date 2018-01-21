@@ -1,7 +1,7 @@
 package carldata.series
 
 import java.time.LocalDateTime
-import java.time.temporal.{TemporalAdjuster, TemporalAdjusters}
+import java.time.temporal.TemporalAdjusters
 
 
 object TimeConverter {
@@ -33,7 +33,7 @@ object TimeConverter {
   def mkConverter(c: CronLike): LocalDateTime => LocalDateTime = { dt =>
     def floor(x: Int, c: CronElement): Int = {
       c match {
-        case n: NumberElement => if (x >= n.v) n.v else -(n.v)
+        case n: NumberElement => if (x >= n.v) n.v else -n.v
         case r: RepeatElement => (x / r.v) * r.v
         case l: ListElement => l.s.sorted.reverse.find(n => n < x).getOrElse(0)
         case _ => x
