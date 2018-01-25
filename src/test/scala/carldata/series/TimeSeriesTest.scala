@@ -120,6 +120,15 @@ class TimeSeriesTest extends FlatSpec with Matchers {
     TimeSeries.diffOverflow(series, 10) shouldBe expected
   }
 
+  it should "differentiate with the overflow without overflowValue" in {
+    val now = Instant.now()
+    val idx = Vector(now, now.plusSeconds(5), now.plusSeconds(10), now.plusSeconds(15),
+      now.plusSeconds(20), now.plusSeconds(25), now.plusSeconds(30))
+    val series = TimeSeries(idx, Vector(1, 2, 3, 3, 8, 3, 2))
+    val expected = TimeSeries(idx, Vector(1, 1, 1, 0, 5, 3 ,2))
+    TimeSeries.diffOverflow(series) shouldBe expected
+  }
+
   it should "differentiate empty series" in {
     val series = TimeSeries.empty[Int]
     series.values.sum shouldBe 0
