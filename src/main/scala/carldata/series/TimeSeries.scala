@@ -76,6 +76,18 @@ object TimeSeries {
     }
   }
 
+  def diffOverflow[V: Numeric](ts: TimeSeries[V])(implicit num: Numeric[V]): TimeSeries[V] = {
+    if (ts.isEmpty) ts
+    else {
+      val vs: Vector[V] = ts.values.zip(ts.values.tail).map { x =>
+        if (num.lt(x._2, x._1)) x._2
+        else if (num.gt(x._2, x._1)) num.minus(x._2, x._1)
+        else num.minus(x._2, x._1)
+      }
+      TimeSeries(ts.index, ts.values.head +: vs)
+    }
+  }
+
   /** Accumulate sum for each point */
   def integrate[V: Numeric](ts: TimeSeries[V])(implicit num: Numeric[V]): TimeSeries[V] = {
     if (ts.isEmpty) ts
