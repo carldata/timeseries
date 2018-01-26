@@ -41,7 +41,7 @@ object TimeConverter {
     def floor(x: Int, c: CronElement): Int = {
       c match {
         case n: NumberElement => if (x >= n.v) n.v else -n.v
-        case r: RepeatElement => (x / r.v) * r.v
+        case r: RepeatElement => ((x + r.v) / r.v) * r.v
         case l: ListElement => l.s.sorted.reverse.find(n => n < x).getOrElse(0)
         case _ => x
       }
@@ -101,7 +101,9 @@ object TimeConverter {
         if (t(1) > 0) {
           if (t(1) == dt.getHour) res
           else res.withHour(t(1)).withMinute(59)
-        } else res.minusDays(1).withHour(Math.abs(t(1))).withMinute(59)
+        }
+        else if (t(1) == 0) res
+        else res.minusDays(1).withHour(Math.abs(t(1))).withMinute(59)
       }
     }
 
@@ -109,7 +111,8 @@ object TimeConverter {
       res = if (t.head > 0) {
         if (t.head == dt.getMinute) res
         else res.withMinute(t.head)
-      } else res.minusHours(1).withMinute(Math.abs(t.head))
+      } else if (t.head == 0) res
+      else res.minusHours(1).withMinute(Math.abs(t.head))
     }
 
     res.withSecond(0)
