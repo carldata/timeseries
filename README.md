@@ -37,9 +37,11 @@ sbt -mem 4000 run
     * [x] Read data from CSV string
   * Generators
     * [x] Constant series
-    * [ ] Random noise
+    * [x] Random noise
     * [ ] Random Walk
     * [ ] periodic pattern
+  * Metrics
+    * [ ] MSE between 2 series
   * ARIMA
     * [ ] Check is series is stationary
     * [ ] AR(p) - Autoregressive

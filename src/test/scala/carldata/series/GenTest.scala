@@ -2,7 +2,10 @@ package carldata.series
 
 import java.time.{Duration, Instant}
 
+import carldata.series.Stats.MeanAndVariance
 import org.scalatest._
+
+import scala.util.Random
 
 
 class GenTest extends FlatSpec with Matchers {
@@ -38,5 +41,11 @@ class GenTest extends FlatSpec with Matchers {
     result shouldBe expected
   }
 
-
+  "Random noise generator" should "create series with gaussian noise." in {
+    val idx = Gen.mkIndex(Instant.EPOCH, Instant.ofEpochSecond(60*60*24), Duration.ofSeconds(1))
+    val ts: TimeSeries[Double] = Gen.randomNoise(idx, 5, 9, new Random(100))
+    val mv = Stats.meanAndVariance(ts.values)
+    math.abs(mv.mean-5.0) < 0.1 shouldBe true
+    math.abs(mv.variance-9.0) < 0.1 shouldBe true
+  }
 }

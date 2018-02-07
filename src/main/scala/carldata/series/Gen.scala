@@ -4,6 +4,7 @@ import java.time.{Duration, Instant}
 
 import scala.annotation.tailrec
 import scala.collection.mutable.ListBuffer
+import scala.util.Random
 
 /**
   * Time Series generators
@@ -54,6 +55,13 @@ object Gen {
       val (idx, vs) = repeatR((pattern.index, pattern.values), (Vector(start), Vector(pattern.values.head)))
       TimeSeries(idx, vs)
     }
+  }
+
+  /** Generate random noise */
+  def randomNoise(idx: Vector[Instant], mean: Double, variance: Double, rng: Random=new Random()): TimeSeries[Double] = {
+    val std = math.sqrt(variance)
+    val vs = idx.map(_ => rng.nextGaussian()*std + mean)
+    TimeSeries(idx, vs)
   }
 
 }
