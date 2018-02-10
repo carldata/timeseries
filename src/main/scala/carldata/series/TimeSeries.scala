@@ -2,7 +2,7 @@ package carldata.series
 
 import java.time.{Duration, Instant}
 
-import carldata.series.TimeSeries.reindex
+import carldata.series.TimeSeries.mkIndex
 
 import scala.annotation.tailrec
 import scala.collection.mutable
@@ -76,6 +76,10 @@ object TimeSeries {
     }
   }
 
+  /**
+    * Predictive overflow based on the assumption that
+    * if the next value is smaller then the current value, then overflow happend
+    */
   def diffOverflow[V: Numeric](ts: TimeSeries[V])(implicit num: Numeric[V]): TimeSeries[V] = {
     if (ts.isEmpty) ts
     else {
@@ -124,7 +128,7 @@ object TimeSeries {
   }
 
   /** Create new index with the step equal to duration, for a given time range */
-  private def reindex(start: Instant, end: Instant, delta: Duration): Vector[Instant] = {
+  private def mkIndex(start: Instant, end: Instant, delta: Duration): Vector[Instant] = {
     Iterator.iterate(start)(_.plusNanos(delta.toNanos)).takeWhile(_.isBefore(end)).toVector
   }
 
@@ -135,7 +139,7 @@ object TimeSeries {
     * we will get values 2.5 every 15 minutes (10/4)
     */
   def step[V: Fractional](ts: TimeSeries[V], d: Duration)(implicit num: Fractional[V]): TimeSeries[V] = {
-    val index = reindex(ts.index.head, ts.index.last, d)
+    val index = mkIndex(ts.index.head, ts.index.last, d)
     val builder: mutable.ListBuffer[V] = ListBuffer()
 
     @tailrec def stepR(dp: Vector[(Instant, V)], newIdx: Vector[Instant]): Vector[V] = {
@@ -205,7 +209,7 @@ case class TimeSeries[V](idx: Vector[Instant], ds: Vector[V]) {
 
 
   /** Return new Time Series where index is always increasing */
-  def ensureIncreasing: TimeSeries[V] = {
+  def sortByIndex: TimeSeries[V] = {
     if (isEmpty) this
     else {
       val ds = dataPoints
@@ -359,7 +363,7 @@ case class TimeSeries[V](idx: Vector[Instant], ds: Vector[V]) {
     if (isEmpty) this
     else {
       val ys: mutable.ListBuffer[(Instant, V)] = ListBuffer()
-      val resampledIndex = reindex(index.head, index.last, delta)
+      val resampledIndex = mkIndex(index.head, index.last, delta)
 
       @tailrec def g(ts: Vector[Instant], xs: Vector[(Instant, V)], prev: (Instant, V)): Unit = {
         if (xs.nonEmpty) {

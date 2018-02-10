@@ -92,10 +92,10 @@ class TimeSeriesTest extends FlatSpec with Matchers {
     series.filter(x => x._2 > 0).length shouldBe 2
   }
 
-  it should "ensure that the index is increasing" in {
+  it should "sort series by index" in {
     val series: TimeSeries[Int] = TimeSeries.fromTimestamps(Seq((1, 1), (2, 2), (5, 5), (3, 3), (4, 4), (6, 6)))
     val expected: TimeSeries[Int] = TimeSeries.fromTimestamps(Seq((1, 1), (2, 2), (5, 5), (6, 6)))
-    series.ensureIncreasing shouldBe expected
+    series.sortByIndex shouldBe expected
   }
 
   it should "return sub series" in {
