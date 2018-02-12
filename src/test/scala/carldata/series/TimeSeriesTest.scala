@@ -1,7 +1,7 @@
 package carldata.series
 
-import java.time.temporal.ChronoUnit
-import java.time.{Duration, Instant}
+import java.time.temporal.{ChronoUnit, TemporalField}
+import java.time.{Duration, Instant, LocalDateTime, ZoneOffset}
 
 import org.scalatest._
 
@@ -125,7 +125,7 @@ class TimeSeriesTest extends FlatSpec with Matchers {
     val idx = Vector(now, now.plusSeconds(5), now.plusSeconds(10), now.plusSeconds(15),
       now.plusSeconds(20), now.plusSeconds(25), now.plusSeconds(30))
     val series = TimeSeries(idx, Vector(1, 2, 3, 3, 8, 3, 2))
-    val expected = TimeSeries(idx, Vector(1, 1, 1, 0, 5, 3 ,2))
+    val expected = TimeSeries(idx, Vector(1, 1, 1, 0, 5, 3, 2))
     TimeSeries.diffOverflow(series) shouldBe expected
   }
 
@@ -165,10 +165,25 @@ class TimeSeriesTest extends FlatSpec with Matchers {
     series.groupByTime(_.truncatedTo(ChronoUnit.MINUTES), _.unzip._2.sum) shouldBe expected
   }
 
+  it should "group by hour" in {
+    def groupHours(dt: Instant): Instant = {
+      Instant.EPOCH.truncatedTo(ChronoUnit.HOURS).plusSeconds(LocalDateTime.ofInstant(dt, ZoneOffset.UTC).getSecond)
+    }
+
+    val now = Instant.EPOCH
+    val day = 86400
+    val idx = Vector(now, now.plusSeconds(10), now.plusSeconds(20)
+      , now.plusSeconds(day), now.plusSeconds(day + 10), now.plusSeconds(day + 20)
+      , now.plusSeconds(2 * day), now.plusSeconds(2 * day + 10), now.plusSeconds(2 * day + 20))
+    val series = TimeSeries(idx, Vector(1, 2, 3, 1, 2, 3, 1, 2, 4))
+    val expected = TimeSeries(Vector(now, now.plusSeconds(10), now.plusSeconds(20)), Vector(3, 6, 10))
+    series.groupByTime(groupHours, _.unzip._2.sum) shouldBe expected
+  }
+
   it should "find sum in rolling windows operation" in {
     val now = Instant.EPOCH
-    val idx = Vector(now, now.plusSeconds(10*60), now.plusSeconds(30*60), now.plusSeconds(50*60),
-      now.plusSeconds(80*60))
+    val idx = Vector(now, now.plusSeconds(10 * 60), now.plusSeconds(30 * 60), now.plusSeconds(50 * 60),
+      now.plusSeconds(80 * 60))
     val series = TimeSeries(idx, Vector(1, 2, 3, 4, 5))
     val expected = TimeSeries(idx, Vector(1, 3, 6, 10, 12))
     val window = Duration.ofHours(1)
@@ -251,7 +266,7 @@ class TimeSeriesTest extends FlatSpec with Matchers {
     val idx2 = Vector(now.plusSeconds(60), now.plusSeconds(75), now.plusSeconds(90), now.plusSeconds(105))
     val expected = TimeSeries(idx ++ idx2, Vector(1, 4, 6, 8, 1, 4, 6, 8))
 
-    series.repeat(now, now.plusSeconds(2*60), Duration.ofMinutes(1)) shouldBe expected
+    series.repeat(now, now.plusSeconds(2 * 60), Duration.ofMinutes(1)) shouldBe expected
   }
 
   it should "shift time forward" in {
@@ -277,7 +292,7 @@ class TimeSeriesTest extends FlatSpec with Matchers {
 
   it should "step index" in {
     val now = Instant.EPOCH
-    val idx = Vector(now, now.plusSeconds(60), now.plusSeconds(2*60))
+    val idx = Vector(now, now.plusSeconds(60), now.plusSeconds(2 * 60))
     val vs = Vector(10f, 8f, 12f)
     val series = TimeSeries(idx, vs)
     val idx2 = Vector(now, now.plusSeconds(15), now.plusSeconds(30), now.plusSeconds(45),

@@ -295,14 +295,11 @@ case class TimeSeries[V](idx: Vector[Instant], ds: Vector[V]) {
   def groupByTime(g: Instant => Instant, f: Seq[(Instant, V)] => V): TimeSeries[V] = {
     if (isEmpty) this
     else {
-      val xs = ListBuffer[(Instant, ArrayBuffer[(Instant, V)])]((g(index.head), ArrayBuffer()))
-      for ((k, v) <- index.zip(values)) {
-        val last = xs.last
-        val t = g(k)
-        if (last._1 == t) last._2 += ((k, v))
-        else xs += ((t, ArrayBuffer((k, v))))
-      }
-      TimeSeries(xs.map(_._1).toVector, xs.map(x => f(x._2)).toVector)
+      val xs = index.zip(values).toMap
+        .groupBy(x => g(x._1))
+        .map(x => (x._1, f(x._2.toSeq))).toVector
+        .sortBy(_._1)
+      new TimeSeries(xs)
     }
   }
 
