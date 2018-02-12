@@ -262,7 +262,7 @@ class TimeSeriesTest extends FlatSpec with Matchers {
     val idx2 = Vector(now.plusSeconds(60), now.plusSeconds(75), now.plusSeconds(90), now.plusSeconds(105))
     val expected = TimeSeries(idx2, vs)
 
-    series.shiftTime(Duration.ofMinutes(1), forward = true) shouldBe expected
+    series.shiftTime(Duration.ofMinutes(1)) shouldBe expected
   }
 
   it should "shift time backward" in {
@@ -272,8 +272,7 @@ class TimeSeriesTest extends FlatSpec with Matchers {
     val series = TimeSeries(idx, vs)
     val idx2 = Vector(now, now.plusSeconds(15), now.plusSeconds(30), now.plusSeconds(45))
     val expected = TimeSeries(idx2, vs)
-
-    series.shiftTime(Duration.ofMinutes(1), forward = false) shouldBe expected
+    series.shiftTime(Duration.ofMinutes(-1)) shouldBe expected
   }
 
   it should "step index" in {

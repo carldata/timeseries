@@ -427,9 +427,8 @@ case class TimeSeries[V](idx: Vector[Instant], ds: Vector[V]) {
   }
 
   /** Shift index by specific time duration */
-  def shiftTime(d: Duration, forward: Boolean): TimeSeries[V] = {
-    val idx = index.map(i => if (forward) i.plus(d) else i.minus(d))
-    TimeSeries(idx, values)
+  def shiftTime(d: Duration): TimeSeries[V] = {
+    TimeSeries(index.map(_.plus(d)), values)
   }
 
   /** Remove outliers */
