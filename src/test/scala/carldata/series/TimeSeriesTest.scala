@@ -259,16 +259,6 @@ class TimeSeriesTest extends FlatSpec with Matchers {
     series.addMissing(Duration.ofMinutes(1), f) shouldBe expected
   }
 
-  it should "repeat values" in {
-    val now = Instant.EPOCH
-    val idx = Vector(now, now.plusSeconds(15), now.plusSeconds(30), now.plusSeconds(45))
-    val series = TimeSeries(idx, Vector(1, 4, 6, 8))
-    val idx2 = Vector(now.plusSeconds(60), now.plusSeconds(75), now.plusSeconds(90), now.plusSeconds(105))
-    val expected = TimeSeries(idx ++ idx2, Vector(1, 4, 6, 8, 1, 4, 6, 8))
-
-    series.repeat(now, now.plusSeconds(2 * 60), Duration.ofMinutes(1)) shouldBe expected
-  }
-
   it should "shift time forward" in {
     val now = Instant.EPOCH
     val idx = Vector(now, now.plusSeconds(15), now.plusSeconds(30), now.plusSeconds(45))

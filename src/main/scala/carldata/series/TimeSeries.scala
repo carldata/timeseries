@@ -407,22 +407,6 @@ case class TimeSeries[V](idx: Vector[Instant], ds: Vector[V]) {
     new TimeSeries(index, g(index.zip(values).reverse, Vector.empty).reverse)
   }
 
-  /** Repeat series */
-  def repeat(start: Instant, end: Instant, d: Duration): TimeSeries[V] = {
-    val ts = slice(start, start.plus(d))
-    if (ts.isEmpty) ts
-    else {
-      @tailrec def repeatR(offset: Duration, dp: (Vector[Instant], Vector[V])): (Vector[Instant], Vector[V]) = {
-        val idx = ts.index.map(_.plus(offset))
-        if (idx.head.isBefore(end)) repeatR(offset.plus(d), (dp._1 ++ idx, dp._2 ++ ts.values))
-        else dp
-      }
-
-      val (idx, vs) = repeatR(Duration.ZERO, (Vector(), Vector()))
-      TimeSeries(idx, vs)
-    }
-  }
-
   /** Shift index by specific time duration */
   def shiftTime(d: Duration): TimeSeries[V] = {
     TimeSeries(index.map(_.plus(d)), values)
