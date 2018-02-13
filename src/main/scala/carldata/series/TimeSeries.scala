@@ -428,38 +428,6 @@ case class TimeSeries[V](idx: Vector[Instant], ds: Vector[V]) {
     TimeSeries(index.map(_.plus(d)), values)
   }
 
-  /** Remove outliers */
-  def removeOutliers(min: V, max: V)(implicit num: Numeric[V]): TimeSeries[V] = {
-    val ys = index.zip(values).flatMap(x => {
-      if (num.compare(x._2, min) < 0) None
-      else if (num.compare(x._2, max) > 0) None
-      else Some(x)
-    }).unzip
-
-    TimeSeries(ys._1, ys._2)
-  }
-
-  /** Remove outliers by set min/max values on their place */
-  def trimOutliers(min: V, max: V)(implicit num: Numeric[V]): TimeSeries[V] = {
-    val vs = values.map(x => {
-      if (num.compare(x, min) < 0) min
-      else if (num.compare(x, max) > 0) max
-      else x
-    })
-    TimeSeries(idx, vs)
-  }
-
-  /** Remove outliers by interpolate values on their place */
-  def interpolateOutliers(min: V, max: V, f: (V, V) => V)(implicit num: Numeric[V]): TimeSeries[V] = {
-    val zipped = (num.zero +: values).zip(values).zip(values.tail :+ values.last)
-    val vs = zipped.map(x => {
-      if (num.compare(x._1._2, min) < 0) f(x._1._1, x._2)
-      else if (num.compare(x._1._2, max) > 0) f(x._1._1, x._2)
-      else x._1._2
-    })
-    TimeSeries(idx, vs)
-  }
-
   /** Inner join. Only include points which have the same data in both series */
   def join[U](ts: TimeSeries[U]): TimeSeries[(V, U)] = {
     val builder: mutable.ListBuffer[(Instant, (V, U))] = ListBuffer()
