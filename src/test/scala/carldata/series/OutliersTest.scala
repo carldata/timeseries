@@ -14,7 +14,7 @@ class OutliersTest extends FlatSpec with Matchers {
     val series = TimeSeries(idx, Vector(3, 20, 5, 6, 0, 8))
     val expected = TimeSeries(idx2, Vector(3, 5, 6, 8))
 
-    Outliers.removeOutliers(series, 1, 10) shouldBe expected
+    Outliers.remove(series, 1, 10) shouldBe expected
   }
 
 
@@ -24,7 +24,7 @@ class OutliersTest extends FlatSpec with Matchers {
     val series = TimeSeries(idx, Vector(1, 200, -3, 4, 5))
     val expected = TimeSeries(idx, Vector(1, 5, 0, 4, 5))
 
-    Outliers.trimOutliers(series, 0, 5) shouldBe expected
+    Outliers.trim(series, 0, 5) shouldBe expected
   }
 
   it should "interpolate outliers" in {
@@ -35,7 +35,8 @@ class OutliersTest extends FlatSpec with Matchers {
       now.plusSeconds(5), now.plusSeconds(6))
     val series = TimeSeries[Float](idx, Vector(3f, 20f, 5f, 6f, 0f, 8f))
     val expected = TimeSeries(idx, Vector(3, 4, 5, 6, 7, 8))
-    new Outliers[Float].interpolateOutliers(series, 1, 10, f) shouldBe expected
+    
+    Outliers.interpolate(series, 1f, 10f, f) shouldBe expected
   }
 }
 
