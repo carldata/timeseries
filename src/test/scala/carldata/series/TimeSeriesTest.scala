@@ -292,15 +292,6 @@ class TimeSeriesTest extends FlatSpec with Matchers {
     TimeSeries.step(series, Duration.ofSeconds(15)) shouldBe expected
   }
 
-  it should "trim outliers" in {
-    val now = Instant.EPOCH
-    val idx = Vector(now, now.plusSeconds(10), now.plusSeconds(30), now.plusSeconds(50), now.plusSeconds(80))
-    val series = TimeSeries(idx, Vector(1, 200, -3, 4, 5))
-    val expected = TimeSeries(idx, Vector(1, 5, 0, 4, 5))
-
-    series.trimOutliers(0, 5) shouldBe expected
-  }
-
   it should "inner join 2 series" in {
     val now = Instant.now()
     val idx1 = Vector(now.plusSeconds(1), now.plusSeconds(2), now.plusSeconds(4), now.plusSeconds(5))
@@ -380,29 +371,6 @@ class TimeSeriesTest extends FlatSpec with Matchers {
     val expected = TimeSeries(idx3, Vector(1, 4, 3, 6, 8))
 
     series1.merge(series2) shouldBe expected
-  }
-
-  it should "interpolate outliers" in {
-    def f(x: Float, y: Float): Float = (x + y) / 2
-
-    val now = Instant.now()
-    val idx = Vector(now.plusSeconds(1), now.plusSeconds(2), now.plusSeconds(3), now.plusSeconds(4),
-      now.plusSeconds(5), now.plusSeconds(6))
-    val series = TimeSeries(idx, Vector(3f, 20f, 5f, 6f, 0f, 8f))
-    val expected = TimeSeries(idx, Vector(3f, 4f, 5f, 6f, 7f, 8f))
-
-    series.interpolateOutliers(1, 10, f) shouldBe expected
-  }
-
-  it should "remove outliers" in {
-    val now = Instant.now()
-    val idx = Vector(now.plusSeconds(1), now.plusSeconds(2), now.plusSeconds(3), now.plusSeconds(4), now.plusSeconds(5),
-      now.plusSeconds(6))
-    val idx2 = Vector(now.plusSeconds(1), now.plusSeconds(3), now.plusSeconds(4), now.plusSeconds(6))
-    val series = TimeSeries(idx, Vector(3f, 20f, 5f, 6f, 0f, 8f))
-    val expected = TimeSeries(idx2, Vector(3f, 5f, 6f, 8f))
-
-    series.removeOutliers(1, 10) shouldBe expected
   }
 
   it should "check if 2 ts is almost equal (true)" in {
