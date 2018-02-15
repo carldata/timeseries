@@ -60,6 +60,14 @@ class StatsTest extends FlatSpec with Matchers {
     val xs: Seq[Double] = Seq(1, 2, 3, 4, 5)
     val ys: Seq[Double] = Seq(3, 4, 7, 2, 3)
     Stats.correlation(xs, ys) + 0.1644 < 0.0001 shouldBe true
+
+  }
+  "Stats" should "normalize series" in {
+    val series: TimeSeries[Double] = TimeSeries.fromTimestamps(Seq((1, -5), (2, 6), (3, 9), (4, 2), (5, 4)))
+    val expected: TimeSeries[Double] = TimeSeries.fromTimestamps(Seq((1, -1.74), (2, 0.59), (3, 1.23), (4, -0.25), (5, 0.17)))
+    val result = series.index.zip(Stats.normalize(series.values)).unzip
+    val resultTs = TimeSeries(result._1, result._2)
+    TimeSeries.almostEqual(resultTs, expected, 0.01) shouldBe true
   }
 
 }
