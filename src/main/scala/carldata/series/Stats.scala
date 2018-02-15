@@ -64,13 +64,12 @@ object Stats {
     }
   }
 
-  /** Normalize series by mean and standard deviation*/
+  /** Normalize series by mean and standard deviation */
   def normalize[V: Fractional](xs: Seq[V])(implicit num: Fractional[V]): Seq[Double] = {
     val xs2 = xs.map(num.toDouble)
-    val mean = xs2.sum / xs2.length
-    val deviation = Math.sqrt(xs2.map(x => Math.pow(x - mean, 2)).sum / xs2.length)
-
-    xs2.map(x => (x - mean) / deviation)
+    val MeanAndVariance(mean, variance) = meanAndVariance(xs2)
+    val std = Math.sqrt(variance)
+    xs2.map(x => (x - mean) / std)
   }
 
 }
