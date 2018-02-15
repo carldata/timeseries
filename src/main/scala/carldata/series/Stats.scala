@@ -57,11 +57,20 @@ object Stats {
     val MeanAndVariance(mean1, variance1) = meanAndVariance(xs2)
     val MeanAndVariance(mean2, variance2) = meanAndVariance(ys2)
 
-    if (variance1*variance2 == 0) 0
+    if (variance1 * variance2 == 0) 0
     else {
       val vs = xs2.zip(ys2).map(x => (x._1 - mean1) * (x._2 - mean2))
       vs.sum / (variance1 * variance2)
     }
+  }
+
+  /** Normalize series by mean and standard deviation*/
+  def normalize[V: Fractional](xs: Seq[V])(implicit num: Fractional[V]): Seq[Double] = {
+    val xs2 = xs.map(num.toDouble)
+    val mean = xs2.sum / xs2.length
+    val deviation = Math.sqrt(xs2.map(x => Math.pow(x - mean, 2)).sum / xs2.length)
+
+    xs2.map(x => (x - mean) / deviation)
   }
 
 }
