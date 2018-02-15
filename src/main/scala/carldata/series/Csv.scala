@@ -7,7 +7,7 @@ import java.time.temporal.ChronoField
 
 object Csv {
 
-  private val dateFormatter = new DateTimeFormatterBuilder()
+  private val defaultFormatter = new DateTimeFormatterBuilder()
     .parseCaseInsensitive
     .appendValue(ChronoField.YEAR)
     .appendLiteral('-')
@@ -32,7 +32,7 @@ object Csv {
 
 
   /** Reader for CSV string */
-  def fromString(str: String): TimeSeries[Double] = {
+  def fromString(str: String, dateFormatter: DateTimeFormatter = defaultFormatter): TimeSeries[Double] = {
     val data = str.split("\n").tail.map{ line =>
       val tokens = line.split(",")
       (LocalDateTime.parse(tokens(0), dateFormatter).toInstant(ZoneOffset.UTC), tokens(1).toDouble)
