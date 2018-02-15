@@ -33,15 +33,17 @@ sbt -mem 4000 run
     * [x] min, max
     * [x] mean, variance and standard deviation
     * [x] covariance and correlation
+    * [x] normalization
   * IO
-    * [x] Read data from CSV string
+    * [x] Read data to/from CSV string
   * Generators
     * [x] Constant series
     * [x] Random noise
     * [ ] Random Walk
-    * [ ] periodic pattern
+    * [x] periodic pattern
   * Metrics
     * [ ] MSE between 2 series
+    * [ ] MAE between 2 series
   * ARIMA
     * [ ] Check is series is stationary
     * [ ] AR(p) - Autoregressive
