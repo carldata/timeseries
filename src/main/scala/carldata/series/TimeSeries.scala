@@ -1,5 +1,6 @@
 package carldata.series
 
+import java.time.temporal.ChronoUnit
 import java.time.{Duration, Instant}
 
 import carldata.series.TimeSeries.mkIndex
@@ -182,6 +183,20 @@ case class TimeSeries[V](idx: Vector[Instant], ds: Vector[V]) {
   val index: Vector[Instant] = idx.take(length)
   val values: Vector[V] = ds.take(length)
   val dataPoints: Vector[(Instant, V)] = index.zip(values)
+
+  /** Most frequent duration in time series */
+  val resolution: Duration = {
+    if (idx.isEmpty) Duration.ZERO
+    else {
+      idx.zip(idx.tail)
+        .map(x => x._2.getEpochSecond - x._1.getEpochSecond)
+        .map(x => Duration.of(x, ChronoUnit.SECONDS))
+        .groupBy(x => x)
+        .maxBy(x => x._2.size)._1
+    }
+  }
+
+
 
   /** Check is series is empty */
   def isEmpty: Boolean = index.isEmpty || values.isEmpty
