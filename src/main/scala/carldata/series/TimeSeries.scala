@@ -1,5 +1,6 @@
 package carldata.series
 
+import java.time.temporal.ChronoUnit
 import java.time.{Duration, Instant}
 
 import carldata.series.TimeSeries.mkIndex
@@ -130,6 +131,18 @@ object TimeSeries {
   /** Create new index with the step equal to duration, for a given time range */
   private def mkIndex(start: Instant, end: Instant, delta: Duration): Vector[Instant] = {
     Iterator.iterate(start)(_.plusNanos(delta.toNanos)).takeWhile(_.isBefore(end)).toVector
+  }
+
+  /** Find most frequent duration in time series */
+  def resolution[V: Numeric](ts: TimeSeries[V]): Duration = {
+    if (ts.isEmpty) Duration.ZERO
+    else {
+      ts.index.zip(ts.index.tail)
+        .map(x => x._2.getEpochSecond - x._1.getEpochSecond)
+        .map(x => Duration.of(x, ChronoUnit.SECONDS))
+        .groupBy(x => x)
+        .maxBy(x => x._2.size)._1
+    }
   }
 
   /**

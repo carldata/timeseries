@@ -420,5 +420,13 @@ class TimeSeriesTest extends FlatSpec with Matchers {
     TimeSeries.almostEqual(series1, series2, 0.00001f) shouldBe false
   }
 
+  it should "find most frequent duration" in {
+    val now = Instant.EPOCH
+    val idx = Vector(now, now.plusSeconds(10), now.plusSeconds(20), now.plusSeconds(60), now.plusSeconds(80))
+    val series = TimeSeries(idx, Vector(1, 2f, 3f, 4f, 5f))
+    val expected = Duration.of(10l, ChronoUnit.SECONDS)
+    TimeSeries.resolution(series) shouldBe expected
+  }
+
 
 }
