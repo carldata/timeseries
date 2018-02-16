@@ -1,7 +1,7 @@
 package carldata.series
 
-import java.time.temporal.{ChronoField, ChronoUnit}
-import java.time.{Duration, Instant, LocalTime}
+import java.time.temporal.ChronoUnit
+import java.time.{Duration, Instant}
 
 import org.scalameter._
 

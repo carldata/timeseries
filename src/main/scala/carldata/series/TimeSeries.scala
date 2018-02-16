@@ -7,7 +7,7 @@ import carldata.series.TimeSeries.mkIndex
 
 import scala.annotation.tailrec
 import scala.collection.mutable
-import scala.collection.mutable.{ArrayBuffer, ListBuffer}
+import scala.collection.mutable.ListBuffer
 
 
 object TimeSeries {

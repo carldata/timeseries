@@ -2,7 +2,6 @@ package carldata.series
 
 import java.time.{Duration, Instant}
 
-import carldata.series.Stats.MeanAndVariance
 import org.scalatest._
 
 import scala.util.Random

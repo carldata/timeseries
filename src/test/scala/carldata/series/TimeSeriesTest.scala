@@ -1,6 +1,6 @@
 package carldata.series
 
-import java.time.temporal.{ChronoUnit, TemporalField}
+import java.time.temporal.ChronoUnit
 import java.time.{Duration, Instant, LocalDateTime, ZoneOffset}
 
 import org.scalatest._
