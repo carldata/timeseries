@@ -425,7 +425,7 @@ class TimeSeriesTest extends FlatSpec with Matchers {
     val idx = Vector(now, now.plusSeconds(10), now.plusSeconds(20), now.plusSeconds(60), now.plusSeconds(80))
     val series = TimeSeries(idx, Vector(1, 2f, 3f, 4f, 5f))
     val expected = Duration.of(10l, ChronoUnit.SECONDS)
-    TimeSeries.resolution(series) shouldBe expected
+    series.resolution shouldBe expected
   }
 
 

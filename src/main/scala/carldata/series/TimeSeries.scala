@@ -133,18 +133,6 @@ object TimeSeries {
     Iterator.iterate(start)(_.plusNanos(delta.toNanos)).takeWhile(_.isBefore(end)).toVector
   }
 
-  /** Find most frequent duration in time series */
-  def resolution[V: Numeric](ts: TimeSeries[V]): Duration = {
-    if (ts.isEmpty) Duration.ZERO
-    else {
-      ts.index.zip(ts.index.tail)
-        .map(x => x._2.getEpochSecond - x._1.getEpochSecond)
-        .map(x => Duration.of(x, ChronoUnit.SECONDS))
-        .groupBy(x => x)
-        .maxBy(x => x._2.size)._1
-    }
-  }
-
   /**
     * This function resamples index. But the values are not interpolated but just fractions
     * of current values.
@@ -195,6 +183,20 @@ case class TimeSeries[V](idx: Vector[Instant], ds: Vector[V]) {
   val index: Vector[Instant] = idx.take(length)
   val values: Vector[V] = ds.take(length)
   val dataPoints: Vector[(Instant, V)] = index.zip(values)
+
+  /** Most frequent duration in time series */
+  val resolution: Duration = {
+    if (idx.isEmpty) Duration.ZERO
+    else {
+      idx.zip(idx.tail)
+        .map(x => x._2.getEpochSecond - x._1.getEpochSecond)
+        .map(x => Duration.of(x, ChronoUnit.SECONDS))
+        .groupBy(x => x)
+        .maxBy(x => x._2.size)._1
+    }
+  }
+
+
 
   /** Check is series is empty */
   def isEmpty: Boolean = index.isEmpty || values.isEmpty
