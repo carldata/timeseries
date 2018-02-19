@@ -72,4 +72,25 @@ object Stats {
     xs2.map(x => (x - mean) / std)
   }
 
+  /** Find percentile
+    *
+    * @param p desired percentile
+    * */
+  def percentile[V: Fractional](xs: Seq[V], p: Int)(implicit num: Fractional[V]): Double = {
+    val xs2 = xs.map(num.toDouble).sorted
+    val pos = (p * (xs.length + 1)).toDouble / 100
+    if (pos < 1) xs2.head
+    else if (pos >= xs.length) xs2.last
+    else {
+      val pf = Math.floor(pos).toInt
+      val lower = xs2(pf - 1)
+      val upper = xs2(pf)
+      val d = pos - Math.floor(pos)
+      lower + d * (upper - lower)
+    }
+  }
+
+  /** This is the 50th percentile **/
+  def median[V: Fractional](xs: Seq[V]): Double = percentile(xs, 50)
+
 }
