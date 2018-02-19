@@ -41,10 +41,19 @@ class GenTest extends FlatSpec with Matchers {
   }
 
   "Random noise generator" should "create series with gaussian noise." in {
-    val idx = Gen.mkIndex(Instant.EPOCH, Instant.ofEpochSecond(60*60*24), Duration.ofSeconds(1))
+    val idx = Gen.mkIndex(Instant.EPOCH, Instant.ofEpochSecond(60 * 60 * 24), Duration.ofSeconds(1))
     val ts: TimeSeries[Double] = Gen.randomNoise(idx, 5, 9, new Random(100))
     val mv = Stats.meanAndVariance(ts.values)
-    math.abs(mv.mean-5.0) < 0.1 shouldBe true
-    math.abs(mv.variance-9.0) < 0.1 shouldBe true
+    math.abs(mv.mean - 5.0) < 0.1 shouldBe true
+    math.abs(mv.variance - 9.0) < 0.1 shouldBe true
+  }
+
+  "Random walk generator" should "create series with random walk." in {
+    def sumDifferences(ts: TimeSeries[Double]) = TimeSeries.differentiate(ts).map(x => Math.abs(x._2)).values.sum
+
+    val idx = Gen.mkIndex(Instant.EPOCH, Instant.ofEpochSecond(60), Duration.ofSeconds(1))
+    val ts = Gen.randomWalk(idx)
+    sumDifferences(ts) shouldBe idx.length - 1
+
   }
 }

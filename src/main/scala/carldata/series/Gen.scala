@@ -58,9 +58,23 @@ object Gen {
   }
 
   /** Generate random noise */
-  def randomNoise(idx: Vector[Instant], mean: Double, variance: Double, rng: Random=new Random()): TimeSeries[Double] = {
+  def randomNoise(idx: Vector[Instant], mean: Double, variance: Double, rng: Random = new Random()): TimeSeries[Double] = {
     val std = math.sqrt(variance)
-    val vs = idx.map(_ => rng.nextGaussian()*std + mean)
+    val vs = idx.map(_ => rng.nextGaussian() * std + mean)
+    TimeSeries(idx, vs)
+  }
+
+  /** Generate random walk */
+  def randomWalk(idx: Vector[Instant], rng: Random = new Random()): TimeSeries[Double] = {
+    @tailrec def g(idx2: Vector[Instant], vs: Vector[Double]): Vector[Double] = {
+      if (idx2.isEmpty) vs
+      else {
+        val prev = vs.last
+        if (rng.nextBoolean) g(idx2.tail, vs :+ prev + 1) else g(idx2.tail, vs :+ prev - 1)
+      }
+    }
+
+    val vs = g(idx, Vector(0))
     TimeSeries(idx, vs)
   }
 
