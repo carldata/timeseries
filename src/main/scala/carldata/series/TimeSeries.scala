@@ -299,6 +299,9 @@ case class TimeSeries[V](idx: Vector[Instant], ds: Vector[V]) {
     new TimeSeries(d)
   }
 
+  /** Return series with first n elements **/
+  def take(n: Int): TimeSeries[V] = new TimeSeries(idx.take(n), values.take(n))
+
   /**
     * Aggregate data points.
     *
