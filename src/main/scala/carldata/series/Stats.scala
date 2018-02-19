@@ -78,7 +78,7 @@ object Stats {
     * */
   def percentile[V: Fractional](xs: Seq[V], p: Int)(implicit num: Fractional[V]): Double = {
     val xs2 = xs.map(num.toDouble).sorted
-    val pos = p * (xs.length + 1) / 100
+    val pos = (p * (xs.length + 1)).toDouble / 100
     if (pos < 1) xs2.head
     else if (pos >= xs.length) xs2.last
     else {
