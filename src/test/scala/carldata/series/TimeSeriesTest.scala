@@ -105,6 +105,12 @@ class TimeSeriesTest extends FlatSpec with Matchers {
     series.slice(start, end).length shouldBe 4
   }
 
+  it should "take first n element" in {
+    val series: TimeSeries[Int] = TimeSeries.fromTimestamps(Seq((1, 1), (2, -3), (3, 6), (4, 6), (5, 6), (6, 6)))
+    val expected: TimeSeries[Int] = TimeSeries.fromTimestamps(Seq((1, 1), (2, -3), (3, 6), (4, 6)))
+    series.take(4) shouldBe expected
+  }
+
   it should "differentiate" in {
     val series: TimeSeries[Int] = TimeSeries.fromTimestamps(Seq((1, 2), (2, -4), (3, -6), (4, 8)))
     val expected: TimeSeries[Int] = TimeSeries.fromTimestamps(Seq((2, -6), (3, -2), (4, 14)))
