@@ -186,7 +186,7 @@ case class TimeSeries[V](idx: Vector[Instant], ds: Vector[V]) {
 
   /** Most frequent duration in time series */
   val resolution: Duration = {
-    if (idx.isEmpty) Duration.ZERO
+    if (idx.size < 2) Duration.ZERO
     else {
       idx.zip(idx.tail)
         .map(x => x._2.getEpochSecond - x._1.getEpochSecond)
@@ -195,7 +195,6 @@ case class TimeSeries[V](idx: Vector[Instant], ds: Vector[V]) {
         .maxBy(x => x._2.size)._1
     }
   }
-
 
 
   /** Check is series is empty */
