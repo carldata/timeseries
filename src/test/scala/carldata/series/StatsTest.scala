@@ -70,4 +70,25 @@ class StatsTest extends FlatSpec with Matchers {
     TimeSeries.almostEqual(resultTs, expected, 0.01) shouldBe true
   }
 
+  it should "allow to find 25 percentile" in {
+    val xs: Seq[Double] = Seq(1, 2, 3, 4)
+    Stats.percentile(xs, 25) shouldBe 1
+  }
+
+  it should "allow to find median" in {
+    val xs: Seq[Double] = Seq(1, 2, 3, 4, 5)
+    Stats.median(xs) shouldBe 3
+  }
+
+  it should "allow to find 75 percentile" in {
+    val xs: Seq[Double] = Seq(1, 2, 3, 4)
+    Stats.percentile(xs, 75) shouldBe 3
+  }
+
+  it should "allow to find 100 percentile" in {
+    val xs: Seq[Double] = Seq(1, 2, 3, 4, 5)
+    Stats.percentile(xs, 100) shouldBe 5
+  }
+
+
 }
