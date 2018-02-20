@@ -10,7 +10,7 @@ Library for processing Time Series.
  
  Add the following dependency to the build.sbt
  ```scala
- libraryDependencies += "io.github.carldata" %% "timeseries" % "0.6.1"
+ libraryDependencies += "io.github.carldata" %% "timeseries" % "0.6.2"
  ```
 
 Running benchmarks
@@ -39,7 +39,7 @@ sbt -mem 4000 run
   * Generators
     * [x] Constant series
     * [x] Random noise
-    * [ ] Random Walk
+    * [x] Random Walk
     * [x] periodic pattern
   * Metrics
     * [ ] MSE between 2 series
