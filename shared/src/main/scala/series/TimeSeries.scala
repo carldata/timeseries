@@ -1,9 +1,9 @@
-package carldata.series
+package series
 
 import java.time.temporal.ChronoUnit
 import java.time.{Duration, Instant}
 
-import carldata.series.TimeSeries.mkIndex
+import series.TimeSeries.mkIndex
 
 import scala.annotation.tailrec
 import scala.collection.mutable

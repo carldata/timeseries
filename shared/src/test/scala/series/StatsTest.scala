@@ -1,6 +1,6 @@
-package carldata.series
+package series
 
-import carldata.series.Stats.MeanAndVariance
+import series.Stats.MeanAndVariance
 import org.scalatest._
 
 

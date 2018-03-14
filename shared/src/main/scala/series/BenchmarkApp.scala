@@ -1,4 +1,4 @@
-package carldata.series
+package series
 
 import java.time.temporal.ChronoUnit
 import java.time.{Duration, Instant}

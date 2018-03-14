@@ -1,8 +1,8 @@
-package carldata.series
+package series
 
 import java.time.Duration
 
-import carldata.series.Sessions.Session
+import series.Sessions.Session
 import org.scalatest._
 
 class SessionsTest extends FlatSpec with Matchers {
