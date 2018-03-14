@@ -13,9 +13,13 @@ case class JsTimeSeries[V](idx: js.Array[Int], ds: js.Array[V]) {
 
   private def toEpoch(i: Int): Instant = Instant.ofEpochMilli(i)
 
-  private def fromTimeSeries[V: Numeric](ts: TimeSeries[V]): JsTimeSeries[V] = JsTimeSeries(ts.index.map(toInt).toJSArray, ts.values.toJSArray)
+  private def fromTimeSeries[V: Numeric](ts: TimeSeries[V]): JsTimeSeries[V] = {
+    JsTimeSeries(ts.index.map(toInt).toJSArray, ts.values.toJSArray)
+  }
 
-  private def toTimeSeries[V: Numeric](xs: JsTimeSeries[V]): TimeSeries[V] = new TimeSeries(xs.index.map(toEpoch).toVector, xs.values.toVector)
+  private def toTimeSeries[V: Numeric](xs: JsTimeSeries[V]): TimeSeries[V] = {
+    new TimeSeries(xs.index.map(toEpoch).toVector, xs.values.toVector)
+  }
 
   val timeSeries = new TimeSeries[V](idx.map(toEpoch).toVector, ds.toVector)
 
@@ -33,8 +37,8 @@ case class JsTimeSeries[V](idx: js.Array[Int], ds: js.Array[V]) {
 
 
   @JSExport("interpolate")
-  def interpolate[V: Fractional](xs: JsTimeSeries[V], delta: Duration): JsTimeSeries[V] = {
-    val ts: TimeSeries[V] = TimeSeries.interpolate(toTimeSeries(xs), delta)
+  def interpolate(delta: Int)(implicit num: Fractional[V]): JsTimeSeries[V] = {
+    val ts: TimeSeries[V] = TimeSeries.interpolate(timeSeries, Duration.ofSeconds(delta))
     fromTimeSeries(ts)
   }
 
@@ -76,8 +80,8 @@ case class JsTimeSeries[V](idx: js.Array[Int], ds: js.Array[V]) {
   }
 
   @JSExport("step")
-  def step[V: Fractional](ts: JsTimeSeries[V], d: Duration): JsTimeSeries[V] = {
-    val xs = TimeSeries.step(toTimeSeries(ts), d)
+  def step[V: Fractional](ts: JsTimeSeries[V], delta: Int): JsTimeSeries[V] = {
+    val xs = TimeSeries.step(toTimeSeries(ts), Duration.ofSeconds(delta))
     fromTimeSeries(xs)
   }
 
@@ -157,26 +161,26 @@ case class JsTimeSeries[V](idx: js.Array[Int], ds: js.Array[V]) {
   }
 
   @JSExport("resample")
-  def resample(delta: Duration, f: ((Int, V), (Int, V), Int) => V)(implicit num: Numeric[V]): JsTimeSeries[V] = {
+  def resample(delta: Int, f: ((Int, V), (Int, V), Int) => V)(implicit num: Numeric[V]): JsTimeSeries[V] = {
     def g(x1: (Instant, V), x2: (Instant, V), tsh: Instant) =
       f((toInt(x1._1), x1._2), (toInt(x2._1), x2._2), toInt(tsh))
 
-    val ts = timeSeries.resample(delta, g)
+    val ts = timeSeries.resample(Duration.ofSeconds(delta), g)
     fromTimeSeries(ts)
   }
 
   @JSExport("resampleWithDefault")
-  def resampleWithDefault(delta: Duration, default: V)(implicit num: Fractional[V]): JsTimeSeries[V] = {
-    val ts = timeSeries.resampleWithDefault(delta, default)
+  def resampleWithDefault(delta: Int, default: V)(implicit num: Fractional[V]): JsTimeSeries[V] = {
+    val ts = timeSeries.resampleWithDefault(Duration.ofSeconds(delta), default)
     fromTimeSeries(ts)
   }
 
   @JSExport("addMissing")
-  def addMissing(delta: Duration, f: ((Int, V), (Int, V), Int) => V)(implicit num: Numeric[V]): JsTimeSeries[V] = {
+  def addMissing(delta: Int, f: ((Int, V), (Int, V), Int) => V)(implicit num: Numeric[V]): JsTimeSeries[V] = {
     def g(x1: (Instant, V), x2: (Instant, V), tsh: Instant) =
       f((toInt(x1._1), x1._2), (toInt(x2._1), x2._2), toInt(tsh))
 
-    val ts = timeSeries.addMissing(delta, g)
+    val ts = timeSeries.addMissing(Duration.ofSeconds(delta), g)
     fromTimeSeries(ts)
   }
 
@@ -187,8 +191,12 @@ case class JsTimeSeries[V](idx: js.Array[Int], ds: js.Array[V]) {
   }
 
   @JSExport("shiftTime")
-  def shiftTime(d: Duration): JsTimeSeries[V] = {
-    JsTimeSeries(index.map(x => x + d.toMillis.toInt), values)
+  def shiftTime(delta: Int): JsTimeSeries[V] = {
+    timeSeries.dataPoints.map(x=>println(x))
+    index.map(println)
+    val xs = JsTimeSeries(index.map(x => x + delta), values)
+    xs.dataPoints.map(x=>println(x))
+    xs
   }
 
   @JSExport("join")
