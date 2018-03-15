@@ -13,12 +13,16 @@ case class JsTimeSeries(idx: js.Array[Int], ds: js.Array[Double]) {
 
   private def toEpoch(i: Int): Instant = Instant.ofEpochMilli(i)
 
-  private def fromTimeSeries(ts: TimeSeries[Double]): JsTimeSeries = {
+  def fromTimeSeries(ts: TimeSeries[Double]): JsTimeSeries = {
     JsTimeSeries(ts.index.map(toInt).toJSArray, ts.values.toJSArray)
   }
 
-  private def toTimeSeries(xs: JsTimeSeries): TimeSeries[Double] = {
+  def toTimeSeries(xs: JsTimeSeries): TimeSeries[Double] = {
     new TimeSeries(xs.index.map(toEpoch).toVector, xs.values.toVector)
+  }
+
+  def toTimeSeries: TimeSeries[Double] = {
+    new TimeSeries(this.index.map(toEpoch).toVector, this.values.toVector)
   }
 
   private val timeSeries = new TimeSeries[Double](idx.map(toEpoch).toVector, ds.toVector)
