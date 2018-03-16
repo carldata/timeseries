@@ -9,9 +9,9 @@ import scala.scalajs.js.annotation.{JSExport, JSExportTopLevel}
 @JSExportTopLevel("TimeSeries")
 case class JsTimeSeries(idx: js.Array[Int], ds: js.Array[Double]) {
 
-  private def toInt(i: Instant): Int = i.toEpochMilli.toInt
+  def toInt(i: Instant): Int = i.toEpochMilli.toInt
 
-  private def toEpoch(i: Int): Instant = Instant.ofEpochMilli(i)
+  def toEpoch(i: Int): Instant = Instant.ofEpochMilli(i)
 
   def fromTimeSeries(ts: TimeSeries[Double]): JsTimeSeries = {
     JsTimeSeries(ts.index.map(toInt).toJSArray, ts.values.toJSArray)
