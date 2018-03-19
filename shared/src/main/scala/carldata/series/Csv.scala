@@ -1,8 +1,8 @@
 package carldata.series
 
-import java.time.{LocalDateTime, ZoneOffset}
 import java.time.format.{DateTimeFormatter, DateTimeFormatterBuilder}
 import java.time.temporal.ChronoField
+import java.time.{LocalDateTime, ZoneOffset}
 
 
 object Csv {

@@ -193,7 +193,7 @@ class TimeSeriesTest extends FlatSpec with Matchers {
     val series = TimeSeries(idx, Vector(1, 2, 3, 4, 5))
     val expected = TimeSeries(idx, Vector(1, 3, 6, 10, 12))
     val window = Duration.ofHours(1)
-
+    println(window)
     series.rollingWindow(window, _.sum) shouldBe expected
   }
 

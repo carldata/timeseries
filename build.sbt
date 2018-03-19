@@ -1,3 +1,5 @@
+import sbt.librarymanagement.{Developer, ScmInfo}
+
 name := "timeseries"
 
 organization := "io.github.carldata"
@@ -6,10 +8,6 @@ version := "0.6.2"
 
 scalaVersion := "2.12.3"
 
-libraryDependencies ++= Seq(
-  "com.storm-enroute" %% "scalameter-core" % "0.8.2",
-  "org.scalatest" %% "scalatest" % "3.0.1" % "test"
-)
 
 publishTo := {
   val nexus = "https://oss.sonatype.org/"
@@ -43,3 +41,30 @@ useGpg := true
 
 pomIncludeRepository := { _ => false }
 
+
+lazy val root = project
+  .in(file(".")).
+  aggregate(tsJS, tsJVM).
+  settings(
+    publish := {},
+    publishLocal := {}
+  )
+
+lazy val ts = crossProject.crossType(CrossType.Full).in(file(".")).
+  settings(
+    name := "timeseries",
+    libraryDependencies ++= Seq(
+      "com.storm-enroute" %% "scalameter-core" % "0.8.2",
+      "org.scalatest" %% "scalatest" % "3.0.1" % "test"
+    )  )
+  .jvmSettings(
+    libraryDependencies += "org.scala-js" %% "scalajs-stubs" % scalaJSVersion % "provided"
+
+  )
+  .jsSettings(
+    libraryDependencies += "org.scala-js" %%% "scalajs-java-time" % "0.2.3"
+  )
+
+
+lazy val tsJVM = ts.jvm
+lazy val tsJS = ts.js
