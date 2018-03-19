@@ -1,4 +1,4 @@
-package series
+package carldata.series
 
 import java.time.format.{DateTimeFormatter, DateTimeFormatterBuilder}
 import java.time.temporal.ChronoField

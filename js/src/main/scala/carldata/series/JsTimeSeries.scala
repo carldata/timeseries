@@ -1,4 +1,4 @@
-package series
+package carldata.series
 
 import java.time.{Duration, Instant}
 
@@ -98,7 +98,7 @@ case class JsTimeSeries(idx: js.Array[Int], ds: js.Array[Double]) {
   @JSExport("dataPoints")
   val dataPoints: js.Array[(Int, Double)] = index.zip(values).toJSArray
   @JSExport("resolution")
-  val resolution: Duration = timeSeries.resolution
+  val resolution: Long = timeSeries.resolution.toMillis.toInt * 1000
 
   @JSExport("isEmpty")
   def isEmpty: Boolean = timeSeries.isEmpty
@@ -107,7 +107,7 @@ case class JsTimeSeries(idx: js.Array[Int], ds: js.Array[Double]) {
   def nonEmpty: Boolean = timeSeries.nonEmpty
 
   @JSExport("get")
-  def get(i: Int): Double ={
+  def get(i: Int): Double = {
     timeSeries.get(i)
   }
 
@@ -191,8 +191,8 @@ case class JsTimeSeries(idx: js.Array[Int], ds: js.Array[Double]) {
   }
 
   @JSExport("rollingWindow")
-  def rollingWindow(windowSize: Duration, f: Seq[Double] => Double): JsTimeSeries = {
-    val ts = timeSeries.rollingWindow(windowSize, f)
+  def rollingWindow(windowSize: Int, f: Seq[Double] => Double): JsTimeSeries = {
+    val ts = timeSeries.rollingWindow(Duration.ofSeconds(windowSize), f)
     fromTimeSeries(ts)
   }
 

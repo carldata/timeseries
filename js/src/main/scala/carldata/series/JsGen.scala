@@ -1,4 +1,4 @@
-package series
+package carldata.series
 
 import scala.annotation.tailrec
 import scala.collection.mutable.ListBuffer

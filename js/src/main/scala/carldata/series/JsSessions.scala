@@ -1,8 +1,8 @@
-package series
+package carldata.series
 
 import java.time.Duration
 
-import series.Sessions.Session
+import carldata.series.Sessions.Session
 
 import scala.scalajs.js.annotation.{JSExport, JSExportTopLevel}
 

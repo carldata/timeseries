@@ -1,9 +1,7 @@
-package series
+package carldata.series
 
 import java.time.temporal.ChronoUnit
 import java.time.{Duration, Instant}
-
-import series.TimeSeries.mkIndex
 
 import scala.annotation.tailrec
 import scala.collection.mutable
@@ -377,7 +375,7 @@ case class TimeSeries[V](idx: Vector[Instant], ds: Vector[V]) {
     if (isEmpty) this
     else {
       val ys: mutable.ListBuffer[(Instant, V)] = ListBuffer()
-      val resampledIndex = mkIndex(index.head, index.last, delta)
+      val resampledIndex = TimeSeries.mkIndex(index.head, index.last, delta)
 
       @tailrec def g(ts: Vector[Instant], xs: Vector[(Instant, V)], prev: (Instant, V)): Unit = {
         if (xs.nonEmpty) {

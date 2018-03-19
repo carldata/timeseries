@@ -1,4 +1,4 @@
-package series
+package carldata.series
 
 /** Calculate Time Series statistics */
 object Stats {

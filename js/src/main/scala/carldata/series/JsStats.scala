@@ -1,8 +1,9 @@
-package series
+package carldata.series
 
-import series.Stats.MeanAndVariance
-import scala.scalajs.js.JSConverters._
+import carldata.series.Stats.MeanAndVariance
+
 import scala.scalajs.js
+import scala.scalajs.js.JSConverters._
 import scala.scalajs.js.annotation.{JSExport, JSExportTopLevel}
 
 @JSExportTopLevel("Stats")
