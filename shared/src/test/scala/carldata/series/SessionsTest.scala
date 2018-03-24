@@ -99,7 +99,7 @@ class SessionsTest extends FlatSpec with Matchers {
       |2008-01-01T12:44:00, 0""".stripMargin)
 
   "findSessions" should "detect sessions" in {
-    val expected: Seq[Session] = Seq(Session(0,2), Session(7,8), Session(10,17), Session(23,24), Session(28,29))
+    val expected: Seq[Session] = Seq(Session(0, 2), Session(7, 8), Session(10, 17), Session(23, 24), Session(28, 29))
     Sessions.findSessions(seriesOfTypicalRain) shouldBe expected
   }
 
@@ -114,47 +114,47 @@ class SessionsTest extends FlatSpec with Matchers {
   }
 
   "findSessionsWithTolerance" should "detect sessions with toleration of 1 minute in typical rain signal" in {
-    val expected = Seq(Session(0,2), Session(7,8), Session(10,17), Session(23,24), Session(28,29))
+    val expected = Seq(Session(0, 2), Session(7, 8), Session(10, 17), Session(23, 24), Session(28, 29))
     Sessions.findSessions(seriesOfTypicalRain, Duration.ofMinutes(1)) shouldBe expected
   }
 
   it should "detect sessions with toleration of 3 minutes in typical rain signal" in {
-    val expected = Seq(Session(0,2), Session(7,17), Session(23,24), Session(28,29))
+    val expected = Seq(Session(0, 2), Session(7, 17), Session(23, 24), Session(28, 29))
     Sessions.findSessions(seriesOfTypicalRain, Duration.ofMinutes(3)) shouldBe expected
   }
 
   it should "detect sessions with toleration of 4 minutes in typical rain signal" in {
-    val expected = Seq(Session(0,2), Session(7,17), Session(23,29))
+    val expected = Seq(Session(0, 2), Session(7, 17), Session(23, 29))
     Sessions.findSessions(seriesOfTypicalRain, Duration.ofMinutes(4)) shouldBe expected
   }
 
   it should "detect sessions with toleration of 0 minutes in evanescent rain signal" in {
-    val expected = Seq(Session(2,2), Session(4,4), Session(7,7), Session(11,11), Session(16,16), Session(22,22))
+    val expected = Seq(Session(2, 2), Session(4, 4), Session(7, 7), Session(11, 11), Session(16, 16), Session(22, 22))
     Sessions.findSessions(seriesOfEvanescentRain, Duration.ofMinutes(0)) shouldBe expected
   }
 
   it should "detect sessions with toleration of 1 minute in evanescent rain signal" in {
-    val expected = Seq(Session(2,2), Session(4,4), Session(7,7), Session(11,11), Session(16,16), Session(22,22))
+    val expected = Seq(Session(2, 2), Session(4, 4), Session(7, 7), Session(11, 11), Session(16, 16), Session(22, 22))
     Sessions.findSessions(seriesOfEvanescentRain, Duration.ofMinutes(1)) shouldBe expected
   }
 
   it should "detect sessions with toleration of 2 minutes in evanescent rain signal" in {
-    val expected = Seq(Session(2,4), Session(7,7), Session(11,11), Session(16,16), Session(22,22))
+    val expected = Seq(Session(2, 4), Session(7, 7), Session(11, 11), Session(16, 16), Session(22, 22))
     Sessions.findSessions(seriesOfEvanescentRain, Duration.ofMinutes(2)) shouldBe expected
   }
 
   it should "detect sessions with toleration of 3 minutes in evanescent rain signal" in {
-    val expected = Seq(Session(2,7), Session(11,11), Session(16,16), Session(22,22))
+    val expected = Seq(Session(2, 7), Session(11, 11), Session(16, 16), Session(22, 22))
     Sessions.findSessions(seriesOfEvanescentRain, Duration.ofMinutes(3)) shouldBe expected
   }
 
   it should "detect sessions with toleration of 4 minutes in evanescent rain signal" in {
-    val expected = Seq(Session(2,11), Session(16,16), Session(22,22))
+    val expected = Seq(Session(2, 11), Session(16, 16), Session(22, 22))
     Sessions.findSessions(seriesOfEvanescentRain, Duration.ofMinutes(4)) shouldBe expected
   }
 
   it should "detect sessions with toleration of 5 minutes in evanescent rain signal" in {
-    val expected = Seq(Session(2,16), Session(22,22))
+    val expected = Seq(Session(2, 16), Session(22, 22))
     Sessions.findSessions(seriesOfEvanescentRain, Duration.ofMinutes(5)) shouldBe expected
   }
 
@@ -162,4 +162,10 @@ class SessionsTest extends FlatSpec with Matchers {
     val expected = Seq(Session(0, 29))
     Sessions.findSessions(seriesOfTypicalRain, Duration.ofMinutes(100)) shouldBe expected
   }
+
+  it should "detect no session with toleration of 5 minutes in signal of all zero values " in {
+    val expected: Seq[Session] = Seq()
+    Sessions.findSessions(seriesOfNoRain, Duration.ofMinutes(5)) shouldBe expected
+  }
+
 }
