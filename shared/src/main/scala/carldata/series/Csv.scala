@@ -37,9 +37,10 @@ object Csv {
       val tokens = line.split(",")
       (LocalDateTime.parse(tokens(0), dateFormatter).toInstant(ZoneOffset.UTC), tokens.tail.map(_.toDouble).toVector)
     }.toVector
-    val vs = data.unzip._2
 
-    vs.transpose.map(x => TimeSeries(data.unzip._1, x))
+    data.unzip._2
+      .transpose
+      .map(vs => TimeSeries(data.unzip._1, vs))
   }
 
   /** Write TimeSeries to CSV string */
