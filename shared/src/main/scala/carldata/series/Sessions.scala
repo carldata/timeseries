@@ -28,6 +28,7 @@ object Sessions {
   }
 
   /** Finds sessions with a duration tolerance
+    *
     * @param tolerance the time distance (inclusive) between two detected sessions that will make the sessions merged,
     *                  for example, for a fragment of signal values distributed evenly for exactly one second
     *                  (2, 0, 1, 0, 0, 2, 3, 4, 5, 7, 0)
@@ -35,7 +36,9 @@ object Sessions {
     *                  the Duration.ofSeconds(2) will be following sessions detected: [Session(0,2), Session(5, 9)]
     */
   def findSessions[V: Numeric](ts: TimeSeries[V], tolerance: Duration)(implicit num: Fractional[V]): Seq[Session] = {
-      val xs = Sessions.findSessions(ts)
+    val xs = Sessions.findSessions(ts)
+    if (xs.isEmpty) Seq()
+    else
       xs.tail.foldLeft[List[Session]](List(xs.head))((zs, x) => {
         if (tolerance.compareTo(Duration.between(ts.index(zs.head.endIndex), ts.index(x.startIndex))) >= 0)
           Session(zs.head.startIndex, x.endIndex) :: zs.tail //merge sessions
