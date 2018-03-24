@@ -32,12 +32,15 @@ object Csv {
 
 
   /** Reader for CSV string */
-  def fromString(str: String, dateFormatter: DateTimeFormatter = defaultFormatter): TimeSeries[Double] = {
-    val data = str.split("\n").tail.map{ line =>
+  def fromString(str: String, dateFormatter: DateTimeFormatter = defaultFormatter): Seq[TimeSeries[Double]] = {
+    val data = str.split("\n").tail.map { line =>
       val tokens = line.split(",")
-      (LocalDateTime.parse(tokens(0), dateFormatter).toInstant(ZoneOffset.UTC), tokens(1).toDouble)
-    }
-    new TimeSeries(data)
+      (LocalDateTime.parse(tokens(0), dateFormatter).toInstant(ZoneOffset.UTC), tokens.tail.map(_.toDouble).toVector)
+    }.toVector
+
+    data.unzip._2
+      .transpose
+      .map(vs => TimeSeries(data.unzip._1, vs))
   }
 
   /** Write TimeSeries to CSV string */
