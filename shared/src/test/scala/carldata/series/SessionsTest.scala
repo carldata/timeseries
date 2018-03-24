@@ -37,7 +37,7 @@ class SessionsTest extends FlatSpec with Matchers {
       |2008-01-01T13:01:00, 0
       |2008-01-01T13:02:00, 0
       |2008-01-01T13:03:00, 1
-      |2008-01-01T13:04:00, 3""".stripMargin)
+      |2008-01-01T13:04:00, 3""".stripMargin).head
 
   private val seriesOfEvanescentRain = Csv.fromString(
     """time,value
@@ -70,7 +70,7 @@ class SessionsTest extends FlatSpec with Matchers {
       |2008-01-01T13:01:00, 0
       |2008-01-01T13:02:00, 0
       |2008-01-01T13:03:00, 0
-      |2008-01-01T13:04:00, 0""".stripMargin)
+      |2008-01-01T13:04:00, 0""".stripMargin).head
 
   private val seriesOfAllRain = Csv.fromString(
     """time,value
@@ -83,7 +83,7 @@ class SessionsTest extends FlatSpec with Matchers {
       |2008-01-01T12:41:00, 6
       |2008-01-01T12:42:00, 4
       |2008-01-01T12:43:00, 2
-      |2008-01-01T12:44:00, 5""".stripMargin)
+      |2008-01-01T12:44:00, 5""".stripMargin).head
 
   private val seriesOfNoRain = Csv.fromString(
     """time,value
@@ -96,9 +96,10 @@ class SessionsTest extends FlatSpec with Matchers {
       |2008-01-01T12:41:00, 0
       |2008-01-01T12:42:00, 0
       |2008-01-01T12:43:00, 0
-      |2008-01-01T12:44:00, 0""".stripMargin)
+      |2008-01-01T12:44:00, 0""".stripMargin).head
 
   "findSessions" should "detect sessions" in {
+    print(seriesOfTypicalRain)
     val expected: Seq[Session] = Seq(Session(0, 2), Session(7, 8), Session(10, 17), Session(23, 24), Session(28, 29))
     Sessions.findSessions(seriesOfTypicalRain) shouldBe expected
   }
