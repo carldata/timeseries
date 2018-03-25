@@ -1,6 +1,6 @@
 package carldata.series
 
-import java.time.Duration
+import java.time.{Duration, Instant}
 
 import carldata.series.Sessions.Session
 import org.scalatest._
@@ -98,14 +98,17 @@ class SessionsTest extends FlatSpec with Matchers {
       |2008-01-01T12:43:00, 0
       |2008-01-01T12:44:00, 0""".stripMargin).head
 
+  def createSession(x: (String, String)): Session = Session(Instant.parse(x._1), Instant.parse(x._2))
+
   "findSessions" should "detect sessions" in {
-    print(seriesOfTypicalRain)
-    val expected: Seq[Session] = Seq(Session(0, 2), Session(7, 8), Session(10, 17), Session(23, 24), Session(28, 29))
+    val expected: Seq[Session] = Seq(("2008-01-01T12:35:00Z", "2008-01-01T12:37:00Z"), ("2008-01-01T12:42:00Z", "2008-01-01T12:43:00Z")
+      , ("2008-01-01T12:45:00Z", "2008-01-01T12:52:00Z"), ("2008-01-01T12:58:00Z", "2008-01-01T12:59:00Z")
+      , ("2008-01-01T13:03:00Z", "2008-01-01T13:04:00Z")).map(createSession)
     Sessions.findSessions(seriesOfTypicalRain) shouldBe expected
   }
 
   it should "detect one session in signal of all non-zero values" in {
-    val expected: Seq[Session] = Seq(Session(0, 9))
+    val expected: Seq[Session] = Seq(("2008-01-01T12:35:00Z", "2008-01-01T12:44:00Z")).map(createSession)
     Sessions.findSessions(seriesOfAllRain) shouldBe expected
   }
 
@@ -115,52 +118,65 @@ class SessionsTest extends FlatSpec with Matchers {
   }
 
   "findSessionsWithTolerance" should "detect sessions with toleration of 1 minute in typical rain signal" in {
-    val expected = Seq(Session(0, 2), Session(7, 8), Session(10, 17), Session(23, 24), Session(28, 29))
+    val expected = Seq(("2008-01-01T12:35:00Z", "2008-01-01T12:37:00Z"), ("2008-01-01T12:42:00Z", "2008-01-01T12:43:00Z")
+      , ("2008-01-01T12:45:00Z", "2008-01-01T12:52:00Z"), ("2008-01-01T12:58:00Z", "2008-01-01T12:59:00Z")
+      , ("2008-01-01T13:03:00Z", "2008-01-01T13:04:00Z")).map(createSession)
     Sessions.findSessions(seriesOfTypicalRain, Duration.ofMinutes(1)) shouldBe expected
   }
 
   it should "detect sessions with toleration of 3 minutes in typical rain signal" in {
-    val expected = Seq(Session(0, 2), Session(7, 17), Session(23, 24), Session(28, 29))
+    val expected = Seq(("2008-01-01T12:35:00Z", "2008-01-01T12:37:00Z"), ("2008-01-01T12:42:00Z", "2008-01-01T12:52:00Z")
+      , ("2008-01-01T12:58:00Z", "2008-01-01T12:59:00Z"), ("2008-01-01T13:03:00Z", "2008-01-01T13:04:00Z")).map(createSession)
     Sessions.findSessions(seriesOfTypicalRain, Duration.ofMinutes(3)) shouldBe expected
   }
 
   it should "detect sessions with toleration of 4 minutes in typical rain signal" in {
-    val expected = Seq(Session(0, 2), Session(7, 17), Session(23, 29))
+    val expected = Seq(("2008-01-01T12:35:00Z", "2008-01-01T12:37:00Z"), ("2008-01-01T12:42:00Z", "2008-01-01T12:52:00Z")
+      , ("2008-01-01T12:58:00Z", "2008-01-01T13:04:00Z")).map(createSession)
     Sessions.findSessions(seriesOfTypicalRain, Duration.ofMinutes(4)) shouldBe expected
   }
 
   it should "detect sessions with toleration of 0 minutes in evanescent rain signal" in {
-    val expected = Seq(Session(2, 2), Session(4, 4), Session(7, 7), Session(11, 11), Session(16, 16), Session(22, 22))
+    val expected = Seq(("2008-01-01T12:37:00Z", "2008-01-01T12:37:00Z"), ("2008-01-01T12:39:00Z", "2008-01-01T12:39:00Z")
+      , ("2008-01-01T12:42:00Z", "2008-01-01T12:42:00Z"), ("2008-01-01T12:46:00Z", "2008-01-01T12:46:00Z")
+      , ("2008-01-01T12:51:00Z", "2008-01-01T12:51:00Z"), ("2008-01-01T12:57:00Z", "2008-01-01T12:57:00Z")).map(createSession)
     Sessions.findSessions(seriesOfEvanescentRain, Duration.ofMinutes(0)) shouldBe expected
   }
 
   it should "detect sessions with toleration of 1 minute in evanescent rain signal" in {
-    val expected = Seq(Session(2, 2), Session(4, 4), Session(7, 7), Session(11, 11), Session(16, 16), Session(22, 22))
+    val expected = Seq(("2008-01-01T12:37:00Z", "2008-01-01T12:37:00Z"), ("2008-01-01T12:39:00Z", "2008-01-01T12:39:00Z")
+      , ("2008-01-01T12:42:00Z", "2008-01-01T12:42:00Z"), ("2008-01-01T12:46:00Z", "2008-01-01T12:46:00Z")
+      , ("2008-01-01T12:51:00Z", "2008-01-01T12:51:00Z"), ("2008-01-01T12:57:00Z", "2008-01-01T12:57:00Z")).map(createSession)
     Sessions.findSessions(seriesOfEvanescentRain, Duration.ofMinutes(1)) shouldBe expected
   }
 
   it should "detect sessions with toleration of 2 minutes in evanescent rain signal" in {
-    val expected = Seq(Session(2, 4), Session(7, 7), Session(11, 11), Session(16, 16), Session(22, 22))
+    val expected = Seq(("2008-01-01T12:37:00Z", "2008-01-01T12:39:00Z"), ("2008-01-01T12:42:00Z", "2008-01-01T12:42:00Z")
+      , ("2008-01-01T12:46:00Z", "2008-01-01T12:46:00Z"), ("2008-01-01T12:51:00Z", "2008-01-01T12:51:00Z")
+      , ("2008-01-01T12:57:00Z", "2008-01-01T12:57:00Z")).map(createSession)
     Sessions.findSessions(seriesOfEvanescentRain, Duration.ofMinutes(2)) shouldBe expected
   }
 
   it should "detect sessions with toleration of 3 minutes in evanescent rain signal" in {
-    val expected = Seq(Session(2, 7), Session(11, 11), Session(16, 16), Session(22, 22))
+    val expected = Seq(("2008-01-01T12:37:00Z", "2008-01-01T12:42:00Z"), ("2008-01-01T12:46:00Z", "2008-01-01T12:46:00Z")
+      , ("2008-01-01T12:51:00Z", "2008-01-01T12:51:00Z"), ("2008-01-01T12:57:00Z", "2008-01-01T12:57:00Z")).map(createSession)
     Sessions.findSessions(seriesOfEvanescentRain, Duration.ofMinutes(3)) shouldBe expected
   }
 
   it should "detect sessions with toleration of 4 minutes in evanescent rain signal" in {
-    val expected = Seq(Session(2, 11), Session(16, 16), Session(22, 22))
+    val expected = Seq(("2008-01-01T12:37:00Z", "2008-01-01T12:46:00Z"), ("2008-01-01T12:51:00Z", "2008-01-01T12:51:00Z")
+      , ("2008-01-01T12:57:00Z", "2008-01-01T12:57:00Z")).map(createSession)
     Sessions.findSessions(seriesOfEvanescentRain, Duration.ofMinutes(4)) shouldBe expected
   }
 
   it should "detect sessions with toleration of 5 minutes in evanescent rain signal" in {
-    val expected = Seq(Session(2, 16), Session(22, 22))
+    val expected = Seq(("2008-01-01T12:37:00Z", "2008-01-01T12:51:00Z")
+      , ("2008-01-01T12:57:00Z", "2008-01-01T12:57:00Z")).map(createSession)
     Sessions.findSessions(seriesOfEvanescentRain, Duration.ofMinutes(5)) shouldBe expected
   }
 
   it should "return proper result for toleration greater than signal" in {
-    val expected = Seq(Session(0, 29))
+    val expected = Seq(("2008-01-01T12:35:00Z", "2008-01-01T13:04:00Z")).map(createSession)
     Sessions.findSessions(seriesOfTypicalRain, Duration.ofMinutes(100)) shouldBe expected
   }
 

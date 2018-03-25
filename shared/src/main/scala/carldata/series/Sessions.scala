@@ -1,27 +1,27 @@
 package carldata.series
 
-import java.time.Duration
+import java.time.{Duration, Instant}
 
 object Sessions {
 
-  case class Session(startIndex: Int, endIndex: Int)
+  case class Session(startIndex: Instant, endIndex: Instant)
 
   /**
     * Session is continuous period where the data point value is not 0
     */
   def findSessions[V: Numeric](ts: TimeSeries[V]): Seq[Session] = {
-    val tss = ts.values.zipWithIndex
-    // where: (_1, _2, _3) = (index of the first of compared pair, first pair value, second pair value)
-    val zps: Seq[(Int, V, V)] = tss.zip(tss.tail).map(e => (e._1._2, e._1._1, e._2._1))
-    val zStart: List[Session] = if (zps.nonEmpty && zps.head._2 != 0)
-      List(Session(zps.head._1, zps.head._1))
+    val xs: Vector[((Instant, V), (Instant, V))] = ts.dataPoints.zip(ts.dataPoints.tail)
+    val xsHead: List[Session] = if (xs.nonEmpty && xs.head._2._2 != 0)
+      List(Session(xs.head._1._1, xs.head._1._1))
     else
       List()
-    zps.foldLeft[List[Session]](zStart) { (z, e) =>
-      if ((e._2 == 0) && (e._3 != 0))
-        Session(e._1 + 1, e._1 + 1) :: z
-      else if (e._2 != 0)
-        Session(z.head.startIndex, e._1 + (if (e._3 != 0) 1 else 0)) :: z.tail
+    
+    xs.foldLeft[List[Session]](xsHead) { (z, e) =>
+
+      if ((e._1._2 == 0) && (e._2._2 != 0))
+        Session(e._2._1, e._2._1) :: z
+      else if (e._1._2 != 0)
+        Session(z.head.startIndex, if (e._2._2 != 0) e._2._1 else e._1._1) :: z.tail
       else
         z
     }.reverse
@@ -40,7 +40,7 @@ object Sessions {
     if (xs.isEmpty) Seq()
     else
       xs.tail.foldLeft[List[Session]](List(xs.head))((zs, x) => {
-        if (tolerance.compareTo(Duration.between(ts.index(zs.head.endIndex), ts.index(x.startIndex))) >= 0)
+        if (tolerance.compareTo(Duration.between(zs.head.endIndex, x.startIndex)) >= 0)
           Session(zs.head.startIndex, x.endIndex) :: zs.tail //merge sessions
         else
           x :: zs
