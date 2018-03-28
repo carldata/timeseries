@@ -15,7 +15,7 @@ object Sessions {
       List(Session(xs.head._1._1, xs.head._1._1))
     else
       List()
-    
+
     xs.foldLeft[List[Session]](xsHead) { (z, e) =>
 
       if ((e._1._2 == 0) && (e._2._2 != 0))
@@ -45,5 +45,12 @@ object Sessions {
         else
           x :: zs
       }).reverse
+  }
+
+  /**
+    * Time series adjusted to session, inclusive
+    */
+  def splitBySession[V: Numeric](ts: TimeSeries[V], session: Session): TimeSeries[V] = {
+    ts.slice(session.startIndex, session.endIndex.plusSeconds(1))
   }
 }
