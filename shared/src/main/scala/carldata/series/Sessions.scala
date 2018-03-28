@@ -48,9 +48,9 @@ object Sessions {
   }
 
   /**
-    * Time series adjusted to session
+    * Time series adjusted to session, inclusive
     */
   def splitBySession[V: Numeric](ts: TimeSeries[V], session: Session): TimeSeries[V] = {
-    ts.slice(session.startIndex, session.endIndex)
+    ts.slice(session.startIndex, session.endIndex.plusSeconds(1))
   }
 }

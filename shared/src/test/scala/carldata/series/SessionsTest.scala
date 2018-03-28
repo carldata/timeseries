@@ -189,11 +189,11 @@ class SessionsTest extends FlatSpec with Matchers {
     val idx = Vector("2008-01-01T12:37:00Z", "2008-01-01T12:38:00Z", "2008-01-01T12:39:00Z", "2008-01-01T12:40:00Z"
       , "2008-01-01T12:41:00Z", "2008-01-01T12:42:00Z", "2008-01-01T12:43:00Z", "2008-01-01T12:44:00Z"
       , "2008-01-01T12:45:00Z", "2008-01-01T12:46:00Z", "2008-01-01T12:47:00Z", "2008-01-01T12:48:00Z"
-      , "2008-01-01T12:49:00Z", "2008-01-01T12:50:00Z").map(Instant.parse)
+      , "2008-01-01T12:49:00Z", "2008-01-01T12:50:00Z", "2008-01-01T12:51:00Z").map(Instant.parse)
     val session = createSession("2008-01-01T12:37:00Z", "2008-01-01T12:51:00Z")
-    val vs = Vector(1.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0)
+    val vs = Vector(1.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0)
     val expected = TimeSeries(idx, vs)
-    
+
     Sessions.splitBySession(seriesOfEvanescentRain, session) shouldBe expected
   }
 
