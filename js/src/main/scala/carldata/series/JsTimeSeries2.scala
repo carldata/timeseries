@@ -44,7 +44,7 @@ case class JsTimeSeries2(idx: js.Array[Int], ds: js.Array[(Double, Double)]) {
     this(d.map(_._1).toJSArray, d.map(_._2).toJSArray)
   }
 
-  private def fromTimeSeries(ts: TimeSeries[(Double, Double)]): JsTimeSeries2 = {
+  def fromTimeSeries(ts: TimeSeries[(Double, Double)]): JsTimeSeries2 = {
     JsTimeSeries2(ts.index.map(JsTimeSeries2.toInt).toJSArray, ts.values.toJSArray)
   }
 
