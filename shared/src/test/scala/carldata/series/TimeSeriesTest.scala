@@ -298,6 +298,19 @@ class TimeSeriesTest extends FlatSpec with Matchers {
     TimeSeries.step(series, Duration.ofSeconds(15)) shouldBe expected
   }
 
+  it should "step index on series with right step" in {
+    val now = Instant.EPOCH
+    val idx = Vector(now, now.plusSeconds(60), now.plusSeconds(2 * 60))
+    val vs = Vector(10f, 8f, 12f)
+    val series = TimeSeries(idx, vs)
+
+    TimeSeries.step(series, Duration.ofSeconds(60)) shouldBe series
+  }
+
+  it should "step index on empty series" in {
+    TimeSeries.step(TimeSeries.empty[Float], Duration.ofSeconds(15)) shouldBe TimeSeries.empty[Float]
+  }
+
   it should "inner join 2 series" in {
     val now = Instant.now()
     val idx1 = Vector(now.plusSeconds(1), now.plusSeconds(2), now.plusSeconds(4), now.plusSeconds(5))

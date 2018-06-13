@@ -138,25 +138,29 @@ object TimeSeries {
     * we will get values 2.5 every 15 minutes (10/4)
     */
   def step[V: Fractional](ts: TimeSeries[V], d: Duration)(implicit num: Fractional[V]): TimeSeries[V] = {
-    val index = mkIndex(ts.index.head, ts.index.last, d)
-    val builder: mutable.ListBuffer[V] = ListBuffer()
+    if (ts.isEmpty || ts.resolution.equals(d)) ts
+    else {
+      val index = mkIndex(ts.index.head, ts.index.last, d)
+      val builder: mutable.ListBuffer[V] = ListBuffer()
 
-    @tailrec def stepR(dp: Vector[(Instant, V)], newIdx: Vector[Instant]): Vector[V] = {
-      if (dp.isEmpty) builder.toVector
-      else {
-        val p = dp.head
-        val xs = newIdx.takeWhile(_.isBefore(p._1))
-        val len = xs.length
-        if (len > 0) {
-          val v = num.div(p._2, num.fromInt(len))
-          0.until(len).foreach(_ => builder.append(v))
+      @tailrec def stepR(dp: Vector[(Instant, V)], newIdx: Vector[Instant]): Vector[V] = {
+        if (dp.isEmpty) builder.toVector
+        else {
+          val p = dp.head
+          val xs = newIdx.takeWhile(_.isBefore(p._1))
+          val len = xs.length
+          if (len > 0) {
+            val v = num.div(p._2, num.fromInt(len))
+            0.until(len).foreach(_ => builder.append(v))
+          }
+          stepR(dp.tail, newIdx.drop(len))
         }
-        stepR(dp.tail, newIdx.drop(len))
       }
+
+      val vs = stepR(ts.dataPoints, index)
+      TimeSeries(index.take(vs.length), vs)
     }
 
-    val vs = stepR(ts.dataPoints, index)
-    TimeSeries(index.take(vs.length), vs)
   }
 
   def join[V](ts: Seq[TimeSeries[V]]): TimeSeries[Seq[V]] = {
