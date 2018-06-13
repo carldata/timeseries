@@ -3,8 +3,12 @@ package carldata.series
 import java.time.Instant
 import java.time.temporal.ChronoUnit
 
+import carldata.series.Stats.meanAndVariance
+
 object Patterns {
-  def daily[V](xs: TimeSeries[V])(implicit num: Fractional[V]): TimeSeries[V] = {
+  def daily[V: Fractional](xs: TimeSeries[V])(implicit num: Fractional[V]): TimeSeries[(Double, Double)] = {
+    val xs2 = TimeSeries(xs.index, xs.values.map(num.toDouble))
+
     /** Calculate seconds passed from midnight **/
     def fromMidnight(dt: Instant): Long = {
       dt.getEpochSecond - dt.truncatedTo(ChronoUnit.DAYS).getEpochSecond
@@ -16,9 +20,16 @@ object Patterns {
         .plusSeconds(fromMidnight(dt))
     }
 
-    def average(vs: Seq[(Instant, V)]): V = num.div(vs.unzip._2.sum, num.fromInt(vs.length))
+    def average(vs: Seq[(Instant, Double)]): Double = Stats.meanAndVariance(vs.unzip._2).mean
 
-    xs.groupByTime(groupByDuration, average)
+    def standardDeviation(vs: Seq[(Instant, Double)]): Double = {
+      val variance = meanAndVariance(vs.unzip._2).variance
+      Math.sqrt(variance)
+    }
+
+    val mean = xs2.groupByTime(groupByDuration, average)
+    val stddev = xs2.groupByTime(groupByDuration, standardDeviation)
+    mean.join(stddev)
   }
 
 }

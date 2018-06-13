@@ -12,8 +12,12 @@ class PatternsTest extends FlatSpec with Matchers {
       , now.plusSeconds(day), now.plusSeconds(day + 300), now.plusSeconds(day + 600)
       , now.plusSeconds(2 * day), now.plusSeconds(2 * day + 300), now.plusSeconds(2 * day + 600))
     val series = TimeSeries(idx, Vector(1d, 2d, 3d, 2d, 4d, 6d, 3d, 6d, 9d))
-    val expected = TimeSeries(Vector(now, now.plusSeconds(300), now.plusSeconds(600)), Vector(2d, 4d, 6d))
+    val expectedTS = TimeSeries(Vector(now, now.plusSeconds(300), now.plusSeconds(600))
+      , Vector(2d, 4d, 6d))
+    val expectedSD = TimeSeries(Vector(now, now.plusSeconds(300), now.plusSeconds(600))
+      , Vector(0.81649d, 1.63299d, 2.44948d))
     val result = Patterns.daily(series)
-    result shouldBe expected
+    result.mapValues(_._1) shouldBe expectedTS
+    TimeSeries.almostEqual(result.mapValues(_._2), expectedSD,0.01) shouldBe true
   }
 }
