@@ -5,7 +5,7 @@ lazy val timeseries = crossProject.in(file("."))
   .settings(
     name := "timeseries",
     organization := "io.github.carldata",
-    version := "0.6.5",
+    version := "0.6.6",
     scalaVersion := "2.12.3",
     autoCompilerPlugins := true,
     libraryDependencies ++= Seq(
