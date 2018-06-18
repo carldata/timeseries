@@ -353,6 +353,39 @@ class TimeSeriesTest extends FlatSpec with Matchers {
     series1.joinLeft(series2, 0) shouldBe expected
   }
 
+  it should "left join 2 series, second empty" in {
+    val now = Instant.now()
+    val idx1 = Vector(now.plusSeconds(1), now.plusSeconds(2), now.plusSeconds(4), now.plusSeconds(5))
+    val vs = Vector(1, 4, 6, 8)
+    val series1 = TimeSeries(idx1, vs)
+    val expected = TimeSeries(idx1, Vector((1, 0), (4, 0), (6, 0), (8, 0)))
+
+    series1.joinLeft(TimeSeries.empty, 0) shouldBe expected
+  }
+
+  it should "left join 2 series, second less elements" in {
+    val now = Instant.now()
+    val idx1 = Vector(now.plusSeconds(1), now.plusSeconds(2), now.plusSeconds(4), now.plusSeconds(5))
+    val idx2 = Vector(now.plusSeconds(2), now.plusSeconds(3), now.plusSeconds(4))
+    val vs = Vector(1, 4, 6, 8)
+    val series1 = TimeSeries(idx1, vs)
+    val series2 = TimeSeries(idx2, vs.tail)
+    val expected = TimeSeries(idx1, Vector((1, 0), (4, 4), (6, 8), (8, 0)))
+
+    series1.joinLeft(series2, 0) shouldBe expected
+  }
+
+  it should "left join 2 series, second more elements" in {
+    val now = Instant.now()
+    val idx1 = Vector(now.plusSeconds(1), now.plusSeconds(2), now.plusSeconds(4))
+    val idx2 = Vector(now.plusSeconds(2), now.plusSeconds(3), now.plusSeconds(4), now.plusSeconds(5))
+    val vs = Vector(1, 4, 6, 8)
+    val series1 = TimeSeries(idx1, vs.tail)
+    val series2 = TimeSeries(idx2, vs)
+    val expected = TimeSeries(idx1, Vector((4, 0), (6, 1), (8, 6)))
+
+    series1.joinLeft(series2, 0) shouldBe expected  }
+
   it should "outer join 2 series" in {
     val now = Instant.now()
     val idx1 = Vector(now.plusSeconds(1), now.plusSeconds(2), now.plusSeconds(4), now.plusSeconds(5))
