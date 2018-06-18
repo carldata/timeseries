@@ -460,7 +460,12 @@ case class TimeSeries[V](idx: Vector[Instant], ds: Vector[V]) {
 
     @tailrec def joinR(xs: Vector[(Instant, V)],
                        ys: Vector[(Instant, U)]): Seq[(Instant, (V, U))] = {
-      if (xs.isEmpty || ys.isEmpty) builder
+      if (xs.isEmpty && ys.isEmpty) builder
+      else if (ys.isEmpty) {
+        xs.foreach(x => builder.append((x._1, (x._2, default))))
+        builder
+      }
+      else if (xs.isEmpty) builder
       else {
         val x = xs.head
         val y = ys.head
