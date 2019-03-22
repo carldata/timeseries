@@ -1,7 +1,9 @@
 organization := "io.github.carldata"
 
+// shadow sbt-scalajs' crossProject and CrossType until Scala.js 1.0.0 is released
+import sbtcrossproject.{ crossProject, CrossType }
 
-lazy val timeseries = crossProject.in(file("."))
+lazy val timeseries =  (crossProject(JSPlatform, JVMPlatform) in file("."))
   .settings(
     name := "timeseries",
     organization := "io.github.carldata",
@@ -43,5 +45,5 @@ lazy val timeseries = crossProject.in(file("."))
     libraryDependencies += "org.scala-js" %%% "scalajs-java-time" % "0.2.3"
   )
 
-lazy val jvm = timeseries.jvm
-lazy val js = timeseries.js
+lazy val timeseriesJVM = timeseries.jvm
+lazy val timeseriesJS = timeseries.js
