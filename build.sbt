@@ -3,12 +3,14 @@ organization := "io.github.carldata"
 // shadow sbt-scalajs' crossProject and CrossType until Scala.js 1.0.0 is released
 import sbtcrossproject.{ crossProject, CrossType }
 
+
+
 lazy val timeseries =  (crossProject(JSPlatform, JVMPlatform) in file("."))
   .settings(
     name := "timeseries",
     organization := "io.github.carldata",
     version := "0.6.7",
-    scalaVersion := "2.12.3",
+    scalaVersion := "2.11.12",
     autoCompilerPlugins := true,
     libraryDependencies ++= Seq(
       "org.scalatest" %% "scalatest" % "3.0.1" % "test"
