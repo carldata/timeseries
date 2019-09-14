@@ -74,4 +74,28 @@ object Csv {
     header + "\n" + lines.mkString("\n")
   }
 
+  /** Write Sequence of TimeSeries to CSV string */
+  def toComplexCsv[A](tss: Seq[TimeSeries[A]])(implicit num: Numeric[A]): String = {
+    require(tss.nonEmpty)
+    val header =
+      tss.size match {
+        case 1 => "time,value"
+        case l =>
+          val valueCols = Vector.tabulate(l) { idx => "value" + (idx + 1) }
+          "time" + valueCols.mkString(",", ",", "")
+      }
+    val data = tss.foldLeft(TimeSeries.empty[Vector[A]]) { case (acc, ts) =>
+      val joined = acc.joinOuter(ts, Vector.fill(acc.length)(num.zero), num.zero)
+      joined.mapValues { case (vs, v) => vs :+ v }
+    }
+    val lines = data.dataPoints.map { case (instant, vec) =>
+      val time = LocalDateTime
+        .ofInstant(instant, ZoneOffset.UTC)
+        .format(DateTimeFormatter.ISO_LOCAL_DATE_TIME)
+      val values = vec.mkString(tokensDelimeter)
+      time + tokensDelimeter + values
+    }
+    header + newLineDelimeter + lines.mkString(newLineDelimeter)
+  }
+
 }

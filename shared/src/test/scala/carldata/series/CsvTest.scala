@@ -95,4 +95,38 @@ class CsvTest extends FlatSpec with Matchers {
     series shouldBe Csv.fromString(csv).head
   }
 
+  it should "save and load complex series" in {
+    val idx@Vector(idx0, idx1, idx2, idx3) = Vector(
+      "2005-01-01T12:34:15Z",
+      "2006-01-01T12:34:15Z",
+      "2007-01-01T12:34:15Z",
+      "2008-01-01T12:34:15Z"
+    )
+
+    val str =
+      s"""time,value1,value2,value3
+         |$idx0,2,,1
+         |$idx1,,-1,1
+         |$idx2,,0,0
+         |$idx3,,2,1""".stripMargin
+
+    val insts@Seq(inst0, inst1, inst2, inst3) = idx.map(i => Instant.parse(i))
+    val input = Seq(
+      Seq((inst0, 2)),
+      Seq((inst1, -1), (inst2, 0), (inst3, 2)),
+      Seq((inst0, 1), (inst1, 1), (inst2, 0), (inst3, 1))
+    ).map { vs =>
+      val ts = vs.map { case (i, x) => (i.getEpochSecond, x) }
+      TimeSeries.fromTimestamps(ts)
+    }
+
+    val expected = Seq(
+      TimeSeries(insts, Vector(2, 0, 0, 0)),
+      TimeSeries(insts, Vector(0, -1, 0, 2)),
+      TimeSeries(insts, Vector(1, 1, 0, 1))
+    )
+
+    Csv.fromString(Csv.toComplexCsv(input)) shouldBe expected
+  }
+
 }
