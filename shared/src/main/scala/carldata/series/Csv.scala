@@ -4,8 +4,13 @@ import java.time.format.{DateTimeFormatter, DateTimeFormatterBuilder}
 import java.time.temporal.ChronoField
 import java.time.{LocalDateTime, ZoneOffset}
 
+import scala.collection.mutable.ArrayBuffer
+
 
 object Csv {
+
+  private val newLineDelimeter = "\n"
+  private val tokensDelimeter = ","
 
   private val defaultFormatter = new DateTimeFormatterBuilder()
     .parseCaseInsensitive
@@ -33,14 +38,32 @@ object Csv {
 
   /** Reader for CSV string */
   def fromString(str: String, dateFormatter: DateTimeFormatter = defaultFormatter): Seq[TimeSeries[Double]] = {
-    val data = str.split("\n").tail.map { line =>
-      val tokens = line.split(",")
-      (LocalDateTime.parse(tokens(0), dateFormatter).toInstant(ZoneOffset.UTC), tokens.tail.map(_.toDouble).toVector)
-    }.toVector
+    val lines = str.split(newLineDelimeter)
+    require(lines.nonEmpty)
+    val header = lines.head
+    val columnsCount = header.split(tokensDelimeter) match {
+      case Array("time", "value") => 2
+      case arr if arr.size > 2 && arr(0) == "time" &&
+        arr.zipWithIndex.tail.forall { case (p, i) => p == s"value$i" } => arr.size
+      case _ => throw new IllegalArgumentException("Wrong input string format")
+    }
+    val valueColumnsCount = columnsCount - 1
 
-    data.unzip._2
-      .transpose
-      .map(vs => TimeSeries(data.unzip._1, vs))
+    val data = Vector.fill(valueColumnsCount)(ArrayBuffer.empty[(Long, Double)])
+    for (line <- lines.tail) {
+      val tokens = line.split(tokensDelimeter)
+      require(tokens.size == columnsCount)
+      val instant = LocalDateTime.parse(tokens(0), dateFormatter).toEpochSecond(ZoneOffset.UTC)
+
+      for (idx <- 1 until tokens.size) {
+        val token = tokens(idx)
+        if (token.nonEmpty) {
+          data(idx - 1) += ((instant, token.toDouble))
+        }
+      }
+    }
+
+    data.map(TimeSeries.fromTimestamps(_))
   }
 
   /** Write TimeSeries to CSV string */
