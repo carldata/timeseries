@@ -98,6 +98,14 @@ class SessionsTest extends FlatSpec with Matchers {
       |2008-01-01T12:43:00, 0
       |2008-01-01T12:44:00, 0""".stripMargin).head
 
+  private val seriesWithSingleEvent = Csv.fromString(
+    """|time,value
+       |2013-08-13T08:00:00,0.1
+       |2013-08-13T08:15:00,0
+       |2013-08-13T08:30:00,0
+       |2013-08-13T08:45:00,0
+       |2013-08-13T09:00:00,0""".stripMargin).head
+
   def createSession(x: (String, String)): Session = Session(Instant.parse(x._1), Instant.parse(x._2))
 
   "findSessions" should "detect sessions" in {
@@ -107,6 +115,9 @@ class SessionsTest extends FlatSpec with Matchers {
     Sessions.findSessions(seriesOfTypicalRain) shouldBe expected
   }
 
+  it should "handle single rain event" in {
+    Sessions.findSessions(seriesWithSingleEvent)  shouldBe Seq(("2013-08-13T08:00:00Z", "2013-08-13T08:00:00Z")).map(createSession)
+  }
   it should "detect one session in signal of all non-zero values" in {
     val expected: Seq[Session] = Seq(("2008-01-01T12:35:00Z", "2008-01-01T12:44:00Z")).map(createSession)
     Sessions.findSessions(seriesOfAllRain) shouldBe expected
