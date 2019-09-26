@@ -2,6 +2,8 @@ package carldata.series
 
 import java.time.{Duration, Instant}
 
+import scala.annotation.tailrec
+
 object Sessions {
 
   case class Session(startIndex: Instant, endIndex: Instant)
@@ -9,22 +11,24 @@ object Sessions {
   /**
     * Session is continuous period where the data point value is not 0
     */
-  def findSessions[V: Numeric](ts: TimeSeries[V]): Seq[Session] = {
-    val xs: Vector[((Instant, V), (Instant, V))] = ts.dataPoints.zip(ts.dataPoints.tail)
-    val xsHead: List[Session] = if (xs.nonEmpty && xs.head._2._2 != 0)
-      List(Session(xs.head._1._1, xs.head._1._1))
-    else
-      List()
+  def findSessions[V: Numeric](ts: TimeSeries[V])(implicit num: Numeric[V]): Seq[Session] = {
+    @tailrec
+    def f(xs: Stream[(Instant, V)], currentSession: Option[Session], sessions: Seq[Session]): Seq[Session] = {
+      if (xs.isEmpty) currentSession.map(cs => sessions :+ cs).getOrElse(sessions)
+      else {
+        val head = xs.head
+        if (head._2 != num.zero) {
+          val widerSession: Session = currentSession.map(cs => Session(cs.startIndex, head._1))
+            .getOrElse(Session(head._1, head._1))
+          f(xs.tail, Some(widerSession), sessions)
+        }
+        else {
+          f(xs.tail, None, currentSession.map(cs => sessions :+ cs).getOrElse(sessions))
+        }
+      }
+    }
 
-    xs.foldLeft[List[Session]](xsHead) { (z, e) =>
-
-      if ((e._1._2 == 0) && (e._2._2 != 0))
-        Session(e._2._1, e._2._1) :: z
-      else if (e._1._2 != 0)
-        Session(z.head.startIndex, if (e._2._2 != 0) e._2._1 else e._1._1) :: z.tail
-      else
-        z
-    }.reverse
+    f(ts.dataPoints.toStream, None, Seq())
   }
 
   /** Finds sessions with a duration tolerance
