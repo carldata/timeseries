@@ -1,13 +1,21 @@
 organization := "io.github.carldata"
 
 // shadow sbt-scalajs' crossProject and CrossType until Scala.js 1.0.0 is released
-import sbtcrossproject.{ crossProject, CrossType }
+import sbtcrossproject.{crossProject, CrossType}
 
-lazy val timeseries =  (crossProject(JSPlatform, JVMPlatform) in file("."))
+lazy val root = project.in(file(".")).
+  aggregate(timeseriesJS, timeseriesJVM).
+  settings(
+    publishArtifact:= false,
+    publish := {},
+    publishLocal := {}
+  )
+
+lazy val timeseries = (crossProject(JSPlatform, JVMPlatform) in file("."))
   .settings(
     name := "timeseries",
     organization := "io.github.carldata",
-    version := "0.6.7",
+    version := "0.6.8",
     scalaVersion := "2.12.3",
     autoCompilerPlugins := true,
     libraryDependencies ++= Seq(
@@ -18,7 +26,7 @@ lazy val timeseries =  (crossProject(JSPlatform, JVMPlatform) in file("."))
     pomIncludeRepository := { _ => false },
     publishMavenStyle := true,
     publishArtifact in Test := false,
-    publishTo := {
+    publishTo in ThisBuild := {
       val nexus = "https://oss.sonatype.org/"
       if (isSnapshot.value)
         Some("snapshots" at nexus + "content/repositories/snapshots")
@@ -37,13 +45,17 @@ lazy val timeseries =  (crossProject(JSPlatform, JVMPlatform) in file("."))
           <url>http://github/klangner</url>
         </developer>
       </developers>
-  ).jvmSettings (
-    libraryDependencies ++= Seq(
-      "com.storm-enroute" %% "scalameter-core" % "0.8.2"
-    )
-  ).jsSettings (
-    libraryDependencies += "org.scala-js" %%% "scalajs-java-time" % "0.2.3"
+  ).jvmSettings(
+  libraryDependencies ++= Seq(
+    "com.storm-enroute" %% "scalameter-core" % "0.8.2"
   )
+).jsSettings(
+  libraryDependencies += "org.scala-js" %%% "scalajs-java-time" % "0.2.3"
+)
+updateOptions := updateOptions.value.withGigahorse(false)
+
+publishConfiguration := publishConfiguration.value.withOverwrite(true)
+publishLocalConfiguration := publishLocalConfiguration.value.withOverwrite(true)
 
 lazy val timeseriesJVM = timeseries.jvm
 lazy val timeseriesJS = timeseries.js
