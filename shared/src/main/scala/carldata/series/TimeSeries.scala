@@ -298,6 +298,11 @@ case class TimeSeries[V](idx: Vector[Instant], ds: Vector[V]) {
     new TimeSeries(d)
   }
 
+  /**
+    * Get tuple of series with right side inclusive to the requested split instant.
+    *
+    * @param g Instant to split the series
+    */
   def splitAt(g: Instant): (TimeSeries[V], TimeSeries[V]) = {
     val ordered = this.sortByIndex
     val indexOpt = ordered.index.zipWithIndex.find(_._1.compareTo(g) >= 0).map(_._2)

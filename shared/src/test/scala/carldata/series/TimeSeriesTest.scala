@@ -190,7 +190,7 @@ class TimeSeriesTest extends FlatSpec with Matchers {
     val series = TimeSeries(idx, Vector(1, 2, 3, 4, 5))
     val expected = TimeSeries(Vector(now, now.plusSeconds(60)), Vector(6, 9))
 
-    series.groupByTime(_.truncatedTo(ChronoUnit.MINUTES), _.map(_._2).sum) shouldBe expected
+    series.groupByTime(_.truncatedTo(ChronoUnit.MINUTES), _.unzip._2.sum) shouldBe expected
   }
 
   it should "group by hour" in {
@@ -205,7 +205,7 @@ class TimeSeriesTest extends FlatSpec with Matchers {
       , now.plusSeconds(2 * day), now.plusSeconds(2 * day + 10), now.plusSeconds(2 * day + 20))
     val series = TimeSeries(idx, Vector(1, 2, 3, 1, 2, 3, 1, 2, 4))
     val expected = TimeSeries(Vector(now, now.plusSeconds(10), now.plusSeconds(20)), Vector(3, 6, 10))
-    series.groupByTime(groupHours, _.map(_._2).sum) shouldBe expected
+    series.groupByTime(groupHours, _.unzip._2.sum) shouldBe expected
   }
 
   it should "find sum in rolling windows operation" in {
@@ -498,7 +498,7 @@ class TimeSeriesTest extends FlatSpec with Matchers {
     val now = Instant.EPOCH
     val idx = Vector(now, now.plusSeconds(10), now.plusSeconds(20), now.plusSeconds(60), now.plusSeconds(80))
     val series = TimeSeries(idx, Vector(1, 2f, 3f, 4f, 5f))
-    val expected = Duration.of(10L, ChronoUnit.SECONDS)
+    val expected = Duration.of(10l, ChronoUnit.SECONDS)
     series.resolution shouldBe expected
   }
 
