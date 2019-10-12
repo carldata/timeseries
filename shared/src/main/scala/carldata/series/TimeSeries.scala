@@ -22,7 +22,7 @@ object TimeSeries {
 
   /** Return new series by interpolate missing points */
   def interpolate[V: Numeric](xs: TimeSeries[V], delta: Duration)(implicit num: Fractional[V]): TimeSeries[V] = {
-    def f(x1: (Instant, V), x2: (Instant, V), tsh: Instant) = {
+    def f(x1: (Instant, V), x2: (Instant, V), tsh: Instant): V = {
       val tx = num.fromInt(Duration.between(tsh, x1._1).toMillis.toInt)
       val ty = num.fromInt(Duration.between(tsh, x2._1).toMillis.toInt)
       num.plus(num.times(num.div(ty, num.plus(tx, ty)), x1._2), num.times(num.div(tx, num.plus(tx, ty)), x2._2))
@@ -77,7 +77,7 @@ object TimeSeries {
 
   /**
     * Predictive overflow based on the assumption that
-    * if the next value is smaller then the current value, then overflow happend
+    * if the next value is smaller then the current value, then overflow happened
     */
   def diffOverflow[V: Numeric](ts: TimeSeries[V])(implicit num: Numeric[V]): TimeSeries[V] = {
     if (ts.isEmpty) ts
@@ -169,6 +169,7 @@ object TimeSeries {
       (acc, x) => acc.join(x).mapValues(y => y._1 :+ y._2)
     }
   }
+
 }
 
 /**
@@ -222,7 +223,6 @@ case class TimeSeries[V](idx: Vector[Instant], ds: Vector[V]) {
       v <- values.lastOption
     } yield (i, v)
   }
-
 
   /** Return new Time Series where index is always increasing */
   def sortByIndex: TimeSeries[V] = {
@@ -363,7 +363,7 @@ case class TimeSeries[V](idx: Vector[Instant], ds: Vector[V]) {
     * Resample series. If there are any missing points then they will be replaced by given default value
     */
   def resampleWithDefault(delta: Duration, default: V)(implicit num: Fractional[V]): TimeSeries[V] = {
-    def f(x1: (Instant, V), x2: (Instant, V), tsh: Instant) = default
+    def f(x1: (Instant, V), x2: (Instant, V), tsh: Instant): V = default
 
     resample(delta, f)
   }
@@ -514,5 +514,5 @@ case class TimeSeries[V](idx: Vector[Instant], ds: Vector[V]) {
 
     new TimeSeries(joinR(dataPoints, ts.dataPoints))
   }
-}
 
+}
