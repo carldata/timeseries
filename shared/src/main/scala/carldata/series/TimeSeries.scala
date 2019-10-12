@@ -160,7 +160,6 @@ object TimeSeries {
       val vs = stepR(ts.dataPoints, index)
       TimeSeries(index.take(vs.length), vs)
     }
-
   }
 
   def join[V](ts: Seq[TimeSeries[V]]): TimeSeries[Seq[V]] = {
@@ -198,7 +197,6 @@ case class TimeSeries[V](idx: Vector[Instant], ds: Vector[V]) {
         .maxBy(x => x._2.size)._1
     }
   }
-
 
   /** Check is series is empty */
   def isEmpty: Boolean = index.isEmpty || values.isEmpty
@@ -292,13 +290,25 @@ case class TimeSeries[V](idx: Vector[Instant], ds: Vector[V]) {
     new TimeSeries[V](rs)
   }
 
-
   /** Get slice of series with left side inclusive and right side exclusive
     * this operation is based on index.
     */
   def slice(start: Instant, end: Instant): TimeSeries[V] = {
     val d = index.zip(values).filter(x => (x._1.isAfter(start) || x._1 == start) && x._1.isBefore(end))
     new TimeSeries(d)
+  }
+
+  def splitAt(g: Instant): (TimeSeries[V], TimeSeries[V]) = {
+    val ordered = this.sortByIndex
+    val indexOpt = ordered.index.zipWithIndex.find(_._1.compareTo(g) >= 0).map(_._2)
+
+    indexOpt match {
+      case None => (ordered, TimeSeries.empty)
+      case Some(index) =>
+        val i = ordered.index.splitAt(index)
+        val v = ordered.values.splitAt(index)
+        (new TimeSeries(i._1, v._1), new TimeSeries(i._2, v._2))
+    }
   }
 
   /** Return series with first n elements **/

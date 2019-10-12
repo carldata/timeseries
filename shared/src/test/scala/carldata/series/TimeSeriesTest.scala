@@ -105,6 +105,28 @@ class TimeSeriesTest extends FlatSpec with Matchers {
     series.slice(start, end).length shouldBe 4
   }
 
+  it should "return same series on right side when splitted at an instant smaller than its first instant" in {
+    val series: TimeSeries[Int] = TimeSeries.fromTimestamps(Seq((2, -3), (3, 6), (4, 6), (5, 6), (6, 6), (7, 3)))
+    val splitted = series.splitAt(Instant.ofEpochSecond(1))
+    splitted shouldBe (TimeSeries.empty, series)
+  }
+
+  it should "return same series on left side when splitted at an instant greater than its last instant" in {
+    val series: TimeSeries[Int] = TimeSeries.fromTimestamps(Seq((1, 1), (2, -3), (3, 6), (4, 6), (5, 6), (6, 6)))
+    val splitted = series.splitAt(Instant.ofEpochSecond(7))
+    splitted shouldBe (series, TimeSeries.empty)
+  }
+
+  it should "return expected series when splitted" in {
+    val series: TimeSeries[Int] = TimeSeries.fromTimestamps(Seq((1, 1), (2, -3), (3, 6), (4, 6), (5, 6), (6, 6)))
+    series.index.zipWithIndex.foreach {
+      case (i, index) =>
+        val (a, b) = series.splitAt(i)
+        a.length shouldBe index
+        b.length shouldBe series.length - index
+    }
+  }
+
   it should "take first n element" in {
     val series: TimeSeries[Int] = TimeSeries.fromTimestamps(Seq((1, 1), (2, -3), (3, 6), (4, 6), (5, 6), (6, 6)))
     val expected: TimeSeries[Int] = TimeSeries.fromTimestamps(Seq((1, 1), (2, -3), (3, 6), (4, 6)))
