@@ -305,14 +305,13 @@ case class TimeSeries[V](idx: Vector[Instant], ds: Vector[V]) {
     */
   def splitAt(g: Instant): (TimeSeries[V], TimeSeries[V]) = {
     val ordered = this.sortByIndex
-    val indexOpt = ordered.index.zipWithIndex.find(_._1.compareTo(g) >= 0).map(_._2)
+    val iOpt = ordered.index.zipWithIndex.find(_._1.compareTo(g) >= 0).map(_._2)
 
-    indexOpt match {
+    iOpt match {
       case None => (ordered, TimeSeries.empty)
-      case Some(index) =>
-        val i = ordered.index.splitAt(index)
-        val v = ordered.values.splitAt(index)
-        (new TimeSeries(i._1, v._1), new TimeSeries(i._2, v._2))
+      case Some(i) =>
+        val ds = ordered.dataPoints.splitAt(i)
+        (new TimeSeries(ds._1), new TimeSeries(ds._2))
     }
   }
 
