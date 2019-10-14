@@ -22,7 +22,7 @@ object TimeSeries {
 
   /** Return new series by interpolate missing points */
   def interpolate[V: Numeric](xs: TimeSeries[V], delta: Duration)(implicit num: Fractional[V]): TimeSeries[V] = {
-    def f(x1: (Instant, V), x2: (Instant, V), tsh: Instant) = {
+    def f(x1: (Instant, V), x2: (Instant, V), tsh: Instant): V = {
       val tx = num.fromInt(Duration.between(tsh, x1._1).toMillis.toInt)
       val ty = num.fromInt(Duration.between(tsh, x2._1).toMillis.toInt)
       num.plus(num.times(num.div(ty, num.plus(tx, ty)), x1._2), num.times(num.div(tx, num.plus(tx, ty)), x2._2))
@@ -77,7 +77,7 @@ object TimeSeries {
 
   /**
     * Predictive overflow based on the assumption that
-    * if the next value is smaller then the current value, then overflow happend
+    * if the next value is smaller then the current value, then overflow happened
     */
   def diffOverflow[V: Numeric](ts: TimeSeries[V])(implicit num: Numeric[V]): TimeSeries[V] = {
     if (ts.isEmpty) ts
@@ -160,7 +160,6 @@ object TimeSeries {
       val vs = stepR(ts.dataPoints, index)
       TimeSeries(index.take(vs.length), vs)
     }
-
   }
 
   def join[V](ts: Seq[TimeSeries[V]]): TimeSeries[Seq[V]] = {
@@ -169,6 +168,7 @@ object TimeSeries {
       (acc, x) => acc.join(x).mapValues(y => y._1 :+ y._2)
     }
   }
+
 }
 
 /**
@@ -198,7 +198,6 @@ case class TimeSeries[V](idx: Vector[Instant], ds: Vector[V]) {
     }
   }
 
-
   /** Check is series is empty */
   def isEmpty: Boolean = index.isEmpty || values.isEmpty
 
@@ -222,7 +221,6 @@ case class TimeSeries[V](idx: Vector[Instant], ds: Vector[V]) {
       v <- values.lastOption
     } yield (i, v)
   }
-
 
   /** Return new Time Series where index is always increasing */
   def sortByIndex: TimeSeries[V] = {
@@ -292,13 +290,29 @@ case class TimeSeries[V](idx: Vector[Instant], ds: Vector[V]) {
     new TimeSeries[V](rs)
   }
 
-
   /** Get slice of series with left side inclusive and right side exclusive
     * this operation is based on index.
     */
   def slice(start: Instant, end: Instant): TimeSeries[V] = {
     val d = index.zip(values).filter(x => (x._1.isAfter(start) || x._1 == start) && x._1.isBefore(end))
     new TimeSeries(d)
+  }
+
+  /**
+    * Get tuple of series with right side inclusive to the requested split instant.
+    *
+    * @param g Instant to split the series
+    */
+  def splitAt(g: Instant): (TimeSeries[V], TimeSeries[V]) = {
+    val ordered = this.sortByIndex
+    val iOpt = ordered.index.zipWithIndex.find(_._1.compareTo(g) >= 0).map(_._2)
+
+    iOpt match {
+      case None => (ordered, TimeSeries.empty)
+      case Some(i) =>
+        val ds = ordered.dataPoints.splitAt(i)
+        (new TimeSeries(ds._1), new TimeSeries(ds._2))
+    }
   }
 
   /** Return series with first n elements **/
@@ -363,7 +377,7 @@ case class TimeSeries[V](idx: Vector[Instant], ds: Vector[V]) {
     * Resample series. If there are any missing points then they will be replaced by given default value
     */
   def resampleWithDefault(delta: Duration, default: V)(implicit num: Fractional[V]): TimeSeries[V] = {
-    def f(x1: (Instant, V), x2: (Instant, V), tsh: Instant) = default
+    def f(x1: (Instant, V), x2: (Instant, V), tsh: Instant): V = default
 
     resample(delta, f)
   }
@@ -514,5 +528,5 @@ case class TimeSeries[V](idx: Vector[Instant], ds: Vector[V]) {
 
     new TimeSeries(joinR(dataPoints, ts.dataPoints))
   }
-}
 
+}
