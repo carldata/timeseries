@@ -6,7 +6,7 @@ import sbtcrossproject.{crossProject, CrossType}
 lazy val root = project.in(file(".")).
   aggregate(timeseriesJS, timeseriesJVM).
   settings(
-    publishArtifact:= false,
+    publishArtifact := false,
     publish := {},
     publishLocal := {}
   )
@@ -15,11 +15,11 @@ lazy val timeseries = (crossProject(JSPlatform, JVMPlatform) in file("."))
   .settings(
     name := "timeseries",
     organization := "io.github.carldata",
-    version := "0.6.8",
-    scalaVersion := "2.12.3",
+    version := "0.6.9",
+    crossScalaVersions := List("2.11.12", "2.12.10"),
     autoCompilerPlugins := true,
     libraryDependencies ++= Seq(
-      "org.scalatest" %% "scalatest" % "3.0.1" % "test"
+      "org.scalatest" %% "scalatest" % "3.2.0-M1" % "test"
     ),
     licenses += ("Apache-2.0", url("http://www.apache.org/licenses/LICENSE-2.0")),
     homepage := Some(url("https://github.com/carldata/timeseries")),
@@ -47,10 +47,10 @@ lazy val timeseries = (crossProject(JSPlatform, JVMPlatform) in file("."))
       </developers>
   ).jvmSettings(
   libraryDependencies ++= Seq(
-    "com.storm-enroute" %% "scalameter-core" % "0.8.2"
+    "com.storm-enroute" %% "scalameter-core" % "0.19"
   )
 ).jsSettings(
-  libraryDependencies += "org.scala-js" %%% "scalajs-java-time" % "0.2.3"
+  libraryDependencies += "org.scala-js" %%% "scalajs-java-time" % "0.2.5"
 )
 updateOptions := updateOptions.value.withGigahorse(false)
 

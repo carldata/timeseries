@@ -4,9 +4,10 @@ import java.time.Instant
 
 import carldata.extras.FilterByDateModule._
 import carldata.series.TimeSeries
-import org.scalatest.{FlatSpec, Matchers}
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 
-class FilterByDateModuleTest extends FlatSpec with Matchers {
+class FilterByDateModuleTest extends AnyFlatSpec with Matchers {
   "FilterByDateModule" should "get last for each minute" in {
     val idx = Vector("2019-10-01T12:35:01Z", "2019-10-01T12:35:15Z"
       , "2019-10-01T12:35:44Z", "2019-10-01T12:36:20Z", "2019-10-01T12:36:21Z").map(Instant.parse(_))

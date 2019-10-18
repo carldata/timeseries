@@ -2,9 +2,10 @@ package carldata.series
 
 import java.time.Instant
 
-import org.scalatest.{FlatSpec, Matchers}
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 
-class OutliersTest extends FlatSpec with Matchers {
+class OutliersTest extends AnyFlatSpec with Matchers {
 
   "Outliers module" should "remove outliers" in {
     val now = Instant.now()

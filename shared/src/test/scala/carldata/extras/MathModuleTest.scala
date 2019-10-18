@@ -2,9 +2,10 @@ package carldata.extras
 
 import carldata.extras.MathModule._
 import carldata.series.TimeSeries
-import org.scalatest.{FlatSpec, Matchers}
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 
-class MathModuleTest extends FlatSpec with Matchers {
+class MathModuleTest extends AnyFlatSpec with Matchers {
 
   "MathModule" should "add constant to each value" in {
     val idx = Seq(1L, 2)

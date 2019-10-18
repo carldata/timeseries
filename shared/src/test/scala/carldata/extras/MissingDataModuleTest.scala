@@ -1,12 +1,13 @@
 package carldata.extras
 
-import java.time.{Duration, Instant}
+import java.time.Instant
 
-import carldata.series.TimeSeries
-import org.scalatest.{FlatSpec, Matchers}
 import carldata.extras.MissingDataModule._
+import carldata.series.TimeSeries
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 
-class MissingDataModuleTest extends FlatSpec with Matchers {
+class MissingDataModuleTest extends AnyFlatSpec with Matchers {
 
   "MissingDataModule" should "fill missing points with forward fill" in {
     val now = Instant.EPOCH

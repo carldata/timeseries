@@ -3,10 +3,11 @@ package carldata.series
 import java.time.temporal.ChronoUnit
 import java.time.{Duration, Instant, LocalDateTime, ZoneOffset}
 
-import org.scalatest._
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 
 
-class TimeSeriesTest extends FlatSpec with Matchers {
+class TimeSeriesTest extends AnyFlatSpec with Matchers {
 
   "TimeSeries" should "have length equal to its index" in {
     val now = Instant.now()
@@ -108,13 +109,13 @@ class TimeSeriesTest extends FlatSpec with Matchers {
   it should "return same series on right side when splitted at an instant smaller than its first instant" in {
     val series: TimeSeries[Int] = TimeSeries.fromTimestamps(Seq((2, -3), (3, 6), (4, 6), (5, 6), (6, 6), (7, 3)))
     val splitted = series.splitAt(Instant.ofEpochSecond(1))
-    splitted shouldBe (TimeSeries.empty, series)
+    splitted shouldBe(TimeSeries.empty, series)
   }
 
   it should "return same series on left side when splitted at an instant greater than its last instant" in {
     val series: TimeSeries[Int] = TimeSeries.fromTimestamps(Seq((1, 1), (2, -3), (3, 6), (4, 6), (5, 6), (6, 6)))
     val splitted = series.splitAt(Instant.ofEpochSecond(7))
-    splitted shouldBe (series, TimeSeries.empty)
+    splitted shouldBe(series, TimeSeries.empty)
   }
 
   it should "return expected series when splitted" in {
@@ -404,7 +405,8 @@ class TimeSeriesTest extends FlatSpec with Matchers {
     val series2 = TimeSeries(idx2, vs)
     val expected = TimeSeries(idx1, Vector((4, 0), (6, 1), (8, 6)))
 
-    series1.joinLeft(series2, 0) shouldBe expected  }
+    series1.joinLeft(series2, 0) shouldBe expected
+  }
 
   it should "outer join 2 series" in {
     val now = Instant.now()

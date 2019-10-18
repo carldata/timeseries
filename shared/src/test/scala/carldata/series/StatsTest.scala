@@ -1,10 +1,11 @@
 package carldata.series
 
 import carldata.series.Stats.MeanAndVariance
-import org.scalatest._
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 
 
-class StatsTest extends FlatSpec with Matchers {
+class StatsTest extends AnyFlatSpec with Matchers {
 
   "MeanAndVariance" should "calculate for non empty data." in {
     val series: TimeSeries[Double] = TimeSeries.fromTimestamps(Seq((1, 1), (2, -3), (3, 6), (4, 6), (5, 6), (6, 8)))
