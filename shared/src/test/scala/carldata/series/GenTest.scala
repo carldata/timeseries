@@ -2,12 +2,13 @@ package carldata.series
 
 import java.time.{Duration, Instant}
 
-import org.scalatest._
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 
 import scala.util.Random
 
 
-class GenTest extends FlatSpec with Matchers {
+class GenTest extends AnyFlatSpec with Matchers {
 
   "Constant generator" should "create series with constant value." in {
     val idx = Gen.mkIndex(Instant.ofEpochSecond(1), Instant.ofEpochSecond(5), Duration.ofSeconds(1))

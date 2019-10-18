@@ -2,9 +2,10 @@ package carldata.series
 
 import java.time.Instant
 
-import org.scalatest.{FlatSpec, Matchers}
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 
-class PatternsTest extends FlatSpec with Matchers {
+class PatternsTest extends AnyFlatSpec with Matchers {
   "Patterns" should "estimate daily pattern" in {
     val now = Instant.EPOCH
     val day = 86400
@@ -18,6 +19,6 @@ class PatternsTest extends FlatSpec with Matchers {
       , Vector(0.81649d, 1.63299d, 2.44948d))
     val result = Patterns.daily(series)
     result.mapValues(_._1) shouldBe expectedTS
-    TimeSeries.almostEqual(result.mapValues(_._2), expectedSD,0.01) shouldBe true
+    TimeSeries.almostEqual(result.mapValues(_._2), expectedSD, 0.01) shouldBe true
   }
 }

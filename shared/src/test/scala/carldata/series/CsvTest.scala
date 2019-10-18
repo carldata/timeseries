@@ -2,10 +2,11 @@ package carldata.series
 
 import java.time.Instant
 
-import org.scalatest._
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 
 
-class CsvTest extends FlatSpec with Matchers {
+class CsvTest extends AnyFlatSpec with Matchers {
 
   "Csv reader" should "read single series from string" in {
     val str =

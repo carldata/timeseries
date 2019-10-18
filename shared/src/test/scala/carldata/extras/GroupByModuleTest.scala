@@ -5,9 +5,10 @@ import java.time.temporal.ChronoUnit
 
 import carldata.extras.GroupByModule._
 import carldata.series.TimeSeries
-import org.scalatest.{FlatSpec, Matchers}
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 
-class GroupByModuleTest extends FlatSpec with Matchers {
+class GroupByModuleTest extends AnyFlatSpec with Matchers {
 
   "GroupByModule" should "group by sum" in {
     val now = Instant.EPOCH

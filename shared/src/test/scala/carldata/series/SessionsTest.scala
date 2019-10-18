@@ -3,9 +3,10 @@ package carldata.series
 import java.time.{Duration, Instant}
 
 import carldata.series.Sessions.Session
-import org.scalatest._
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 
-class SessionsTest extends FlatSpec with Matchers {
+class SessionsTest extends AnyFlatSpec with Matchers {
   private val seriesOfTypicalRain = Csv.fromString(
     """time,value
       |2008-01-01T12:35:00, 4

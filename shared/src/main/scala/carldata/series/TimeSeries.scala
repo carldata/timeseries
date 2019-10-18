@@ -501,7 +501,7 @@ case class TimeSeries[V](idx: Vector[Instant], ds: Vector[V]) {
     val builder: mutable.ListBuffer[(Instant, (V, U))] = ListBuffer()
 
     @tailrec def joinR(xs: Vector[(Instant, V)],
-                       ys: Vector[(Instant, U)]): Seq[(Instant, (V, U))] = {
+                       ys: Vector[(Instant, U)]): ListBuffer[(Instant, (V, U))] = {
       if (xs.isEmpty) {
         ys.foreach(y => builder.append((y._1, (defaultLeft, y._2))))
         builder
@@ -526,7 +526,7 @@ case class TimeSeries[V](idx: Vector[Instant], ds: Vector[V]) {
       }
     }
 
-    new TimeSeries(joinR(dataPoints, ts.dataPoints))
+    new TimeSeries(joinR(dataPoints, ts.dataPoints).toSeq)
   }
 
 }
