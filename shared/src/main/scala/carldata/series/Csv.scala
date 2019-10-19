@@ -35,12 +35,23 @@ object Csv {
   def fromString(str: String, dateFormatter: DateTimeFormatter = defaultFormatter): Seq[TimeSeries[Double]] = {
     val data = str.split("\n").tail.map { line =>
       val tokens = line.split(",")
-      (LocalDateTime.parse(tokens(0), dateFormatter).toInstant(ZoneOffset.UTC), tokens.tail.map(_.toDouble).toVector)
+      (LocalDateTime.parse(tokens(0), dateFormatter).toInstant(ZoneOffset.UTC)
+        , tokens.tail.map { v =>
+        if (v.trim != "") Some(v.toDouble)
+        else None
+      }.toVector)
     }.toVector
 
     data.unzip._2
       .transpose
-      .map(vs => TimeSeries(data.unzip._1, vs))
+      .map { vs =>
+        val dps = data.unzip._1.zip(vs).flatMap { xs =>
+          if (xs._2.isDefined) Some(xs._1, xs._2.get)
+          else None
+        }.unzip
+
+        TimeSeries(dps._1, dps._2)
+      }
   }
 
   /** Write TimeSeries to CSV string */
