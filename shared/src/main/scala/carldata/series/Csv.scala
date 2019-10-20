@@ -2,7 +2,7 @@ package carldata.series
 
 import java.time.format.{DateTimeFormatter, DateTimeFormatterBuilder}
 import java.time.temporal.ChronoField
-import java.time.{LocalDateTime, ZoneOffset}
+import java.time.{Instant, LocalDateTime, ZoneOffset}
 
 
 object Csv {
@@ -41,6 +41,10 @@ object Csv {
         else Double.NaN
       }.toVector)
     }.toVector
+
+    data.unzip._2
+        .map{x=> println(x + "\t"+x.length)}
+
 
     data.unzip._2
       .transpose
