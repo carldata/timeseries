@@ -37,20 +37,15 @@ object Csv {
       val tokens = line.split(",")
       (LocalDateTime.parse(tokens(0), dateFormatter).toInstant(ZoneOffset.UTC)
         , tokens.tail.map { v =>
-        if (v.trim != "") Some(v.toDouble)
-        else None
+        if (v.trim != "") v.toDouble
+        else Double.NaN
       }.toVector)
     }.toVector
 
     data.unzip._2
       .transpose
       .map { vs =>
-        val dps = data.unzip._1.zip(vs).flatMap { xs =>
-          if (xs._2.isDefined) Some(xs._1, xs._2.get)
-          else None
-        }.unzip
-
-        TimeSeries(dps._1, dps._2)
+        TimeSeries(data.unzip._1, vs).filter(!_._2.isNaN)
       }
   }
 
