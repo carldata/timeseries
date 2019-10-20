@@ -35,15 +35,17 @@ object Csv {
   def fromString(str: String, dateFormatter: DateTimeFormatter = defaultFormatter): Seq[TimeSeries[Double]] = {
     val data = str.split("\n").tail.map { line =>
       val tokens = line.split(",")
-      (LocalDateTime.parse(tokens(0), dateFormatter).toInstant(ZoneOffset.UTC)
-        , tokens.tail.map { v =>
+      val xs: Vector[Double] = tokens.tail.map { v =>
         if (v.trim != "") v.toDouble
         else Double.NaN
-      }.toVector)
+      }.toVector
+
+      (LocalDateTime.parse(tokens(0), dateFormatter).toInstant(ZoneOffset.UTC)
+        , if (xs.size == line.count(_ == ',')) xs :+ Double.NaN else xs)
     }.toVector
 
     data.unzip._2
-        .map{x=> println(x + "\t"+x.length)}
+      .map { x => println(x + "\t" + x.length) }
 
 
     data.unzip._2
