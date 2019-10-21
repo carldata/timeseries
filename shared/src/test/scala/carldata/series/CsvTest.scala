@@ -38,6 +38,30 @@ class CsvTest extends AnyFlatSpec with Matchers {
     series shouldBe expected
   }
 
+  it should "read many series from string with missing values" in {
+    val str =
+      """time,value
+        |2005-01-01T12:34:15,2,3,
+        |2006-01-01T12:34:15,-4,-1,
+        |2007-01-01T12:34:15,-6,,0
+        |2008-01-01T12:34:15,9,2,1""".stripMargin
+
+    val idx: Vector[Instant] = Vector(Instant.parse("2005-01-01T12:34:15Z")
+      , Instant.parse("2006-01-01T12:34:15Z"), Instant.parse("2007-01-01T12:34:15Z")
+      , Instant.parse("2008-01-01T12:34:15Z"))
+    val idx2: Vector[Instant] = Vector(Instant.parse("2005-01-01T12:34:15Z")
+      , Instant.parse("2006-01-01T12:34:15Z"), Instant.parse("2008-01-01T12:34:15Z"))
+    val idx3: Vector[Instant] = Vector(Instant.parse("2007-01-01T12:34:15Z")
+      , Instant.parse("2008-01-01T12:34:15Z"))
+
+    val vs1: Vector[Double] = Vector(2, -4, -6, 9)
+    val vs2: Vector[Double] = Vector(3, -1, 2)
+    val vs3: Vector[Double] = Vector(0, 1)
+    val expected = Seq(TimeSeries(idx, vs1), TimeSeries(idx2, vs2), TimeSeries(idx3, vs3))
+    val series = Csv.fromString(str)
+    series shouldBe expected
+  }
+
   it should "read custom time format" in {
     val str =
       """time,value
