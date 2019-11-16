@@ -27,6 +27,7 @@ class GroupByModuleTest extends AnyFlatSpec with Matchers {
 
     series.groupByAvg(_.truncatedTo(ChronoUnit.MINUTES)) shouldBe expected
   }
+
   it should "group by max" in {
     val now = Instant.EPOCH
     val idx = Vector(now, now.plusSeconds(34), now.plusSeconds(44), now.plusSeconds(65), now.plusSeconds(74))
@@ -35,6 +36,7 @@ class GroupByModuleTest extends AnyFlatSpec with Matchers {
 
     series.groupByMax(_.truncatedTo(ChronoUnit.MINUTES)) shouldBe expected
   }
+
   it should "group by min" in {
     val now = Instant.EPOCH
     val idx = Vector(now, now.plusSeconds(34), now.plusSeconds(44), now.plusSeconds(65), now.plusSeconds(74))
@@ -43,6 +45,7 @@ class GroupByModuleTest extends AnyFlatSpec with Matchers {
 
     series.groupByMin(_.truncatedTo(ChronoUnit.MINUTES)) shouldBe expected
   }
+
   it should "group by median" in {
     val now = Instant.EPOCH
     val idx = Vector(now, now.plusSeconds(34), now.plusSeconds(44), now.plusSeconds(65), now.plusSeconds(74))
@@ -50,5 +53,14 @@ class GroupByModuleTest extends AnyFlatSpec with Matchers {
     val expected = TimeSeries(Vector(now, now.plusSeconds(60)), Vector(2, 4.5))
 
     series.groupByMedian(_.truncatedTo(ChronoUnit.MINUTES)) shouldBe expected
+  }
+
+  it should "group by mode" in {
+    val now = Instant.EPOCH
+    val idx = Vector(now, now.plusSeconds(34), now.plusSeconds(44), now.plusSeconds(65), now.plusSeconds(74))
+    val series = TimeSeries(idx, Vector(1d, 1d, 3d, 4d, 5d))
+    val expected = TimeSeries(Vector(now, now.plusSeconds(60)), Vector(1, 4))
+
+    series.groupByMode(_.truncatedTo(ChronoUnit.MINUTES)) shouldBe expected
   }
 }

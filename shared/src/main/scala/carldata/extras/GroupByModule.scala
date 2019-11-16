@@ -75,7 +75,47 @@ object GroupByModule {
         ts.groupByTime(g, x => f(x.unzip._2))
       }
     }
-  }
 
+    /**
+      * Find mode of data points.
+      *
+      * @param g              This function transforms current data point time into new time. All points with the same
+      *                       time will be integrated into single point
+      * @param modeSubstitute Function which tell how to deal with situation when mode not exist.
+      *                       (for example when all values occur with the same frequency)
+      */
+    def groupByMode(g: Instant => Instant
+                    , modeSubstitute: Seq[(Instant, V)] => V = (xs: Seq[(Instant, V)]) => mostFrequent(xs).head
+                   ): TimeSeries[V] = {
+      def mode(xs: Seq[(Instant, V)]): V = {
+        val ys = mostFrequent(xs)
+        if (ys.length == 1) ys.head
+        else modeSubstitute(xs)
+      }
+
+      if (ts.isEmpty) ts
+      else {
+        ts.groupByTime(g, mode)
+      }
+    }
+
+    /**
+      * Helper function for groupByMode
+      *
+      * @param xs some window in series to be grouped
+      * @return list of values which have the same number of occurences
+      */
+    def mostFrequent(xs: Seq[(Instant, V)]): Seq[V] = {
+      val valueWithOccurences = xs.map(_._2).distinct
+        .map(value => (value, xs.count(x => x._2 == value)))
+        .sortBy(-_._2)
+      val greatestOccurence = valueWithOccurences.head._2
+
+      valueWithOccurences.filter(x => x._2 == greatestOccurence)
+        .map(_._1)
+        .reverse
+    }
+
+  }
 
 }
