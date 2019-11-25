@@ -2,7 +2,10 @@ package carldata.series
 
 import java.time.format.{DateTimeFormatter, DateTimeFormatterBuilder}
 import java.time.temporal.ChronoField
-import java.time.{LocalDateTime, ZoneOffset}
+import java.time.{Instant, LocalDateTime, ZoneOffset}
+
+import scala.annotation.tailrec
+import scala.collection.mutable.ListBuffer
 
 
 object Csv {
@@ -52,4 +55,44 @@ object Csv {
     header + "\n" + lines.mkString("\n")
   }
 
+  /** Write Sequence of TimeSeries to CSV string */
+  def toComplexCsv[A](tss: Seq[TimeSeries[A]]): String = {
+    @tailrec def join(xs: Vector[(Instant, String)],
+                      ys: Vector[(Instant, String)], res: Vector[(Instant, String)]): Vector[(Instant, String)] = {
+      if (xs.isEmpty) {
+        res ++ ys.map(y => (y._1, List("", y._2).mkString(",")))
+      }
+      else if (ys.isEmpty) {
+        xs.map(x => (x._1, List(x._2, "").mkString(","))) ++ res
+      }
+      else {
+        val x = xs.head
+        val y = ys.head
+        if (x._1 == y._1) {
+          join(xs.tail, ys.tail, res :+ (x._1, x._2 + "," + y._2))
+        } else if (x._1.isBefore(y._1)) {
+          join(xs.tail, ys, res :+ (x._1, x._2 + ","))
+        } else {
+          join(xs, ys.tail, res :+ (x._1, "," + y._2))
+        }
+      }
+    }
+
+    def stringDataPoints(ts: TimeSeries[A]): Vector[(Instant, String)] = {
+      ts.dataPoints.map(x => (x._1, x._2.toString))
+    }
+
+    if (tss.nonEmpty) {
+      val header: String = "time," + (for (i <- 1 to tss.size) yield s"value $i").mkString(",")
+      val body: String = tss.tail.foldLeft(stringDataPoints(tss.head)) {
+        (l, r) =>
+          join(l, stringDataPoints(r), Vector())
+      }
+        .map(x => x._1.toString + "," + x._2)
+        .mkString(System.lineSeparator())
+
+      header + System.lineSeparator() + body
+    }
+    else "time,value"
+  }
 }
