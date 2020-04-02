@@ -421,7 +421,7 @@ case class TimeSeries[V](idx: Vector[Instant], ds: Vector[V]) {
 
       val dp = dataPoints
       g(resampledIndex, dp, dp.head)
-      new TimeSeries(ys)
+      new TimeSeries(ys.toSeq)
     }
   }
 
@@ -451,7 +451,7 @@ case class TimeSeries[V](idx: Vector[Instant], ds: Vector[V]) {
 
     @tailrec def joinR(xs: Vector[(Instant, V)],
                        ys: Vector[(Instant, U)]): Seq[(Instant, (V, U))] = {
-      if (xs.isEmpty || ys.isEmpty) builder
+      if (xs.isEmpty || ys.isEmpty) builder.toSeq
       else {
         val x = xs.head
         val y = ys.head
@@ -474,12 +474,12 @@ case class TimeSeries[V](idx: Vector[Instant], ds: Vector[V]) {
 
     @tailrec def joinR(xs: Vector[(Instant, V)],
                        ys: Vector[(Instant, U)]): Seq[(Instant, (V, U))] = {
-      if (xs.isEmpty && ys.isEmpty) builder
+      if (xs.isEmpty && ys.isEmpty) builder.toSeq
       else if (ys.isEmpty) {
         xs.foreach(x => builder.append((x._1, (x._2, default))))
-        builder
+        builder.toSeq
       }
-      else if (xs.isEmpty) builder
+      else if (xs.isEmpty) builder.toSeq
       else {
         val x = xs.head
         val y = ys.head
