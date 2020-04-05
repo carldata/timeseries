@@ -65,7 +65,7 @@ object MissingDataModule {
 
         val dp = ts.dataPoints
         val res = g(resampledIndex, dp, dp.head, ListBuffer())
-        new TimeSeries(res)
+        new TimeSeries(res.toSeq)
       }
     }
   }
