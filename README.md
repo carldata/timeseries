@@ -42,8 +42,10 @@ sbt -mem 4000 run
     * [x] Random Walk
     * [x] periodic pattern
   * Metrics
-    * [ ] MSE between 2 series
-    * [ ] MAE between 2 series
+    * [x] MSE and RMSE between 2 series
+    * [x] MAE between 2 series
+    * [x] MAPE between 2 series
+    * [x] MAD between 2 series
   * ARIMA
     * [ ] Check is series is stationary
     * [ ] AR(p) - Autoregressive
