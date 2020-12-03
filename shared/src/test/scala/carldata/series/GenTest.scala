@@ -17,6 +17,12 @@ class GenTest extends AnyFlatSpec with Matchers {
     result shouldBe expected
   }
 
+  "Make index generator" should "handle 0 duration" in {
+    val idx: Vector[Instant] = Gen.mkIndex(Instant.ofEpochSecond(1), Instant.ofEpochSecond(5), Duration.ZERO)
+    val expected = Vector(Instant.ofEpochSecond(1))
+    idx shouldBe expected
+  }
+
   "Repeat generator" should "create series when start date is before pattern." in {
     val now = Instant.now()
     val idx1 = Vector(now.plusSeconds(1), now.plusSeconds(2), now.plusSeconds(3), now.plusSeconds(4))

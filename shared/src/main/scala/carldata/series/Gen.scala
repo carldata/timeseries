@@ -11,7 +11,10 @@ import scala.util.Random
   */
 object Gen {
 
-  /** Helper function for creating index entries */
+  /** Helper function for creating index entries
+    *
+    * When `duration` is set to Duration.ZERO, vector with first index is return.
+    */
   def mkIndex(start: Instant, end: Instant, duration: Duration): Vector[Instant] = {
     val xs = ListBuffer[Instant]()
 
@@ -22,8 +25,11 @@ object Gen {
       }
     }
 
-    appendR(start)
-    xs.toVector
+    if (duration.isZero) Vector(start)
+    else {
+      appendR(start)
+      xs.toVector
+    }
   }
 
   /** Generate time series with constant value */
