@@ -35,16 +35,18 @@ object Csv {
 
   /** Reader for CSV string */
   def fromString(str: String, dateFormatter: DateTimeFormatter = defaultFormatter): Seq[TimeSeries[Double]] = {
-    val data = str.split("\n").tail.map { line =>
-      val tokens = line.replace(",,", ",NaN,").trim
-      val tokens2 = (if (tokens.last == ',') tokens + "NaN" else tokens)
-        .split(",") //handle missing values by marking them as Nan
-      (LocalDateTime.parse(tokens2(0), dateFormatter).toInstant(ZoneOffset.UTC), tokens2.tail.map(_.toDouble).toVector)
-    }.toVector
+    val data = str.split("\n").tail
+      .filter(line => line.trim.nonEmpty)
+      .map { line =>
+        val tokens = line.replace(",,", ",NaN,").trim
+        val tokens2 = (if (tokens.last == ',') tokens + "NaN" else tokens)
+          .split(",") //handle missing values by marking them as Nan
+        (LocalDateTime.parse(tokens2(0), dateFormatter).toInstant(ZoneOffset.UTC), tokens2.tail.map(_.toDouble).toVector)
+      }.toVector
 
-    data.unzip._2
+    data.map(_._2)
       .transpose
-      .map(vs => TimeSeries(data.unzip._1, vs).filter(!_._2.isNaN))
+      .map(vs => TimeSeries(data.map(_._1), vs).filter(!_._2.isNaN))
   }
 
   /** Write TimeSeries to CSV string */
