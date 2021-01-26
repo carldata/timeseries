@@ -19,6 +19,18 @@ class CsvTest extends AnyFlatSpec with Matchers {
     series.values shouldBe Vector(2, -4, -6, 9)
   }
 
+  it should "read single series from string with blank line" in {
+    val str =
+      """time,value
+        |
+        |2005-01-01T12:34:15,2
+        |2006-01-01T12:34:15,-4
+        |2007-01-01T12:34:15,-6
+        |2008-01-01T12:34:15,9""".stripMargin
+    val series = Csv.fromString(str).head
+    series.values shouldBe Vector(2, -4, -6, 9)
+  }
+
   it should "read many series from string" in {
     val str =
       """time,value
