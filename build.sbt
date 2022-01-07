@@ -17,10 +17,10 @@ lazy val timeseries = (crossProject(JSPlatform, JVMPlatform) in file("."))
     name := "timeseries",
     organization := "io.github.carldata",
     version := "0.7.0",
-    crossScalaVersions := List("2.11.12", "2.12.11", "2.13.1"),
+    crossScalaVersions := List("2.11.12", "2.12.15", "2.13.7"),
     autoCompilerPlugins := true,
     libraryDependencies ++= Seq(
-      "org.scalatest" %% "scalatest" % "3.2.0-M1" % "test"
+      "org.scalatest" %% "scalatest" % "3.2.9" % "test"
     ),
     licenses += ("Apache-2.0", url("http://www.apache.org/licenses/LICENSE-2.0")),
     homepage := Some(url("https://github.com/carldata/timeseries")),
