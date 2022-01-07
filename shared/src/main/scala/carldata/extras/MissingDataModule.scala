@@ -17,7 +17,7 @@ object MissingDataModule {
     def forwardFill(delta: Duration = ts.resolution): TimeSeries[V] = {
       def f(x1: (Instant, V), x2: (Instant, V), tsh: Instant): V = x1._2
 
-      ts.addMissing(ts.resolution, f)
+      ts.addMissing(delta, f)
     }
 
     /** Filling missing data with next known value
@@ -27,19 +27,21 @@ object MissingDataModule {
     def backwardFill(delta: Duration = ts.resolution): TimeSeries[V] = {
       def f(x1: (Instant, V), x2: (Instant, V), tsh: Instant): V = x2._2
 
-      ts.addMissing(ts.resolution, f)
+      ts.addMissing(delta, f)
     }
 
     /** Filling missing data with last known value.
       * Last observation carried forward.
       *
+      * @param delta Expected distance between points
       * @param maxGap size of space (of missing points) after which we decide to drop filling missing points
       *               (i.e. inserting measurement from last month may have no sense).
       */
-    def locf(maxGap: Duration = Duration.ofDays(365))(implicit num: Fractional[V]): TimeSeries[V] = {
+    def locf(delta: Duration = ts.resolution,
+             maxGap: Duration = Duration.ofDays(365))(implicit num: Fractional[V]): TimeSeries[V] = {
       if (ts.isEmpty) ts
       else {
-        val resampledIndex = Gen.mkIndex(ts.index.head, ts.index.last, ts.resolution)
+        val resampledIndex = Gen.mkIndex(ts.index.head, ts.index.last, delta)
 
         @tailrec def g(idxs: Vector[Instant], xs: Vector[(Instant, V)]
                        , prev: (Instant, V), res: ListBuffer[(Instant, V)]): ListBuffer[(Instant, V)] = {
@@ -65,7 +67,7 @@ object MissingDataModule {
 
         val dp = ts.dataPoints
         val res = g(resampledIndex, dp, dp.head, ListBuffer())
-        new TimeSeries(res.toSeq)
+        new TimeSeries(res)
       }
     }
   }
