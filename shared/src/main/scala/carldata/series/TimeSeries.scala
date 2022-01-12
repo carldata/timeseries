@@ -128,7 +128,12 @@ object TimeSeries {
 
   /** Create new index with the step equal to duration, for a given time range */
   private def mkIndex(start: Instant, end: Instant, delta: Duration): Vector[Instant] = {
-    Iterator.iterate(start)(_.plusNanos(delta.toNanos)).takeWhile(_.isBefore(end)).toVector
+    if (delta.isZero) {
+      Vector(start)
+    }
+    else {
+      Iterator.iterate(start)(_.plusNanos(delta.toNanos)).takeWhile(_.isBefore(end)).toVector
+    }
   }
 
   /**
@@ -139,6 +144,9 @@ object TimeSeries {
     */
   def step[V: Fractional](ts: TimeSeries[V], d: Duration)(implicit num: Fractional[V]): TimeSeries[V] = {
     if (ts.isEmpty || ts.resolution.equals(d)) ts
+    else if (d.isZero) {
+      ts.take(1)
+    }
     else {
       val index = mkIndex(ts.index.head, ts.index.last, d)
       val builder: mutable.ListBuffer[V] = ListBuffer()
@@ -315,7 +323,7 @@ case class TimeSeries[V](idx: Vector[Instant], ds: Vector[V]) {
     }
   }
 
-  /** Return series with first n elements **/
+  /** Return series with first n elements * */
   def take(n: Int): TimeSeries[V] = new TimeSeries(idx.take(n), values.take(n))
 
   /**
@@ -344,8 +352,12 @@ case class TimeSeries[V](idx: Vector[Instant], ds: Vector[V]) {
     * @param f     Function which approximates missing points
     */
   def resample(delta: Duration, f: ((Instant, V), (Instant, V), Instant) => V)(implicit num: Numeric[V]): TimeSeries[V] = {
-    if (index.isEmpty) TimeSeries.empty[V]
+    if (isEmpty) TimeSeries.empty[V]
+    else if (delta.isZero) {
+      TimeSeries(Vector(index.head), Vector(values.head))
+    }
     else {
+
       val ys: mutable.ListBuffer[V] = ListBuffer()
       val ts = Iterator.iterate(index.head)(_.plusNanos(delta.toNanos))
         .takeWhile(_.isBefore(index.last.plusNanos(1))).toVector
@@ -391,6 +403,9 @@ case class TimeSeries[V](idx: Vector[Instant], ds: Vector[V]) {
     */
   def addMissing(delta: Duration, f: ((Instant, V), (Instant, V), Instant) => V): TimeSeries[V] = {
     if (isEmpty) this
+    else if (delta.isZero) {
+      TimeSeries(Vector(index.head), Vector(values.head))
+    }
     else {
       val ys: mutable.ListBuffer[(Instant, V)] = ListBuffer()
       val resampledIndex = TimeSeries.mkIndex(index.head, index.last, delta)
@@ -526,7 +541,7 @@ case class TimeSeries[V](idx: Vector[Instant], ds: Vector[V]) {
       }
     }
 
-    new TimeSeries(joinR(dataPoints, ts.dataPoints).toSeq)
+    new TimeSeries(joinR(dataPoints, ts.dataPoints))
   }
 
 }

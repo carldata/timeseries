@@ -237,6 +237,11 @@ class TimeSeriesTest extends AnyFlatSpec with Matchers {
     TimeSeries.interpolate(series, Duration.ofSeconds(1)) shouldBe expected
   }
 
+  it should "interpolate series with just one element" in {
+    val series = TimeSeries(Vector(Instant.EPOCH), Vector(1f))
+    TimeSeries.interpolate(series, Duration.ofSeconds(0)) shouldBe series
+  }
+
   it should "interpolate: missing lots of values" in {
     val now = Instant.EPOCH
     val idx = Vector(now.plusSeconds(1), now.plusSeconds(5))
@@ -272,6 +277,11 @@ class TimeSeriesTest extends AnyFlatSpec with Matchers {
     series.resampleWithDefault(Duration.ofSeconds(1), 1f) shouldBe expected
   }
 
+  it should "resample series with just one element" in {
+    val series = TimeSeries(Vector(Instant.EPOCH), Vector(1f))
+    series.resample(Duration.ofSeconds(0), (_, _, _) => 2f) shouldBe series
+  }
+
   it should "add missing values" in {
     val now = Instant.EPOCH
     val idx = Vector(now, now.plusSeconds(15), now.plusSeconds(30), now.plusSeconds(45),
@@ -281,9 +291,17 @@ class TimeSeriesTest extends AnyFlatSpec with Matchers {
       now.plusSeconds(60), now.plusSeconds(65), now.plusSeconds(80))
     val expected = TimeSeries(idx2, Vector(1f, 2f, 3f, 3f, 3f, 2f, 6f))
 
-    def f(x1: (Instant, Float), x2: (Instant, Float), tsh: Instant) = x1._2
+    def f(x1: (Instant, Float), x2: (Instant, Float), tsh: Instant): Float = x1._2
 
     series.addMissing(Duration.ofMinutes(1), f) shouldBe expected
+  }
+
+  it should "do not add missing series with just one element" in {
+    val series = TimeSeries(Vector(Instant.EPOCH), Vector(1f))
+
+    def f(x1: (Instant, Float), x2: (Instant, Float), tsh: Instant): Float = x1._2
+
+    series.addMissing(Duration.ofMinutes(0), f) shouldBe series
   }
 
   it should "shift time forward" in {
@@ -317,6 +335,10 @@ class TimeSeriesTest extends AnyFlatSpec with Matchers {
     val expected = TimeSeries(idx2, Vector(2, 2, 2, 2, 3, 3, 3, 3))
 
     TimeSeries.step(series, Duration.ofSeconds(15)) shouldBe expected
+  }
+  it should "step index on series with just one element" in {
+    val series = TimeSeries(Vector(Instant.EPOCH), Vector(1f))
+    TimeSeries.step(series, Duration.ofSeconds(0)) shouldBe series
   }
 
   it should "step index on series with right step" in {
