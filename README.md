@@ -1,3 +1,8 @@
+![](https://raw.githubusercontent.com/carldata/argo/master/proj_header.png "")
+## Biblioteka Timeseries powstała w ramach prac badawczo rozwojowych w RAMACH PROGRAMU OPERACYJNEGO INTELIGENTNY ROZWÓJ  w projekcie:
+
+# Predykacja wydajności sieci kanalizacyjno-burzowej w czasie rzeczywistym jako usługa Saas oparta na danych pozyskanych metodami uczenia maszynowego 
+
 # Welcome to the Time Series library
 
 [![Build status](https://travis-ci.org/carldata/timeseries.svg?branch=master)](https://travis-ci.org/carldata/timeseries)
