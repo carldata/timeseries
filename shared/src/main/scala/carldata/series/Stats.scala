@@ -5,7 +5,7 @@ object Stats {
 
   case class MeanAndVariance(mean: Double, variance: Double)
 
-  def meanAndVariance[V: Fractional](values: Seq[V])(implicit num: Fractional[V]): MeanAndVariance = {
+  def meanAndVariance[V: Fractional](values: Seq[V], sample: Boolean = false)(implicit num: Fractional[V]): MeanAndVariance = {
     if (values.isEmpty) MeanAndVariance(0, 0)
     else {
       val m = num.toDouble(values.sum(num)) / values.length
@@ -13,7 +13,8 @@ object Stats {
         .map(num.toDouble)
         .map(x => Math.pow(x - m, 2))
         .sum
-      MeanAndVariance(m, s / values.length)
+      if (sample) MeanAndVariance(m, s / (values.length - 1))
+      else MeanAndVariance(m , s / values.length)
     }
   }
 

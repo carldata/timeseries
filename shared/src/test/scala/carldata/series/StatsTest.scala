@@ -7,11 +7,18 @@ import org.scalatest.matchers.should.Matchers
 
 class StatsTest extends AnyFlatSpec with Matchers {
 
-  "MeanAndVariance" should "calculate for non empty data." in {
+  "MeanAndVariance" should "calculate for non empty data" in {
     val series: TimeSeries[Double] = TimeSeries.fromTimestamps(Seq((1, 1), (2, -3), (3, 6), (4, 6), (5, 6), (6, 8)))
     val result = Stats.meanAndVariance(series.values)
     result.mean shouldEqual 4
     result.variance - 14.33333 < 0.0001 shouldBe true
+  }
+
+  it should "calculate for non empty data with sample population" in {
+    val series: TimeSeries[Double] = TimeSeries.fromTimestamps(Seq((1, 1), (2, -3), (3, 6), (4, 6), (5, 6), (6, 8)))
+    val result = Stats.meanAndVariance(series.values,sample = true)
+    result.mean shouldEqual 4
+    result.variance - 17.2 < 0.0001 shouldBe true
   }
 
   it should "work with empty series" in {
