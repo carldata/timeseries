@@ -10,7 +10,7 @@ import scala.scalajs.js.annotation.{JSExport, JSExportTopLevel}
 object JsStats {
 
   @JSExport("meanAndVariance")
-  def meanAndVariance(values: js.Array[Double]): MeanAndVariance = Stats.meanAndVariance(values.toSeq)
+  def meanAndVariance(values: js.Array[Double], sample: Boolean = false): MeanAndVariance = Stats.meanAndVariance(values.toSeq)
 
   @JSExport("autoCovariance")
   def autoCovariance(values: js.Array[Double], pos1: Int, pos2: Int, size: Int, mean: Double): Double =

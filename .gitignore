@@ -2,3 +2,5 @@
 target/
 *.iml
 project/project/
+.metals
+.vscode
